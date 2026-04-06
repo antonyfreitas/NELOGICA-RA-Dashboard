@@ -292,5 +292,19 @@
     "Resolvido CC": false,
     "Nota RA": "",
     "Voltaria a Fazer Negócio": false
+  },
+  {
+    "Ticket Zendesk": 1234,
+    "ID ReclameAqui": "",
+    "Cliente": "Teste",
+    "Produto": "",
+    "Categoria": "",
+    "Data abertura": 46118,
+    "Data resolução": "",
+    "Tempo resolução": 0,
+    "Contato feito CC": "",
+    "Resolvido CC": false,
+    "Nota RA": "",
+    "Voltaria a Fazer Negócio": false
   }
 ]
