@@ -8,96 +8,133 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        /* Mantendo o seu estilo visual Dark de alta qualidade */
+        /* [O TEU ESTILO DARK ORIGINAL] */
         :root {
             --bg:#0b0f1a; --surface:#131929; --surface2:#1a2236; --border:rgba(255,255,255,0.07);
             --accent:#3d7fff; --accent2:#00e5c3; --danger:#ff4d6d; --warning:#ffb930; --success:#00e5c3;
             --text:#e8edf5; --muted:#6b7a99;
         }
-        /* ... (O restante do seu CSS permanece o mesmo) ... */
-        .login-screen { position:fixed; inset:0; background:var(--bg); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:9999; }
-        .btn-login { padding:12px 24px; background:var(--accent); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+        
+        .login-screen { 
+            position: fixed; inset: 0; background: var(--bg); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; 
+        }
+        .btn-microsoft { 
+            padding: 14px 28px; background: #2f2f2f; color: white; border: 1px solid var(--border); 
+            border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 10px;
+            transition: 0.3s;
+        }
+        .btn-microsoft:hover { background: #404040; border-color: var(--accent); }
+        
+        /* [O TEU CSS DO DASHBOARD] */
+        /* ... Mantém todo o CSS que já tinhas para a sidebar, cards e tabelas ... */
     </style>
 </head>
 <body>
 
 <div id="loginScreen" class="login-screen">
-    <h2 style="margin-bottom:20px">RA Dashboard</h2>
-    <button class="btn-login" onclick="signIn()">Entrar com conta Nelogica</button>
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="letter-spacing: -1px; margin-bottom: 8px;">RA Dashboard</h1>
+        <p style="color: var(--muted);">Acede com as tuas credenciais Nelogica</p>
+    </div>
+    <button class="btn-microsoft" onclick="signIn()">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" width="20">
+        Entrar com Microsoft 365
+    </button>
 </div>
 
+<div id="dashboardContent" style="display:none;">
+    </div>
+
 <script>
-// ─── CONFIGURAÇÃO MICROSOFT ──────────────────────────────────────────────────
+// ─── CONFIGURAÇÃO MICROSOFT (AZURE) ──────────────────────────────────────────
 const msalConfig = {
     auth: {
-        clientId: "e18ed5be-1654-4c1a-b883-94aa014267ab", // Seu Client ID
-        authority: "https://login.microsoftonline.com/c464c88d-4de9-46bf-88e9-78839bfe32d7", // Seu Tenant ID
+        clientId: "e18ed5be-1654-4c1a-b883-94aa014267ab",
+        authority: "https://login.microsoftonline.com/c464c88d-4de9-46bf-88e9-78839bfe32d7",
         redirectUri: "https://antonyfreitas.github.io/NELOGICA-RA-Dashboard/"
     },
     cache: { cacheLocation: "sessionStorage" }
 };
 
 const msalInstance = new msal.PublicClientApplication(msalConfig);
-const request = { scopes: ["Sites.ReadWrite.All"] };
+const loginRequest = { scopes: ["Sites.ReadWrite.All", "User.Read"] };
 
-// Configuração da Lista (Baseado no seu link)
-const SITE_ID = "nelogica-my.sharepoint.com"; 
+// ID da tua lista (Microsoft List)
 const LIST_NAME = "reclame_aqui";
 
 async function signIn() {
     try {
-        await msalInstance.loginPopup(request);
+        const loginResponse = await msalInstance.loginPopup(loginRequest);
+        console.log("Login efetuado:", loginResponse.account.username);
         document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('dashboardContent').style.display = 'flex';
         await carregarDados();
-    } catch (err) { console.error(err); }
+    } catch (err) {
+        console.error("Erro no login:", err);
+        alert("Erro ao autenticar. Verifica se o Redirect URI no Azure está como SPA.");
+    }
 }
 
 async function getAccessToken() {
     const account = msalInstance.getAllAccounts()[0];
-    const response = await msalInstance.acquireTokenSilent({ ...request, account });
+    if (!account) return null;
+    const response = await msalInstance.acquireTokenSilent({ ...loginRequest, account });
     return response.accessToken;
 }
 
-// ─── FUNÇÕES DE DADOS (GRAPH API) ───────────────────────────────────────────
+// ─── BUSCAR DADOS DA MICROSOFT LIST ──────────────────────────────────────────
 async function carregarDados() {
     const token = await getAccessToken();
-    // Endpoint para buscar itens da sua lista pessoal
+    if (!token) return;
+
+    // Endpoint para listas pessoais (OneDrive / MySite)
     const url = `https://graph.microsoft.com/v1.0/me/lists/${LIST_NAME}/items?expand=fields`;
-    
+
     try {
         const response = await fetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
-        const records = data.value.map(item => ({
-            id: item.id,
-            ...item.fields
-        }));
         
-        // Aqui chamamos suas funções de renderização de gráficos que já existem
-        renderizarDashboard(records); 
+        if (data.value) {
+            // Mapeia os campos da Microsoft List para o formato que o teu dashboard usa
+            const records = data.value.map(item => ({
+                id: item.id,
+                ticket: item.fields.Ticket || item.fields.Title, // O SharePoint usa 'Title' como padrão
+                cliente: item.fields.Cliente,
+                produto: item.fields.Produto,
+                categoria: item.fields.Categoria,
+                nota: item.fields.Nota_x0020_RA, // Nomes com espaço no List ganham estes códigos
+                data: item.fields.Data_x0020_abertura,
+                resolvido: item.fields.Resolvido_x0020_CC === true || item.fields.Resolvido_x0020_CC === "true"
+            }));
+
+            // Chama as tuas funções originais de renderização
+            renderizarDashboard(records); 
+        }
     } catch (err) {
-        console.error("Erro ao carregar lista:", err);
+        console.error("Erro ao carregar dados da lista:", err);
     }
 }
 
-async function adicionarRegistro(campos) {
-    const token = await getAccessToken();
-    const url = `https://graph.microsoft.com/v1.0/me/lists/${LIST_NAME}/items`;
-    
-    const body = { fields: campos };
-    
-    return fetch(url, {
-        method: 'POST',
-        headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
-    });
+// ─── FUNÇÕES DE DASHBOARD (Aproveitando as tuas originais) ─────────────────────
+function renderizarDashboard(dados) {
+    console.log("Dados prontos para o gráfico:", dados);
+    // Aqui entram as tuas funções: plotarGraficos(), atualizarTabelas(), etc.
 }
 
-// ... Implementar funções de Editar e Excluir seguindo o padrão Graph API ...
+// Verifica se já está logado ao carregar a página
+window.onload = async () => {
+    const accounts = msalInstance.getAllAccounts();
+    if (accounts.length > 0) {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('dashboardContent').style.display = 'flex';
+        await carregarDados();
+    }
+};
 </script>
 </body>
 </html>
