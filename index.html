@@ -42,6 +42,8 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
 .btn-atualizar{background:var(--accent);color:white;border:none;padding:7px 18px;border-radius:6px;cursor:pointer;font-size:11px;font-family:var(--sans);font-weight:700;transition:.2s;letter-spacing:.05em;text-transform:uppercase;}
 .btn-atualizar:hover{background:#5a91ff;}
 .divider-v{width:1px;height:28px;background:var(--border);}
+.btn-export{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-family:var(--sans);font-weight:600;transition:all .2s;}
+.btn-export:hover{border-color:var(--accent2);color:var(--accent2);}
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
 .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px 22px 18px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;}
 .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);opacity:0;transition:opacity .2s;}
@@ -162,6 +164,10 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
       <div class="divider-v"></div>
       <button class="btn-atualizar" onclick="carregarDados()">⟳ Sincronizar</button>
       <button class="btn-atualizar" onclick="abrirModalAdicionar()" style="background:var(--success);color:#0b0f1a;">＋ Novo Caso</button>
+      <div class="divider-v"></div>
+      <button class="btn-export" onclick="exportar('csv')">⬇ CSV</button>
+      <button class="btn-export" onclick="exportar('xlsx')">⬇ XLSX</button>
+      <button class="btn-export" onclick="exportar('pdf')">⬇ PDF</button>
     </div>
   </div>
 
@@ -683,6 +689,85 @@ function showToast(msg, tipo='ok') {
   t.textContent = msg;
   t.className = 'toast ' + tipo + ' show';
   setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ─── EXPORTAR ─────────────────────────────────────────────────────────────────
+function exportar(formato) {
+  if (!dadosFiltrados.length) { showToast('⚠️ Nenhum dado para exportar', 'err'); return; }
+
+  const headers = ['Ticket Zendesk','ID ReclameAqui','Cliente','Produto','Categoria','Data abertura','Data resolução','Tempo resolução','Contato feito CC','Resolvido CC','Nota RA','Voltaria a Fazer Negócio'];
+  
+  const rows = dadosFiltrados.map(r => [
+    r.ticket, r.ra, r.cliente, r.produto, r.categoria,
+    r.data, r.dataRes, r.tempo, r.contato,
+    isResolvido(r.resolvido) ? 'Sim' : 'Não',
+    r.nota,
+    isResolvido(r.voltaria) ? 'Sim' : 'Não'
+  ]);
+
+  if (formato === 'csv') {
+    const sep = ';';
+    const csvContent = [headers, ...rows].map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(sep)).join('
+');
+    const blob = new Blob(['﻿' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    downloadBlob(blob, 'reclame_aqui.csv');
+    showToast('✅ CSV exportado!', 'ok');
+  }
+
+  else if (formato === 'xlsx') {
+    // Gera XLSX simples via XML
+    let xml = `<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Reclame Aqui"><Table>`;
+    const allRows = [headers, ...rows];
+    allRows.forEach(row => {
+      xml += '<Row>';
+      row.forEach(cell => {
+        const v = String(cell ?? '');
+        const type = !isNaN(v) && v !== '' ? 'Number' : 'String';
+        xml += `<Cell><Data ss:Type="${type}">${v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</Data></Cell>`;
+      });
+      xml += '</Row>';
+    });
+    xml += '</Table></Worksheet></Workbook>';
+    const blob = new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    downloadBlob(blob, 'reclame_aqui.xls');
+    showToast('✅ XLSX exportado!', 'ok');
+  }
+
+  else if (formato === 'pdf') {
+    const win = window.open('', '_blank');
+    const tableRows = rows.map(row => `<tr>${row.map(v => `<td>${v ?? ''}</td>`).join('')}</tr>`).join('');
+    win.document.write(`
+      <html><head><title>Reclame Aqui</title>
+      <style>
+        body { font-family: Arial, sans-serif; font-size: 11px; }
+        h2 { color: #0052cc; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #0052cc; color: white; padding: 6px; text-align: left; font-size: 10px; }
+        td { padding: 5px 6px; border-bottom: 1px solid #eee; }
+        tr:nth-child(even) { background: #f5f5f5; }
+        .meta { color: #666; font-size: 10px; margin-bottom: 8px; }
+      </style></head>
+      <body>
+        <h2>Nelogica | Controle Reclame Aqui</h2>
+        <div class="meta">Exportado em ${new Date().toLocaleString('pt-BR')} · ${dadosFiltrados.length} registros</div>
+        <table>
+          <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </body></html>`);
+    win.document.close();
+    win.print();
+    showToast('✅ PDF gerado!', 'ok');
+  }
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
