@@ -191,13 +191,67 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
         <button class="btn-periodo" onclick="definirPeriodo('mes')">Último Mês</button> 
         <button class="btn-periodo" onclick="definirPeriodo('ano')">Ano 2026</button>
         <button class="btn-periodo" onclick="definirPeriodo('tudo')">Tudo</button>
-        
-        </div>
-    </div>
-    
+        <input type="date" id="dataInicio">
+        <input type="date" id="dataFim">
+        <button class="btn-atualizar" onclick="processarDados()">↻ Filtrar</button>
+        <div class="divider-v"></div>
+        <button class="btn-atualizar" onclick="carregarDados()">⟳ Sincronizar</button>
+        <button class="btn-atualizar" onclick="abrirModalAdicionar()" style="background:var(--success);color:#0b0f1a;">＋ Novo Caso</button>
+        <div class="divider-v"></div>
+        <button class="btn-export" onclick="exportar('csv')">⬇ CSV</button>
+        <button class="btn-export" onclick="exportar('xlsx')">⬇ XLSX</button>
+        <button class="btn-export" onclick="exportar('pdf')">⬇ PDF</button>
+      </div>
     </div>
 
-  <div id="aba-detratores" style="display: none; height: calc(100vh - 80px);">
+    <div class="kpi-grid">
+      <div class="kpi-card" onclick="abrirModal('total')">
+        <div class="kpi-label">Total de Casos</div>
+        <div class="kpi-value" id="kpi-total">—</div>
+        <div class="kpi-sub">no período selecionado</div>
+      </div>
+      <div class="kpi-card success" onclick="abrirModal('resolvidos')">
+        <div class="kpi-label">Resolvidos CC</div>
+        <div class="kpi-value success" id="kpi-resolvidos">—</div>
+        <div class="kpi-sub" id="kpi-res-pct"></div>
+      </div>
+      <div class="kpi-card" onclick="abrirModal('fora_sla')">
+        <div class="kpi-label">Dentro SLA (5d)</div>
+        <div class="kpi-value" id="kpi-sla">—</div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="sla-bar" style="background:var(--success);width:0%"></div></div>
+      </div>
+      <div class="kpi-card warning" onclick="abrirModal('total')">
+        <div class="kpi-label">Média de Dias</div>
+        <div class="kpi-value warning" id="kpi-tempo">—</div>
+        <div class="kpi-sub">tempo médio de resolução</div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card"><div class="chart-title">Status dos Casos</div><div class="chart-wrap"><canvas id="chartStatus"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">Casos por Categoria</div><div class="chart-wrap"><canvas id="chartCategorias"></canvas></div></div>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card"><div class="chart-title">Casos por Produto</div><div class="chart-wrap"><canvas id="chartProduto"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">Distribuição Tempo de Resolução</div><div class="chart-wrap"><canvas id="chartTempo"></canvas></div></div>
+    </div>
+
+    <div class="detractors-card">
+      <div class="section-header">
+        <div class="section-title">⚠️ Casos sem nota RA</div>
+        <span class="badge badge-warning" id="badge-semNota">0 casos</span>
+      </div>
+      <div id="tabela-sem-nota"><div class="empty-state"><div class="empty-icon">📂</div><div class="empty-text">Carregando dados...</div></div></div>
+    </div>
+
+    <div class="detractors-card">
+      <div class="section-header">
+        <div class="section-title">🔴 Casos fora do SLA (&gt;5 dias)</div>
+        <span class="badge badge-danger" id="badge-foraSLA">0 casos</span>
+      </div>
+      <div id="tabela-fora-sla"><div class="empty-state"><div class="empty-icon">📂</div><div class="empty-text">Carregando dados...</div></div></div>
+    </div>
+  </div> <div id="aba-detratores" style="display: none; height: calc(100vh - 80px);">
     <div class="page-header" style="margin-bottom: 16px;">
       <div>
         <div class="page-title">Projeto <span>Detratores</span></div>
@@ -207,89 +261,7 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
     <iframe src="https://forms.office.com/Pages/ResponsePage.aspx?id=jchkxOlNv0aI6XiDm_4y12D-Yv6pu8tJvhm51FOsNkFUNkJET0I4Q1RGMlhKV1BaVjQ1Qk9RSVBTUC4u" width="100%" height="100%" frameborder="0" style="border: none; border-radius: 12px; background: white;"></iframe>
   </div>
 </div>
-    
-    </div>
 
-  <div id="aba-detratores" style="display: none; height: calc(100vh - 80px);">
-    <div class="page-header" style="margin-bottom: 16px;">
-      <div>
-        <div class="page-title">Projeto <span>Detratores</span></div>
-        <div class="page-subtitle">Atuação de detratores dos tickets</div>
-      </div>
-    </div>
-    <iframe src="https://forms.office.com/Pages/ResponsePage.aspx?id=jchkxOlNv0aI6XiDm_4y12D-Yv6pu8tJvhm51FOsNkFUNkJET0I4Q1RGMlhKV1BaVjQ1Qk9RSVBTUC4u" width="100%" height="100%" frameborder="0" style="border: none; border-radius: 12px; background: white;"></iframe>
-  </div>
-</div>
-
-  <div class="upload-bar">
-    <div class="filter-group">
-      <button class="btn-periodo" onclick="definirPeriodo('semana')">7 Dias</button>
-      <button class="btn-periodo" onclick="definirPeriodo('mes')">30 Dias</button>
-      <button class="btn-periodo" onclick="definirPeriodo('ano')">Ano 2026</button>
-      <button class="btn-periodo" onclick="definirPeriodo('tudo')">Tudo</button>
-      <input type="date" id="dataInicio">
-      <input type="date" id="dataFim">
-      <button class="btn-atualizar" onclick="processarDados()">↻ Filtrar</button>
-      <div class="divider-v"></div>
-      <button class="btn-atualizar" onclick="carregarDados()">⟳ Sincronizar</button>
-      <button class="btn-atualizar" onclick="abrirModalAdicionar()" style="background:var(--success);color:#0b0f1a;">＋ Novo Caso</button>
-      <div class="divider-v"></div>
-      <button class="btn-export" onclick="exportar('csv')">⬇ CSV</button>
-      <button class="btn-export" onclick="exportar('xlsx')">⬇ XLSX</button>
-      <button class="btn-export" onclick="exportar('pdf')">⬇ PDF</button>
-    </div>
-  </div>
-
-  <div class="kpi-grid">
-    <div class="kpi-card" onclick="abrirModal('total')">
-      <div class="kpi-label">Total de Casos</div>
-      <div class="kpi-value" id="kpi-total">—</div>
-      <div class="kpi-sub">no período selecionado</div>
-    </div>
-    <div class="kpi-card success" onclick="abrirModal('resolvidos')">
-      <div class="kpi-label">Resolvidos CC</div>
-      <div class="kpi-value success" id="kpi-resolvidos">—</div>
-      <div class="kpi-sub" id="kpi-res-pct"></div>
-    </div>
-    <div class="kpi-card" onclick="abrirModal('fora_sla')">
-      <div class="kpi-label">Dentro SLA (5d)</div>
-      <div class="kpi-value" id="kpi-sla">—</div>
-      <div class="progress-bar-bg"><div class="progress-bar-fill" id="sla-bar" style="background:var(--success);width:0%"></div></div>
-    </div>
-    <div class="kpi-card warning" onclick="abrirModal('total')">
-      <div class="kpi-label">Média de Dias</div>
-      <div class="kpi-value warning" id="kpi-tempo">—</div>
-      <div class="kpi-sub">tempo médio de resolução</div>
-    </div>
-  </div>
-
-  <div class="charts-grid">
-    <div class="chart-card"><div class="chart-title">Status dos Casos</div><div class="chart-wrap"><canvas id="chartStatus"></canvas></div></div>
-    <div class="chart-card"><div class="chart-title">Casos por Categoria</div><div class="chart-wrap"><canvas id="chartCategorias"></canvas></div></div>
-  </div>
-  <div class="charts-grid">
-    <div class="chart-card"><div class="chart-title">Casos por Produto</div><div class="chart-wrap"><canvas id="chartProduto"></canvas></div></div>
-    <div class="chart-card"><div class="chart-title">Distribuição Tempo de Resolução</div><div class="chart-wrap"><canvas id="chartTempo"></canvas></div></div>
-  </div>
-
-  <div class="detractors-card">
-    <div class="section-header">
-      <div class="section-title">⚠️ Casos sem nota RA</div>
-      <span class="badge badge-warning" id="badge-semNota">0 casos</span>
-    </div>
-    <div id="tabela-sem-nota"><div class="empty-state"><div class="empty-icon">📂</div><div class="empty-text">Carregando dados...</div></div></div>
-  </div>
-
-  <div class="detractors-card">
-    <div class="section-header">
-      <div class="section-title">🔴 Casos fora do SLA (&gt;5 dias)</div>
-      <span class="badge badge-danger" id="badge-foraSLA">0 casos</span>
-    </div>
-    <div id="tabela-fora-sla"><div class="empty-state"><div class="empty-icon">📂</div><div class="empty-text">Carregando dados...</div></div></div>
-  </div>
-</div>
-
-<!-- MODAL DETALHES -->
 <div id="modalTickets" class="modal" onclick="fecharModalOutside(event)">
   <div class="modal-content">
     <div class="modal-header">
@@ -303,7 +275,6 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
   </div>
 </div>
 
-<!-- MODAL EDITAR -->
 <div id="modalEditar" class="edit-modal" onclick="if(event.target===this)fecharModalEditar()">
   <div class="edit-box">
     <h3>✏️ Editando Ticket <span id="editTicketLabel"></span></h3>
@@ -318,7 +289,7 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
       <div class="ef"><label>Categoria</label><input id="eCategoria" type="text"></div>
       <div class="ef"><label>Data Abertura</label><input id="eDataAbertura" type="date"></div>
       <div class="ef"><label>Data Resolução</label><input id="eDataResolucao" type="date"></div>
-      <div class="ef"><label>Tempo (dias)</label><input id="eTempo" type="number"></div>
+      <div class="ef"><label>Tempo (dias)</label><input id="eTempo" type="number" readonly style="opacity:0.6; cursor:not-allowed;" title="Calculado automaticamente"></div>
       <div class="ef"><label>Contato feito CC</label>
         <select id="eContato"><option value="">—</option><option>Sim</option><option>Não</option></select>
       </div>
@@ -337,7 +308,6 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
   </div>
 </div>
 
-<!-- MODAL ADICIONAR -->
 <div id="modalAdicionar" class="edit-modal" onclick="if(event.target===this)fecharModalAdicionar()">
   <div class="edit-box">
     <h3>＋ Novo Caso</h3>
@@ -351,7 +321,7 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
       <div class="ef"><label>Categoria</label><input id="nCategoria" type="text"></div>
       <div class="ef"><label>Data Abertura</label><input id="nDataAbertura" type="date"></div>
       <div class="ef"><label>Data Resolução</label><input id="nDataResolucao" type="date"></div>
-      <div class="ef"><label>Tempo (dias)</label><input id="nTempo" type="number"></div>
+      <div class="ef"><label>Tempo (dias)</label><input id="nTempo" type="number" readonly style="opacity:0.6; cursor:not-allowed;" title="Calculado automaticamente"></div>
       <div class="ef"><label>Contato feito CC</label>
         <select id="nContato"><option value="">—</option><option>Sim</option><option>Não</option></select>
       </div>
@@ -382,11 +352,25 @@ const API_URL      = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}
 const API_HEADS    = { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' };
 
 const META_SLA = 5;
-// campo ticket: 'Ticket'
 const CHART_COLORS = ['#3d7fff','#00e5c3','#ffb930','#ff4d6d','#a78bfa','#38bdf8','#fb923c','#4ade80','#f472b6','#facc15','#818cf8','#34d399'];
 
 let dadosGerais = [], dadosFiltrados = [];
 let chartStatus, chartCategorias, chartProduto, chartTempo;
+
+// ─── NAVEGAÇÃO DE ABAS ────────────────────────────────────────────────────────
+function mudarAba(aba) {
+  if(aba === 'ra') {
+    document.getElementById('aba-ra').style.display = 'block';
+    document.getElementById('aba-detratores').style.display = 'none';
+    document.getElementById('nav-ra').classList.add('active');
+    document.getElementById('nav-detratores').classList.remove('active');
+  } else {
+    document.getElementById('aba-ra').style.display = 'none';
+    document.getElementById('aba-detratores').style.display = 'block';
+    document.getElementById('nav-detratores').classList.add('active');
+    document.getElementById('nav-ra').classList.remove('active');
+  }
+}
 
 // ─── GITHUB API ───────────────────────────────────────────────────────────────
 async function carregarDados() {
@@ -396,7 +380,6 @@ async function carregarDados() {
     if (!r.ok) throw new Error(`Erro ${r.status}`);
     const records = await r.json();
 
-    // Converte serial Excel para YYYY-MM-DD
     const serialParaData = (v) => {
       if (!v) return '';
       if (typeof v === 'number') {
@@ -420,6 +403,8 @@ async function carregarDados() {
       resolvido: (f['Resolvido CC'] === true || String(f['Resolvido CC']).toUpperCase() === 'TRUE') ? 'True' : 'False',
       nota:      f['Nota RA'] ?? '',
       voltaria:  (f['Voltaria a Fazer Negócio'] === true || String(f['Voltaria a Fazer Negócio']).toUpperCase() === 'TRUE') ? 'True' : 'False',
+      ultimaAlteracaoPor: f['ultimaAlteracaoPor'] || '',
+      dataUltimaAlteracao: f['dataUltimaAlteracao'] || ''
     }));
 
     setStatus('ok', `${dadosGerais.length} registros`);
@@ -431,12 +416,10 @@ async function carregarDados() {
 }
 
 async function salvarJSON() {
-  // Busca o SHA atual do arquivo (necessário para atualizar no GitHub)
   const metaR = await fetch(API_URL, { headers: API_HEADS });
   const meta = await metaR.json();
   const sha = meta.sha;
 
-  // Converte dadosGerais de volta para o formato original
   const dataParaSerial = (v) => {
     if (!v) return '';
     if (v.includes('-')) {
@@ -459,6 +442,8 @@ async function salvarJSON() {
     'Resolvido CC':            r.resolvido === 'True',
     'Nota RA':                 r.nota || '',
     'Voltaria a Fazer Negócio':r.voltaria === 'True',
+    'ultimaAlteracaoPor':      r.ultimaAlteracaoPor || '',
+    'dataUltimaAlteracao':     r.dataUltimaAlteracao || ''
   }));
 
   const body = {
@@ -467,23 +452,18 @@ async function salvarJSON() {
     sha: sha
   };
 
-  const r = await fetch(API_URL, {
-    method: 'PUT',
-    headers: API_HEADS,
-    body: JSON.stringify(body)
-  });
+  const r = await fetch(API_URL, { method: 'PUT', headers: API_HEADS, body: JSON.stringify(body) });
   if (!r.ok) throw new Error(`Erro ${r.status}`);
   return r.json();
 }
 
-// ─── STATUS ───────────────────────────────────────────────────────────────────
+// ─── STATUS & FILTROS ─────────────────────────────────────────────────────────
 function setStatus(tipo, msg) {
   document.getElementById('statusText').innerText = msg;
   const dot = document.getElementById('statusDot');
   dot.className = 'status-dot' + (tipo === 'ok' ? ' ok' : tipo === 'loading' ? ' loading' : '');
 }
 
-// ─── FILTROS ──────────────────────────────────────────────────────────────────
 function definirPeriodo(tipo) {
   document.querySelectorAll('.btn-periodo').forEach(b => b.classList.remove('active'));
   event.target.classList.add('active');
@@ -498,10 +478,7 @@ function definirPeriodo(tipo) {
   processarDados();
 }
 
-function dataParaNum(val) {
-  if (!val) return 0;
-  return parseInt(String(val).replace(/-/g, ''));
-}
+function dataParaNum(val) { return val ? parseInt(String(val).replace(/-/g, '')) : 0; }
 
 function isResolvido(val) {
   if (val === null || val === undefined || val === '') return false;
@@ -516,7 +493,7 @@ function chipProduto(prod) {
   return `<span class="chip ${cls}">${prod}</span>`;
 }
 
-// ─── PROCESSAR ────────────────────────────────────────────────────────────────
+// ─── PROCESSAR & GRÁFICOS ─────────────────────────────────────────────────────
 function processarDados() {
   if (!dadosGerais.length) return;
   const nIni = dataParaNum(document.getElementById('dataInicio').value);
@@ -551,7 +528,6 @@ function processarDados() {
   renderTabelaForaSLA();
 }
 
-// ─── GRÁFICOS ─────────────────────────────────────────────────────────────────
 function atualizarGraficos(res, tot) {
   [chartStatus, chartCategorias, chartProduto, chartTempo].forEach(c => c && c.destroy());
   const font = { family: "'DM Sans', sans-serif", size: 11 };
@@ -591,7 +567,7 @@ function atualizarGraficos(res, tot) {
   });
 }
 
-// ─── TABELAS ──────────────────────────────────────────────────────────────────
+// ─── TABELAS & MODAIS ─────────────────────────────────────────────────────────
 function linhaTabela(r) {
   const t = parseFloat(r.tempo)||0;
   return `<tr>
@@ -623,7 +599,6 @@ function renderTabelaForaSLA() {
   cont.innerHTML = `<table class="mini-table"><thead><tr><th>Zendesk</th><th>ID RA</th><th>Cliente</th><th>Produto</th><th>Categoria</th><th>Tempo</th><th>Status</th><th>Nota</th><th></th></tr></thead><tbody>${lista.map(linhaTabela).join('')}</tbody></table>`;
 }
 
-// ─── MODAL DETALHES ───────────────────────────────────────────────────────────
 function abrirModal(tipo, extra='') {
   const titleMap = {total:'Todos os Casos',resolvidos:'Casos Resolvidos',abertos:'Casos em Aberto',fora_sla:'Fora do SLA',categoria:`Categoria: ${extra}`};
   document.getElementById('modalTitle').innerText = titleMap[tipo]||'Detalhes';
@@ -638,7 +613,7 @@ function abrirModal(tipo, extra='') {
 function fecharModal() { document.getElementById('modalTickets').style.display = 'none'; }
 function fecharModalOutside(e) { if(e.target===document.getElementById('modalTickets')) fecharModal(); }
 
-// ─── MODAL EDITAR ─────────────────────────────────────────────────────────────
+// ─── CRUD (CRIAR E EDITAR) ────────────────────────────────────────────────────
 function abrirModalEditar(recordId) {
   const r = dadosGerais.find(x => x._id === recordId);
   if (!r) { showToast('Registro não encontrado', 'err'); return; }
@@ -665,42 +640,42 @@ async function salvarEdicao() {
   const idx = dadosGerais.findIndex(r => r._id === recordId);
   if (idx === -1) { showToast('❌ Registro não encontrado', 'err'); return; }
 
+  // 1. Contagem automática de dias
+  let tempoCalculado = document.getElementById('eTempo').value;
+  const isResolvido = document.getElementById('eResolvido').value === 'true';
+  const dtAbertura = document.getElementById('eDataAbertura').value;
+  const dtResolucao = document.getElementById('eDataResolucao').value;
+
+  if (isResolvido && dtAbertura && dtResolucao) {
+    const criacao = new Date(dtAbertura);
+    const resolucao = new Date(dtResolucao);
+    const diferencaTempo = Math.abs(resolucao - criacao);
+    tempoCalculado = Math.ceil(diferencaTempo / (1000 * 60 * 60 * 24));
+  } else if (!isResolvido) {
+    tempoCalculado = ''; // Zera se o status deixar de ser resolvido
+  }
+
+  // 2. Registrar quem fez a última alteração
+  const sessao = JSON.parse(sessionStorage.getItem(SESSION_KEY));
+  const usuarioLogado = sessao && sessao.user ? sessao.user : 'Desconhecido';
+  const dataAlteracao = new Date().toLocaleString('pt-BR');
+
   dadosGerais[idx] = {
     ...dadosGerais[idx],
     ra:        document.getElementById('eRA').value.trim(),
     cliente:   document.getElementById('eCliente').value.trim(),
     produto:   document.getElementById('eProduto').value,
     categoria: document.getElementById('eCategoria').value.trim(),
-    data:      document.getElementById('eDataAbertura').value,
-    dataRes:   document.getElementById('eDataResolucao').value,
-    tempo:     document.getElementById('eTempo').value,
+    data:      dtAbertura,
+    dataRes:   dtResolucao,
+    tempo:     tempoCalculado,
     contato:   document.getElementById('eContato').value,
-    resolvido: document.getElementById('eResolvido').value === 'true' ? 'True' : 'False',
+    resolvido: isResolvido ? 'True' : 'False',
     nota:      document.getElementById('eNota').value,
     voltaria:  document.getElementById('eVoltaria').value === 'true' ? 'True' : 'False',
+    ultimaAlteracaoPor: usuarioLogado,
+    dataUltimaAlteracao: dataAlteracao
   };
-  // 1. Contagem automática de dias
-// Altere 'dataCriacao' e 'dataResolucao' para o nome exato das variáveis que você usa no seu formulário
-if (ticket.status === 'Resolvido' && ticket.dataCriacao && ticket.dataResolucao) {
-  const criacao = new Date(ticket.dataCriacao);
-  const resolucao = new Date(ticket.dataResolucao);
-  
-  const diferencaTempo = Math.abs(resolucao - criacao);
-  const diffDias = Math.ceil(diferencaTempo / (1000 * 60 * 60 * 24));
-  
-  ticket.diasAberto = diffDias; 
-} else if (ticket.status !== 'Resolvido') {
-  ticket.diasAberto = null; // Zera se o status for alterado e deixar de ser resolvido
-}
-
-// 2. Registrar quem fez a última alteração e quando
-// Busca quem está logado (usando o método de login que já vi que tem no final do seu arquivo)
-const sessao = JSON.parse(sessionStorage.getItem('SESSION_KEY'));
-const usuarioLogado = sessao && sessao.user ? sessao.user : 'Desconhecido';
-const dataAlteracao = new Date().toLocaleString('pt-BR');
-
-ticket.ultimaAlteracaoPor = usuarioLogado;
-ticket.dataUltimaAlteracao = dataAlteracao;
 
   try {
     await salvarJSON();
@@ -712,7 +687,6 @@ ticket.dataUltimaAlteracao = dataAlteracao;
   }
 }
 
-// ─── MODAL ADICIONAR ──────────────────────────────────────────────────────────
 function abrirModalAdicionar() {
   ['nTicket','nRA','nCliente','nCategoria','nTempo','nNota'].forEach(id => document.getElementById(id).value = '');
   ['nProduto','nContato'].forEach(id => document.getElementById(id).value = '');
@@ -728,6 +702,24 @@ async function salvarNovoCaso() {
   const ticket = document.getElementById('nTicket').value.trim();
   if (!ticket) { showToast('⚠️ Ticket Zendesk é obrigatório', 'err'); return; }
 
+  // 1. Contagem automática de dias
+  let tempoCalculado = document.getElementById('nTempo').value;
+  const isResolvido = document.getElementById('nResolvido').value === 'true';
+  const dtAbertura = document.getElementById('nDataAbertura').value;
+  const dtResolucao = document.getElementById('nDataResolucao').value;
+
+  if (isResolvido && dtAbertura && dtResolucao) {
+    const criacao = new Date(dtAbertura);
+    const resolucao = new Date(dtResolucao);
+    const diferencaTempo = Math.abs(resolucao - criacao);
+    tempoCalculado = Math.ceil(diferencaTempo / (1000 * 60 * 60 * 24));
+  }
+
+  // 2. Registrar quem fez a última alteração
+  const sessao = JSON.parse(sessionStorage.getItem(SESSION_KEY));
+  const usuarioLogado = sessao && sessao.user ? sessao.user : 'Desconhecido';
+  const dataAlteracao = new Date().toLocaleString('pt-BR');
+
   const novo = {
     _id:       String(Date.now()),
     ticket:    ticket,
@@ -735,13 +727,15 @@ async function salvarNovoCaso() {
     cliente:   document.getElementById('nCliente').value.trim(),
     produto:   document.getElementById('nProduto').value,
     categoria: document.getElementById('nCategoria').value.trim(),
-    data:      document.getElementById('nDataAbertura').value,
-    dataRes:   document.getElementById('nDataResolucao').value,
-    tempo:     document.getElementById('nTempo').value,
+    data:      dtAbertura,
+    dataRes:   dtResolucao,
+    tempo:     tempoCalculado,
     contato:   document.getElementById('nContato').value,
-    resolvido: document.getElementById('nResolvido').value === 'true' ? 'True' : 'False',
+    resolvido: isResolvido ? 'True' : 'False',
     nota:      document.getElementById('nNota').value,
     voltaria:  document.getElementById('nVoltaria').value === 'true' ? 'True' : 'False',
+    ultimaAlteracaoPor: usuarioLogado,
+    dataUltimaAlteracao: dataAlteracao
   };
 
   dadosGerais.push(novo);
@@ -757,7 +751,6 @@ async function salvarNovoCaso() {
   }
 }
 
-// ─── EXCLUIR ──────────────────────────────────────────────────────────────────
 async function confirmarExcluir(recordId, ticket) {
   if (!confirm(`Excluir o ticket #${ticket}?\nEssa ação não pode ser desfeita.`)) return;
   const idx = dadosGerais.findIndex(r => r._id === recordId);
@@ -774,7 +767,7 @@ async function confirmarExcluir(recordId, ticket) {
   }
 }
 
-// ─── TOAST ────────────────────────────────────────────────────────────────────
+// ─── EXPORTAÇÃO E UTILITÁRIOS ─────────────────────────────────────────────────
 function showToast(msg, tipo='ok') {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -782,20 +775,38 @@ function showToast(msg, tipo='ok') {
   setTimeout(() => t.classList.remove('show'), 3500);
 }
 
-  
-
-// ─── EXPORTAR ─────────────────────────────────────────────────────────────────
 function exportar(formato) {
+  if (formato === 'pdf') {
+    const uploadBar = document.querySelector('.upload-bar');
+    uploadBar.style.display = 'none'; // esconde barra para não poluir o PDF
+    
+    const dashboard = document.getElementById('aba-ra');
+    const opt = {
+      margin:       0.3,
+      filename:     'CustomerCare_RA.pdf',
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, logging: false },
+      jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape' }
+    };
+    
+    html2pdf().set(opt).from(dashboard).save().then(() => {
+      uploadBar.style.display = 'flex'; // volta a barra
+      showToast('✅ PDF gerado visualmente!', 'ok');
+    });
+    return;
+  }
+
   if (!dadosFiltrados.length) { showToast('⚠️ Nenhum dado para exportar', 'err'); return; }
 
-  const headers = ['Ticket Zendesk','ID ReclameAqui','Cliente','Produto','Categoria','Data abertura','Data resolução','Tempo resolução','Contato feito CC','Resolvido CC','Nota RA','Voltaria a Fazer Negócio'];
+  const headers = ['Ticket Zendesk','ID ReclameAqui','Cliente','Produto','Categoria','Data abertura','Data resolução','Tempo resolução','Contato feito CC','Resolvido CC','Nota RA','Voltaria a Fazer Negócio', 'Ultima Alteração', 'Data Alteração'];
   
   const rows = dadosFiltrados.map(r => [
     r.ticket, r.ra, r.cliente, r.produto, r.categoria,
     r.data, r.dataRes, r.tempo, r.contato,
     isResolvido(r.resolvido) ? 'Sim' : 'Não',
     r.nota,
-    isResolvido(r.voltaria) ? 'Sim' : 'Não'
+    isResolvido(r.voltaria) ? 'Sim' : 'Não',
+    r.ultimaAlteracaoPor, r.dataUltimaAlteracao
   ]);
 
   if (formato === 'csv') {
@@ -804,10 +815,7 @@ function exportar(formato) {
     const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
     downloadBlob(blob, 'reclame_aqui.csv');
     showToast('✅ CSV exportado!', 'ok');
-  }
-
-  else if (formato === 'xlsx') {
-    // Gera XLSX simples via XML
+  } else if (formato === 'xlsx') {
     let xml = `<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Reclame Aqui"><Table>`;
     const allRows = [headers, ...rows];
     allRows.forEach(row => {
@@ -824,73 +832,6 @@ function exportar(formato) {
     downloadBlob(blob, 'reclame_aqui.xls');
     showToast('✅ XLSX exportado!', 'ok');
   }
-
-else if (formato === 'pdf') {
-    const win = window.open('', '_blank');
-    const tableRows = rows.map(row => `<tr>${row.map(v => `<td>${v ?? ''}</td>`).join('')}</tr>`).join('');
-    win.document.write(`
-      <html><head><title>Reclame Aqui</title>
-      <style>
-        body { font-family: Arial, sans-serif; font-size: 11px; }
-        h2 { color: #0052cc; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { background: #0052cc; color: white; padding: 6px; text-align: left; font-size: 10px; }
-        td { padding: 5px 6px; border-bottom: 1px solid #eee; }
-        tr:nth-child(even) { background: #f5f5f5; }
-        .meta { color: #666; font-size: 10px; margin-bottom: 8px; }
-      </style></head>
-      <body>
-        <h2>Nelogica | Controle Reclame Aqui</h2>
-        <div class="meta">Exportado em ${new Date().toLocaleString('pt-BR')} · ${dadosFiltrados.length} registros</div>
-        <table>
-          <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
-          <tbody>${tableRows}</tbody>
-        </table>
-      </body></html>`);
-    win.document.close();
-    win.print();
-    showToast('✅ PDF gerado!', 'ok');
-  }
-}
-  // 1. Função para trocar entre RA e Detratores
-function mudarAba(aba) {
-  if(aba === 'ra') {
-    document.getElementById('aba-ra').style.display = 'block';
-    document.getElementById('aba-detratores').style.display = 'none';
-    document.getElementById('nav-ra').classList.add('active');
-    document.getElementById('nav-detratores').classList.remove('active');
-  } else {
-    document.getElementById('aba-ra').style.display = 'none';
-    document.getElementById('aba-detratores').style.display = 'block';
-    document.getElementById('nav-detratores').classList.add('active');
-    document.getElementById('nav-ra').classList.remove('active');
-  }
-}
-
-// 2. Exportação Visual (Atualize sua função exportar)
-function exportar(tipo) {
-  if (tipo === 'pdf') {
-    // Esconde a barra de botões temporariamente para não sair no print
-    const uploadBar = document.querySelector('.upload-bar');
-    uploadBar.style.display = 'none';
-    
-    const dashboard = document.getElementById('aba-ra');
-    const opt = {
-      margin:       0.3,
-      filename:     'CustomerCare_RA.pdf',
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, logging: false },
-      jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape' }
-    };
-    
-    html2pdf().set(opt).from(dashboard).save().then(() => {
-      // Devolve a barra de botões depois que o PDF for gerado
-      uploadBar.style.display = 'flex'; 
-    });
-    return;
-  }
-  
-  // Coloque aqui o resto do seu código que já exportava para CSV e XLSX
 }
 
 function downloadBlob(blob, filename) {
@@ -902,17 +843,14 @@ function downloadBlob(blob, filename) {
   URL.revokeObjectURL(url);
 }
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-
-// ===== LOGIN =====
-// Credenciais — edite à vontade. Pode adicionar mais usuários no array.
+// ─── LOGIN & INICIALIZAÇÃO ────────────────────────────────────────────────────
 const USUARIOS = [
   { user: 'antony',  senha: 'nelogica2026' },
   { user: 'suporte', senha: 'ra@2026'      },
   { user: 'lider',   senha: 'gestao@2026'  },
 ];
 const SESSION_KEY = 'ra_dash_auth';
-const SESSION_TTL = 8 * 60 * 60 * 1000; // 8 horas em ms
+const SESSION_TTL = 8 * 60 * 60 * 1000;
 
 function verificarSessao() {
   try {
@@ -944,13 +882,8 @@ function tentarLogin() {
 }
 
 window.onload = () => {
-  // Só carrega dados se já estiver autenticado
-  if (verificarSessao()) {
-    carregarDados();
-  }
-  setInterval(() => {
-    if (verificarSessao()) carregarDados();
-  }, 120000);
+  if (verificarSessao()) carregarDados();
+  setInterval(() => { if (verificarSessao()) carregarDados(); }, 120000);
 };
 </script>
 
