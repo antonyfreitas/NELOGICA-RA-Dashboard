@@ -767,7 +767,7 @@ function exportar(formato) {
     showToast('✅ XLSX exportado!', 'ok');
   }
 
-  else if (formato === 'pdf') {
+else if (formato === 'pdf') {
     const win = window.open('', '_blank');
     const tableRows = rows.map(row => `<tr>${row.map(v => `<td>${v ?? ''}</td>`).join('')}</tr>`).join('');
     win.document.write(`
@@ -781,7 +781,7 @@ function exportar(formato) {
         tr:nth-child(even) { background: #f5f5f5; }
         .meta { color: #666; font-size: 10px; margin-bottom: 8px; }
       </style></head>
-      <<body>
+      <body>
         <h2>Nelogica | Controle Reclame Aqui</h2>
         <div class="meta">Exportado em ${new Date().toLocaleString('pt-BR')} · ${dadosFiltrados.length} registros</div>
         <table>
@@ -789,42 +789,6 @@ function exportar(formato) {
           <tbody>${tableRows}</tbody>
         </table>
       </body></html>`);
-    win.document.close();
-    win.print();
-    showToast('✅ PDF gerado!', 'ok');
-  }
-}
-
-function downloadBlob(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-      
-<!-- ===== TELA DE LOGIN ===== -->
-<div id="loginScreen">
-  <div class="login-box">
-    <div class="login-logo">NELO<span>GICA</span></div>
-    <div class="login-sub">RA Dashboard</div>
-    <div class="login-title">Acesso restrito — faça login para continuar</div>
-    <div class="login-field">
-      <label>Usuário</label>
-      <input type="text" id="loginUser" placeholder="seu usuário" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
-    </div>
-    <div class="login-field">
-      <label>Senha</label>
-      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')tentarLogin()">
-    </div>
-    <button class="login-btn" onclick="tentarLogin()">Entrar →</button>
-    <div class="login-err" id="loginErr"></div>
-    <div class="login-footer">Nelogica · v10.0 · 2026</div>
-  </div>
-</div>
-
-</body></html>`);
     win.document.close();
     win.print();
     showToast('✅ PDF gerado!', 'ok');
@@ -890,9 +854,6 @@ window.onload = () => {
     if (verificarSessao()) carregarDados();
   }, 120000);
 };
-// ===== LOGIN =====
-// ... suas funções de login aqui (verificarSessao, tentarLogin, window.onload) ...
-
 </script>
 
 <div id="loginScreen">
