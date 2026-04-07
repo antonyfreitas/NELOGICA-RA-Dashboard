@@ -5,6 +5,7 @@
 <title>Nelogica | RA Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>  
 <style>
 :root {
   --bg:#0b0f1a;--surface:#131929;--surface2:#1a2236;--border:rgba(255,255,255,0.07);
@@ -166,26 +167,59 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
 
 <div class="sidebar">
   <div class="logo">NELO<span>GICA</span></div>
-  <div class="logo-sub">RA Dashboard</div>
+  <div class="logo-sub">Ações Customer Care</div>
   <div class="nav-label">Visões</div>
-  <div class="nav-item active"><span class="nav-icon">📊</span> Visão Geral</div>
-  <div class="nav-item"><span class="nav-icon">⚠️</span> Detratores</div>
-  <div class="nav-item"><span class="nav-icon">📦</span> Por Produto</div>
-  <div class="nav-item"><span class="nav-icon">🏷️</span> Por Categoria</div>
+  
+  <div class="nav-item active" onclick="mudarAba('ra')" id="nav-ra">
+    <span class="nav-icon">📊</span> Reclame Aqui
+  </div>
+  <div class="nav-item" onclick="mudarAba('detratores')" id="nav-detratores">
+    <span class="nav-icon">⚠️</span> Detratores
+  </div>
+
   <div class="sidebar-status">
     <div><span class="status-dot" id="statusDot"></span><span id="statusText">Carregando...</span></div>
-    <div style="margin-top:6px;font-family:var(--mono);font-size:9px;color:#3a4560;">BOB v10.0 · Airtable</div>
+    <div style="margin-top:6px;font-family:var(--mono);font-size:9px;color:#3a4560;">BOB v10.0</div>
   </div>
 </div>
 
 <div class="main">
-  <div class="page-header">
-    <div>
-      <div class="page-title">Controle <span>Reclame Aqui</span></div>
-      <div class="page-subtitle">Análise de atendimentos e indicadores de qualidade</div>
+  <div id="aba-ra" style="display: block;">
+    <div class="upload-bar">
+      <div class="filter-group">
+        <button class="btn-periodo" onclick="definirPeriodo('semana')">7 Dias</button>
+        <button class="btn-periodo" onclick="definirPeriodo('mes')">Último Mês</button> 
+        <button class="btn-periodo" onclick="definirPeriodo('ano')">Ano 2026</button>
+        <button class="btn-periodo" onclick="definirPeriodo('tudo')">Tudo</button>
+        
+        </div>
     </div>
-    <div class="version-tag">v10.0 · 2026</div>
+    
+    </div>
+
+  <div id="aba-detratores" style="display: none; height: calc(100vh - 80px);">
+    <div class="page-header" style="margin-bottom: 16px;">
+      <div>
+        <div class="page-title">Projeto <span>Detratores</span></div>
+        <div class="page-subtitle">Atuação de detratores dos tickets</div>
+      </div>
+    </div>
+    <iframe src="https://forms.office.com/Pages/ResponsePage.aspx?id=jchkxOlNv0aI6XiDm_4y12D-Yv6pu8tJvhm51FOsNkFUNkJET0I4Q1RGMlhKV1BaVjQ1Qk9RSVBTUC4u" width="100%" height="100%" frameborder="0" style="border: none; border-radius: 12px; background: white;"></iframe>
   </div>
+</div>
+    
+    </div>
+
+  <div id="aba-detratores" style="display: none; height: calc(100vh - 80px);">
+    <div class="page-header" style="margin-bottom: 16px;">
+      <div>
+        <div class="page-title">Projeto <span>Detratores</span></div>
+        <div class="page-subtitle">Atuação de detratores dos tickets</div>
+      </div>
+    </div>
+    <iframe src="https://forms.office.com/Pages/ResponsePage.aspx?id=jchkxOlNv0aI6XiDm_4y12D-Yv6pu8tJvhm51FOsNkFUNkJET0I4Q1RGMlhKV1BaVjQ1Qk9RSVBTUC4u" width="100%" height="100%" frameborder="0" style="border: none; border-radius: 12px; background: white;"></iframe>
+  </div>
+</div>
 
   <div class="upload-bar">
     <div class="filter-group">
@@ -645,6 +679,28 @@ async function salvarEdicao() {
     nota:      document.getElementById('eNota').value,
     voltaria:  document.getElementById('eVoltaria').value === 'true' ? 'True' : 'False',
   };
+  // 1. Contagem automática de dias
+// Altere 'dataCriacao' e 'dataResolucao' para o nome exato das variáveis que você usa no seu formulário
+if (ticket.status === 'Resolvido' && ticket.dataCriacao && ticket.dataResolucao) {
+  const criacao = new Date(ticket.dataCriacao);
+  const resolucao = new Date(ticket.dataResolucao);
+  
+  const diferencaTempo = Math.abs(resolucao - criacao);
+  const diffDias = Math.ceil(diferencaTempo / (1000 * 60 * 60 * 24));
+  
+  ticket.diasAberto = diffDias; 
+} else if (ticket.status !== 'Resolvido') {
+  ticket.diasAberto = null; // Zera se o status for alterado e deixar de ser resolvido
+}
+
+// 2. Registrar quem fez a última alteração e quando
+// Busca quem está logado (usando o método de login que já vi que tem no final do seu arquivo)
+const sessao = JSON.parse(sessionStorage.getItem('SESSION_KEY'));
+const usuarioLogado = sessao && sessao.user ? sessao.user : 'Desconhecido';
+const dataAlteracao = new Date().toLocaleString('pt-BR');
+
+ticket.ultimaAlteracaoPor = usuarioLogado;
+ticket.dataUltimaAlteracao = dataAlteracao;
 
   try {
     await salvarJSON();
@@ -726,6 +782,8 @@ function showToast(msg, tipo='ok') {
   setTimeout(() => t.classList.remove('show'), 3500);
 }
 
+  
+
 // ─── EXPORTAR ─────────────────────────────────────────────────────────────────
 function exportar(formato) {
   if (!dadosFiltrados.length) { showToast('⚠️ Nenhum dado para exportar', 'err'); return; }
@@ -793,6 +851,46 @@ else if (formato === 'pdf') {
     win.print();
     showToast('✅ PDF gerado!', 'ok');
   }
+}
+  // 1. Função para trocar entre RA e Detratores
+function mudarAba(aba) {
+  if(aba === 'ra') {
+    document.getElementById('aba-ra').style.display = 'block';
+    document.getElementById('aba-detratores').style.display = 'none';
+    document.getElementById('nav-ra').classList.add('active');
+    document.getElementById('nav-detratores').classList.remove('active');
+  } else {
+    document.getElementById('aba-ra').style.display = 'none';
+    document.getElementById('aba-detratores').style.display = 'block';
+    document.getElementById('nav-detratores').classList.add('active');
+    document.getElementById('nav-ra').classList.remove('active');
+  }
+}
+
+// 2. Exportação Visual (Atualize sua função exportar)
+function exportar(tipo) {
+  if (tipo === 'pdf') {
+    // Esconde a barra de botões temporariamente para não sair no print
+    const uploadBar = document.querySelector('.upload-bar');
+    uploadBar.style.display = 'none';
+    
+    const dashboard = document.getElementById('aba-ra');
+    const opt = {
+      margin:       0.3,
+      filename:     'CustomerCare_RA.pdf',
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, logging: false },
+      jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape' }
+    };
+    
+    html2pdf().set(opt).from(dashboard).save().then(() => {
+      // Devolve a barra de botões depois que o PDF for gerado
+      uploadBar.style.display = 'flex'; 
+    });
+    return;
+  }
+  
+  // Coloque aqui o resto do seu código que já exportava para CSV e XLSX
 }
 
 function downloadBlob(blob, filename) {
