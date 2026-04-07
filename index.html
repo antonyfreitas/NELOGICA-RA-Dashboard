@@ -778,30 +778,45 @@ async function confirmarExcluir(recordId, ticket) {
 }
 
 // ─── EXPORTAÇÃO E UTILITÁRIOS ─────────────────────────────────────────────────
-function showToast(msg, tipo='ok') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast ' + tipo + ' show';
-  setTimeout(() => t.classList.remove('show'), 3500);
-}
-
 function exportar(formato) {
   if (formato === 'pdf') {
     const uploadBar = document.querySelector('.upload-bar');
     uploadBar.style.display = 'none'; // esconde barra para não poluir o PDF
     
     const dashboard = document.getElementById('aba-ra');
+    
+    // Guardar os estilos originais para restaurar depois
+    const oldPadding = dashboard.style.padding;
+    const oldBg = dashboard.style.backgroundColor;
+    
+    // Ajustes visuais temporários no container apenas para a fotografia do PDF
+    dashboard.style.padding = '20px';
+    dashboard.style.backgroundColor = '#0b0f1a'; 
+
     const opt = {
-      margin:       0.3,
+      margin:       0.2,
       filename:     'CustomerCare_RA.pdf',
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, logging: false },
-      jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape' }
+      image:        { type: 'jpeg', quality: 1.0 },
+      html2canvas:  { 
+        scale: 2, 
+        useCORS: true, 
+        backgroundColor: '#0b0f1a', // Garante o fundo escuro no render
+        windowWidth: 1366 // Simula um ecrã de computador (não esmaga os cards)
+      },
+      jsPDF: { 
+        unit: 'in', 
+        format: 'a3', // Papel maior para caber o dashboard sem espremer
+        orientation: 'landscape' 
+      },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } // Evita cortes a meio
     };
     
     html2pdf().set(opt).from(dashboard).save().then(() => {
-      uploadBar.style.display = 'flex'; // volta a barra
-      showToast('✅ PDF gerado visualmente!', 'ok');
+      // Restaura o layout normal depois de exportar
+      uploadBar.style.display = 'flex';
+      dashboard.style.padding = oldPadding;
+      dashboard.style.backgroundColor = oldBg;
+      showToast('✅ PDF gerado visualmente com sucesso!', 'ok');
     });
     return;
   }
