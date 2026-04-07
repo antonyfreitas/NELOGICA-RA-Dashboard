@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Nelogica | Dashboards</title>
+<title>Nelogica | RA Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>  
@@ -28,6 +28,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 .status-dot.ok{background:var(--success);box-shadow:0 0 6px var(--success);}
 .status-dot.loading{background:var(--warning);animation:pulse 1s infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.btn-logout { background: none; border: 1px solid var(--border); color: var(--muted); padding: 6px; border-radius: 6px; font-size: 10px; font-family: var(--sans); cursor: pointer; transition: 0.2s; margin-top: 12px; width: 100%; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+.btn-logout:hover { color: var(--danger); border-color: rgba(255,77,109,.3); background: rgba(255,77,109,.05); }
 .main{margin-left:220px;padding:36px 40px;width:calc(100% - 220px);}
 .page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:32px;}
 .page-title{font-family:var(--mono);font-size:22px;font-weight:700;}
@@ -179,7 +181,8 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
 
   <div class="sidebar-status">
     <div><span class="status-dot" id="statusDot"></span><span id="statusText">Carregando...</span></div>
-    <div style="margin-top:6px;font-family:var(--mono);font-size:9px;color:#3a4560;">BOB v10.0</div>
+    <div style="margin-top:6px;font-family:var(--mono);font-size:9px;color:#3a4560;margin-bottom:12px;">BOB v10.0</div>
+    <button class="btn-logout" onclick="fazerLogout()">Sair da conta</button>
   </div>
 </div>
 
@@ -886,6 +889,12 @@ function tentarLogin() {
     document.getElementById('loginPass').value = '';
     document.getElementById('loginPass').focus();
   }
+}
+
+// Limpa a sessão e recarrega a página
+function fazerLogout() {
+  sessionStorage.removeItem(SESSION_KEY);
+  window.location.reload(); 
 }
 
 window.onload = () => {
