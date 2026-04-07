@@ -782,85 +782,90 @@ function exportar(formato) {
   if (formato === 'pdf') {
     const dashboard = document.getElementById('aba-ra');
     const uploadBar = document.querySelector('.upload-bar');
-    const kpiGrid = document.querySelector('.kpi-grid');
+    const sidebar = document.querySelector('.sidebar');
+    const main = document.querySelector('.main');
+    
     const chartsGrids = document.querySelectorAll('.charts-grid');
     const detrCards = document.querySelectorAll('.detractors-card');
 
-    // 1. Esconder a barra de botões
+    // 1. Ocultar elementos da interface que não vão para o PDF
     uploadBar.style.display = 'none';
+    sidebar.style.display = 'none';
     
-    // 2. Criar um Cabeçalho de Relatório Oficial (Apenas para o PDF)
+    // 2. Expandir a área principal para ocupar o espaço em branco da barra lateral
+    const oldMargin = main.style.marginLeft;
+    const oldWidth = main.style.width;
+    main.style.marginLeft = '0';
+    main.style.width = '100%';
+
+    // 3. Criar Cabeçalho
     const headerDiv = document.createElement('div');
-    headerDiv.id = 'pdf-header';
     headerDiv.style.textAlign = 'center';
-    headerDiv.style.marginBottom = '50px';
-    headerDiv.style.marginTop = '20px';
+    headerDiv.style.marginBottom = '40px';
     headerDiv.innerHTML = `
-      <h1 style="font-family:'Space Mono'; color:#3d7fff; font-size:28px; margin-bottom:5px;">NELO<span style="color:#00e5c3">GICA</span></h1>
-      <h2 style="font-size:18px; color:#e8edf5; font-family:'DM Sans';">Relatório de Desempenho - Customer Care</h2>
-      <p style="font-size:12px; color:#6b7a99; margin-top:8px;">Dados extraídos em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p>
+      <h1 style="font-family:'Space Mono'; color:#3d7fff; font-size:32px; margin-bottom:8px;">NELO<span style="color:#00e5c3">GICA</span></h1>
+      <h2 style="font-size:18px; color:#e8edf5; font-family:'DM Sans';">Relatório Executivo - Customer Care</h2>
+      <p style="font-size:12px; color:#6b7a99; margin-top:8px;">Data de extração: ${new Date().toLocaleString('pt-BR')}</p>
     `;
     dashboard.insertBefore(headerDiv, dashboard.firstChild);
 
-    // 3. Configurar Quebras de Página (Page Breaks)
-    // O primeiro grupo de gráficos vai forçar uma nova página (Página 2)
-    if (chartsGrids.length > 0) {
-      chartsGrids[0].style.pageBreakBefore = 'always';
-      chartsGrids[0].style.paddingTop = '30px';
-    }
+    // 4. Inserir Quebras de Página Forçadas da Biblioteca html2pdf
+    const pb1 = document.createElement('div');
+    pb1.className = 'html2pdf__page-break';
+    if (chartsGrids.length > 0) dashboard.insertBefore(pb1, chartsGrids[0]);
 
-    // O primeiro cartão de detratores vai forçar uma nova página (Página 3) e centralizar
-    if (detrCards.length > 0) {
-      detrCards[0].style.pageBreakBefore = 'always';
-    }
+    const pb2 = document.createElement('div');
+    pb2.className = 'html2pdf__page-break';
+    if (detrCards.length > 0) dashboard.insertBefore(pb2, detrCards[0]);
 
-    // Centralizar as tabelas/listas
+    // 5. Centralizar as tabelas
+    const oldCardsStyles = [];
     detrCards.forEach(card => {
-      card.style.margin = '30px auto';
-      card.style.width = '90%'; // Largura reduzida para dar margem e centralizar
+      oldCardsStyles.push({ margin: card.style.margin, width: card.style.width });
+      card.style.margin = '0 auto 30px auto';
+      card.style.width = '85%';
     });
 
-    // 4. Configuração da biblioteca para formato "Relatório A4"
+    // 6. Gerar o PDF (formato A4 Oficial)
     const opt = {
-      margin:       0.4,
-      filename:     'Relatorio_RA_Nelogica.pdf',
+      margin:       10, // Margem em mm
+      filename:     'CustomerCare_Relatorio_RA.pdf',
       image:        { type: 'jpeg', quality: 1.0 },
       html2canvas:  { 
         scale: 2, 
         useCORS: true, 
-        backgroundColor: '#0b0f1a', // Mantém o fundo dark
-        windowWidth: 1024 // Simula um monitor normal para nada ficar espremido
+        backgroundColor: '#0b0f1a', 
+        windowWidth: 1000 // Fixa a largura para organizar os gráficos a pares
       },
       jsPDF: { 
-        unit: 'in', 
-        format: 'a4', // Documento oficial A4
-        orientation: 'portrait' // Retrato (em pé)
-      },
-      pagebreak: { mode: ['css', 'legacy'] } // Avisa a biblioteca para respeitar as quebras de página
+        unit: 'mm', 
+        format: 'a4', 
+        orientation: 'portrait' 
+      }
     };
     
-    // 5. Gerar o PDF e depois restaurar o layout original da tela
     html2pdf().set(opt).from(dashboard).save().then(() => {
+      // 7. Restaurar tudo ao estado original no teu ecrã
       uploadBar.style.display = 'flex';
-      headerDiv.remove(); // Remove o título
+      sidebar.style.display = 'flex';
+      main.style.marginLeft = oldMargin;
+      main.style.width = oldWidth;
       
-      // Restaura os estilos originais
-      if (chartsGrids.length > 0) {
-        chartsGrids[0].style.pageBreakBefore = '';
-        chartsGrids[0].style.paddingTop = '';
-      }
-      detrCards.forEach(card => {
-        card.style.pageBreakBefore = '';
-        card.style.margin = '0 0 20px 0';
-        card.style.width = '100%';
+      headerDiv.remove();
+      pb1.remove();
+      pb2.remove();
+
+      detrCards.forEach((card, i) => {
+        card.style.margin = oldCardsStyles[i].margin;
+        card.style.width = oldCardsStyles[i].width;
       });
       
-      showToast('✅ Relatório PDF formatado e gerado!', 'ok');
+      showToast('✅ Relatório PDF formatado e exportado!', 'ok');
     });
     return;
   }
 
-  // --- Exportações CSV e XLSX mantidas normais abaixo ---
+  // --- Exportações CSV e XLSX ---
   if (!dadosFiltrados.length) { showToast('⚠️ Nenhum dado para exportar', 'err'); return; }
 
   const headers = ['Ticket Zendesk','ID ReclameAqui','Cliente','Produto','Categoria','Data abertura','Data resolução','Tempo resolução','Contato feito CC','Resolvido CC','Nota RA','Voltaria a Fazer Negócio', 'Ultima Alteração', 'Data Alteração'];
