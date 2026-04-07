@@ -742,9 +742,8 @@ function exportar(formato) {
 
   if (formato === 'csv') {
     const sep = ';';
-    const csvContent = [headers, ...rows].map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(sep)).join('
-');
-    const blob = new Blob(['﻿' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const csvContent = [headers, ...rows].map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(sep)).join('\n');
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
     downloadBlob(blob, 'reclame_aqui.csv');
     showToast('✅ CSV exportado!', 'ok');
   }
