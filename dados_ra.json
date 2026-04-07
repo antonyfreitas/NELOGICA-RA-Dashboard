@@ -337,7 +337,7 @@
   },
   {
     "Ticket Zendesk": 123546789,
-    "ID ReclameAqui": "",
+    "ID ReclameAqui": 23456786543,
     "Cliente": "TESTE",
     "Produto": "Profit",
     "Categoria": "Ordem",
@@ -349,6 +349,6 @@
     "Nota RA": "",
     "Voltaria a Fazer Negócio": false,
     "ultimaAlteracaoPor": "antony",
-    "dataUltimaAlteracao": "07/04/2026, 15:52:11"
+    "dataUltimaAlteracao": "07/04/2026, 15:52:19"
   }
 ]
