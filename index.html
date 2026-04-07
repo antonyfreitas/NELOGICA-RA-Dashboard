@@ -349,7 +349,7 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
 // ─── CONFIGURAÇÃO GITHUB ─────────────────────────────────────────────────────
 const GITHUB_USER  = 'antonyfreitas';
 const GITHUB_REPO  = 'NELOGICA-RA-Dashboard';
-const GITHUB_TOKEN = '__GH_TOKEN__'; // COLE SEU TOKEN AQUI!
+const GITHUB_TOKEN = '__GH_TOKEN__'; // COLE AQUI O SEU TOKEN!
 const JSON_URL     = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/dados_ra.json`;
 const API_URL      = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/dados_ra.json`;
 const API_HEADS    = { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' };
@@ -787,99 +787,136 @@ function showToast(msg, tipo='ok') {
 
 function exportar(formato) {
   if (formato === 'pdf') {
-    // 1. Rolar para o topo (MUITO IMPORTANTE para não cortar o PDF no meio)
+    // 1. Impedir cortes: O ecrã volta sempre ao topo antes da fotografia
     window.scrollTo(0, 0);
+    showToast('⏳ A desenhar o PDF Oficial...', 'loading');
     
-    // 2. Tela de carregamento preta e gigante para esconder a "mágica"
+    // 2. Tela de Carregamento Preta a cobrir tudo (esconde o processo)
     const overlay = document.createElement('div');
-    overlay.style.position = 'fixed';
-    overlay.style.inset = '0';
-    overlay.style.background = '#0b0f1a';
-    overlay.style.zIndex = '999999';
-    overlay.style.display = 'flex';
-    overlay.style.flexDirection = 'column';
-    overlay.style.alignItems = 'center';
-    overlay.style.justifyContent = 'center';
+    overlay.style.cssText = 'position:fixed;inset:0;background:#0b0f1a;z-index:999999;display:flex;align-items:center;justify-content:center;flex-direction:column;';
     overlay.innerHTML = `
       <h2 style="color:#3d7fff;font-family:'Space Mono',monospace;font-size:40px;margin-bottom:10px;">NELO<span style="color:#00e5c3">GICA</span></h2>
-      <p style="color:#e8edf5;font-family:'DM Sans',sans-serif;font-size:16px;">📸 A preparar o PDF Oficial... aguarde uns segundos.</p>
+      <p style="color:#e8edf5;font-family:'DM Sans',sans-serif;font-size:16px;">📸 A desenhar o seu PDF, aguarde uns segundos...</p>
     `;
     document.body.appendChild(overlay);
 
-    const main = document.querySelector('.main');
-    const abaRa = document.getElementById('aba-ra');
-    const sidebar = document.querySelector('.sidebar');
-    const uploadBar = document.querySelector('.upload-bar');
-
-    // 3. Salvar o layout original do seu ecrã
-    const sDisplay = sidebar.style.display;
-    const uDisplay = uploadBar.style.display;
-    const mMargin = main.style.marginLeft;
-    const mWidth = main.style.width;
-
-    // 4. Modificar layout EXCLUSIVAMENTE para a fotografia
-    sidebar.style.display = 'none'; // Some com o menu lateral
-    uploadBar.style.display = 'none'; // Some com a barra de botões
-    main.style.marginLeft = '0'; // Puxa tudo para a esquerda
-    main.style.width = '1000px'; // Força largura exata para caber perfeito na folha A4 em pé
-
-    // 5. Esconder a coluna dos lixos/lápis
-    const acoes = document.querySelectorAll('#aba-ra .mini-table th:last-child, #aba-ra .mini-table td:last-child');
-    acoes.forEach(el => el.style.display = 'none');
-
-    // 6. Criar um Cabeçalho Bonito no Topo
-    const cabecalho = document.createElement('div');
-    cabecalho.style.textAlign = 'center';
-    cabecalho.style.marginBottom = '40px';
-    cabecalho.innerHTML = `
-      <h1 style="font-family:'Space Mono'; color:#3d7fff; font-size:36px; margin-bottom:5px;">NELO<span style="color:#00e5c3">GICA</span></h1>
-      <h2 style="font-size:22px; color:#e8edf5; font-family:'DM Sans';">Relatório de Customer Care</h2>
-      <p style="font-size:12px; color:#6b7a99;">Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
-    `;
-    abaRa.insertBefore(cabecalho, abaRa.firstChild);
-
-    // 7. Forçar as Quebras de Página da Biblioteca (Page Breaks)
-    const grids = document.querySelectorAll('.charts-grid');
-    if (grids.length > 0) {
-      grids[0].classList.add('html2pdf__page-break');
-    }
+    // 3. Criar um contentor isolado e absoluto, que a biblioteca não confunde com as margens da tua janela
+    const pdfContainer = document.createElement('div');
+    // Largura exata de 1000px, preso no canto superior esquerdo para que nada fuja
+    pdfContainer.style.cssText = 'position:absolute;top:0;left:0;width:1000px;background:#0b0f1a;padding:40px;z-index:999998;box-sizing:border-box;';
     
-    const cards = document.querySelectorAll('.detractors-card');
-    if (cards.length > 0) {
-      cards[0].classList.add('html2pdf__page-break');
-    }
+    // 4. Injetar Cabeçalho
+    const header = document.createElement('div');
+    header.style.cssText = 'text-align:center;margin-bottom:40px;';
+    header.innerHTML = `
+      <h1 style="font-family:'Space Mono',monospace;color:#3d7fff;font-size:40px;margin-bottom:5px;">NELO<span style="color:#00e5c3">GICA</span></h1>
+      <h2 style="font-size:20px;color:#e8edf5;font-family:'DM Sans',sans-serif;font-weight:400;">Relatório Executivo - Customer Care</h2>
+      <p style="font-size:12px;color:#6b7a99;font-family:'DM Sans',sans-serif;">Extraído em: ${new Date().toLocaleString('pt-BR')}</p>
+    `;
+    pdfContainer.appendChild(header);
 
-    // 8. Tira a foto 📸 (espera meio segundo para o navegador pintar a tela)
+    // 5. Clonar os teus KPIs de forma exata e perfeita
+    const kpiClone = document.querySelector('.kpi-grid').cloneNode(true);
+    kpiClone.style.marginBottom = '40px'; // Espaço antes de quebrar a página
+    pdfContainer.appendChild(kpiClone);
+
+    const pb1 = document.createElement('div');
+    pb1.className = 'html2pdf__page-break';
+    pdfContainer.appendChild(pb1);
+
+    // 6. Converter os Gráficos em fotografias base64 para evitar que fiquem brancos ou bugados
+    const imgStatus = chartStatus ? chartStatus.toBase64Image() : '';
+    const imgCat = chartCategorias ? chartCategorias.toBase64Image() : '';
+    const imgProd = chartProduto ? chartProduto.toBase64Image() : '';
+    const imgTempo = chartTempo ? chartTempo.toBase64Image() : '';
+
+    const chartsDiv = document.createElement('div');
+    chartsDiv.innerHTML = `
+       <h2 style="font-size:20px;color:#e8edf5;text-align:center;margin-bottom:30px;font-family:'Space Mono',monospace;">Análise Gráfica</h2>
+       <div style="display:flex;gap:20px;margin-bottom:20px;">
+          <div style="flex:1;background:#131929;padding:25px;border-radius:12px;border:1px solid rgba(255,255,255,0.05);text-align:center;">
+             <h3 style="font-size:12px;color:#6b7a99;text-transform:uppercase;margin-bottom:20px;font-family:'DM Sans',sans-serif;font-weight:bold;">Status</h3>
+             ${imgStatus ? `<img src="${imgStatus}" style="max-height:240px;max-width:100%;">` : ''}
+          </div>
+          <div style="flex:1;background:#131929;padding:25px;border-radius:12px;border:1px solid rgba(255,255,255,0.05);text-align:center;">
+             <h3 style="font-size:12px;color:#6b7a99;text-transform:uppercase;margin-bottom:20px;font-family:'DM Sans',sans-serif;font-weight:bold;">Produto</h3>
+             ${imgProd ? `<img src="${imgProd}" style="max-height:240px;max-width:100%;">` : ''}
+          </div>
+       </div>
+       <div style="background:#131929;padding:25px;border-radius:12px;border:1px solid rgba(255,255,255,0.05);text-align:center;margin-bottom:20px;">
+             <h3 style="font-size:12px;color:#6b7a99;text-transform:uppercase;margin-bottom:20px;font-family:'DM Sans',sans-serif;font-weight:bold;">Categoria</h3>
+             ${imgCat ? `<img src="${imgCat}" style="max-height:260px;width:100%;object-fit:contain;">` : ''}
+       </div>
+       <div style="background:#131929;padding:25px;border-radius:12px;border:1px solid rgba(255,255,255,0.05);text-align:center;">
+             <h3 style="font-size:12px;color:#6b7a99;text-transform:uppercase;margin-bottom:20px;font-family:'DM Sans',sans-serif;font-weight:bold;">Tempo de Resolução</h3>
+             ${imgTempo ? `<img src="${imgTempo}" style="max-height:260px;width:100%;object-fit:contain;">` : ''}
+       </div>
+    `;
+    pdfContainer.appendChild(chartsDiv);
+
+    const pb2 = document.createElement('div');
+    pb2.className = 'html2pdf__page-break';
+    pdfContainer.appendChild(pb2);
+
+    // 7. Limpar botões de lixo/editar das tabelas antes de cloná-las
+    const tab1 = document.getElementById('tabela-sem-nota').cloneNode(true);
+    const tab2 = document.getElementById('tabela-fora-sla').cloneNode(true);
+
+    [tab1, tab2].forEach(tab => {
+         const ths = tab.querySelectorAll('th');
+         if(ths.length) ths[ths.length-1].remove(); 
+         const tds = tab.querySelectorAll('td:last-child');
+         tds.forEach(td => td.remove()); 
+    });
+
+    const badge1 = document.getElementById('badge-semNota').innerText;
+    const badge2 = document.getElementById('badge-foraSLA').innerText;
+
+    const tablesDiv = document.createElement('div');
+    tablesDiv.innerHTML = `
+       <h2 style="font-size:20px;color:#e8edf5;text-align:center;margin-bottom:30px;font-family:'Space Mono',monospace;">Detalhamento de Casos Críticos</h2>
+       <div style="background:#131929;padding:30px;border-radius:12px;border:1px solid rgba(255,255,255,0.05);margin-bottom:30px;">
+           <div style="display:flex;justify-content:space-between;margin-bottom:20px;align-items:center;">
+              <span style="font-size:14px;color:#6b7a99;font-weight:bold;text-transform:uppercase;font-family:'DM Sans',sans-serif;">⚠️ Casos Sem Nota RA</span>
+              <span style="font-size:12px;color:#ffb930;background:rgba(255,185,48,0.15);padding:4px 12px;border-radius:20px;font-weight:bold;">${badge1}</span>
+           </div>
+           ${tab1.outerHTML}
+       </div>
+       <div style="background:#131929;padding:30px;border-radius:12px;border:1px solid rgba(255,255,255,0.05);">
+           <div style="display:flex;justify-content:space-between;margin-bottom:20px;align-items:center;">
+              <span style="font-size:14px;color:#6b7a99;font-weight:bold;text-transform:uppercase;font-family:'DM Sans',sans-serif;">🔴 Casos Fora do SLA</span>
+              <span style="font-size:12px;color:#ff4d6d;background:rgba(255,77,109,0.15);padding:4px 12px;border-radius:20px;font-weight:bold;">${badge2}</span>
+           </div>
+           ${tab2.outerHTML}
+       </div>
+    `;
+    pdfContainer.appendChild(tablesDiv);
+
+    // 8. O Contentor está finalizado, vamos enviá-lo para a árvore HTML (debaixo da tela de carregamento)
+    document.body.appendChild(pdfContainer);
+
+    // Damos um fôlego de 1 segundo para as imagens base64 entrarem e não saírem em branco!
     setTimeout(() => {
-      const opt = {
-        margin:       10, // Margem de 10mm na folha toda
-        filename:     'CustomerCare_RA.pdf',
-        image:        { type: 'jpeg', quality: 1.0 },
-        html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#0b0f1a', windowWidth: 1000, scrollY: 0 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
+       const opt = {
+          margin: 10,
+          filename: 'Relatorio_CustomerCare_RA.pdf',
+          image: { type: 'jpeg', quality: 1.0 },
+          html2canvas: { scale: 2, useCORS: true, backgroundColor: '#0b0f1a', windowWidth: 1000, scrollY: 0 },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+       };
 
-      html2pdf().set(opt).from(main).save().then(() => {
-        // 9. Restaurar tudo como se nada tivesse acontecido!
-        sidebar.style.display = sDisplay;
-        uploadBar.style.display = uDisplay;
-        main.style.marginLeft = mMargin;
-        main.style.width = mWidth;
-        acoes.forEach(el => el.style.display = ''); // Traz os botões de volta
-        
-        cabecalho.remove();
-        if (grids.length > 0) grids[0].classList.remove('html2pdf__page-break');
-        if (cards.length > 0) cards[0].classList.remove('html2pdf__page-break');
-        
-        overlay.remove(); // Tira a tela preta de carregamento
-        showToast('✅ PDF exportado com sucesso!', 'ok');
-      });
-    }, 500);
+       html2pdf().set(opt).from(pdfContainer).save().then(() => {
+           // 9. Destruir as provas do crime e voltar ao estado original 🧹
+           pdfContainer.remove();
+           overlay.remove();
+           showToast('✅ O teu PDF está perfeito!', 'ok');
+       });
+    }, 1000); 
 
     return;
   }
 
-  // --- Exportações CSV e XLSX mantidas normais ---
+  // --- Exportações CSV e XLSX ---
   if (!dadosFiltrados.length) { showToast('⚠️ Nenhum dado para exportar', 'err'); return; }
 
   const headers = ['Ticket Zendesk','ID ReclameAqui','Cliente','Produto','Categoria','Data abertura','Data resolução','Tempo resolução','Contato feito CC','Resolvido CC','Nota RA','Voltaria a Fazer Negócio', 'Ultima Alteração', 'Data Alteração'];
@@ -965,7 +1002,6 @@ function tentarLogin() {
   }
 }
 
-// Limpa a sessão e recarrega a página
 function fazerLogout() {
   sessionStorage.removeItem(SESSION_KEY);
   window.location.reload(); 
