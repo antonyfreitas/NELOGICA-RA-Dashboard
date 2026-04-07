@@ -334,5 +334,21 @@
     "Voltaria a Fazer Negócio": false,
     "ultimaAlteracaoPor": "antony",
     "dataUltimaAlteracao": "07/04/2026, 15:42:19"
+  },
+  {
+    "Ticket Zendesk": 123546789,
+    "ID ReclameAqui": "",
+    "Cliente": "TESTE",
+    "Produto": "",
+    "Categoria": "Ordem",
+    "Data abertura": 46119,
+    "Data resolução": "",
+    "Tempo resolução": 0,
+    "Contato feito CC": "",
+    "Resolvido CC": false,
+    "Nota RA": "",
+    "Voltaria a Fazer Negócio": false,
+    "ultimaAlteracaoPor": "antony",
+    "dataUltimaAlteracao": "07/04/2026, 15:51:58"
   }
 ]
