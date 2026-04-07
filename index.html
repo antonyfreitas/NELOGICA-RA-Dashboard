@@ -376,9 +376,18 @@ function mudarAba(aba) {
 async function carregarDados() {
   setStatus('loading', 'Carregando...');
   try {
-    const r = await fetch(JSON_URL + '?t=' + Date.now());
+    // Busca direto da API do GitHub (API_URL) para fugir do cache de 5 minutos do Raw
+    const r = await fetch(API_URL, { 
+      headers: API_HEADS, 
+      cache: 'no-store' 
+    });
+    
     if (!r.ok) throw new Error(`Erro ${r.status}`);
-    const records = await r.json();
+    const meta = await r.json();
+    
+    // O GitHub retorna os dados da API em Base64, então precisamos decodificar:
+    const jsonString = decodeURIComponent(escape(atob(meta.content)));
+    const records = JSON.parse(jsonString);
 
     const serialParaData = (v) => {
       if (!v) return '';
@@ -388,6 +397,32 @@ async function carregarDados() {
       }
       return String(v).split('T')[0];
     };
+
+    dadosGerais = records.map((f, i) => ({
+      _id:       String(i),
+      ticket:    f['Ticket Zendesk'] || '',
+      ra:        f['ID ReclameAqui'] || '',
+      cliente:   f['Cliente'] || '',
+      produto:   f['Produto'] || '',
+      categoria: f['Categoria'] || '',
+      data:      serialParaData(f['Data abertura']),
+      dataRes:   serialParaData(f['Data resolução']),
+      tempo:     f['Tempo resolução'] ?? '',
+      contato:   f['Contato feito CC'] || '',
+      resolvido: (f['Resolvido CC'] === true || String(f['Resolvido CC']).toUpperCase() === 'TRUE') ? 'True' : 'False',
+      nota:      f['Nota RA'] ?? '',
+      voltaria:  (f['Voltaria a Fazer Negócio'] === true || String(f['Voltaria a Fazer Negócio']).toUpperCase() === 'TRUE') ? 'True' : 'False',
+      ultimaAlteracaoPor: f['ultimaAlteracaoPor'] || '',
+      dataUltimaAlteracao: f['dataUltimaAlteracao'] || ''
+    }));
+
+    setStatus('ok', `${dadosGerais.length} registros`);
+    processarDados();
+  } catch(e) {
+    setStatus('err', 'Erro ao carregar');
+    showToast('❌ Erro ao carregar dados: ' + e.message, 'err');
+  }
+};
 
     dadosGerais = records.map((f, i) => ({
       _id:       String(i),
