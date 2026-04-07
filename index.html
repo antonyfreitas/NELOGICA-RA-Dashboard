@@ -349,7 +349,7 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
 // ─── CONFIGURAÇÃO GITHUB ─────────────────────────────────────────────────────
 const GITHUB_USER  = 'antonyfreitas';
 const GITHUB_REPO  = 'NELOGICA-RA-Dashboard';
-const GITHUB_TOKEN = '__GH_TOKEN__'; // COLE O SEU TOKEN AQUI!
+const GITHUB_TOKEN = '__GH_TOKEN__'; // COLE SEU TOKEN AQUI!
 const JSON_URL     = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/dados_ra.json`;
 const API_URL      = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/dados_ra.json`;
 const API_HEADS    = { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' };
@@ -787,146 +787,99 @@ function showToast(msg, tipo='ok') {
 
 function exportar(formato) {
   if (formato === 'pdf') {
-    showToast('⏳ A gerar o PDF, aguarde...', 'loading');
+    // 1. Rolar para o topo (MUITO IMPORTANTE para não cortar o PDF no meio)
+    window.scrollTo(0, 0);
     
-    // 1. Extrair Valores dos KPIs
-    const tot = document.getElementById('kpi-total').innerText;
-    const res = document.getElementById('kpi-resolvidos').innerText;
-    const sla = document.getElementById('kpi-sla').innerText;
-    const tempo = document.getElementById('kpi-tempo').innerText;
-    
-    // 2. Extrair Imagens (Base64) dos Gráficos gerados
-    const imgStatus = chartStatus ? chartStatus.toBase64Image() : '';
-    const imgCat = chartCategorias ? chartCategorias.toBase64Image() : '';
-    const imgProd = chartProduto ? chartProduto.toBase64Image() : '';
-    const imgTempo = chartTempo ? chartTempo.toBase64Image() : '';
-
-    // 3. Preparar as Tabelas removendo a coluna de ações (botões editar/excluir)
-    const tabSemNotaContainer = document.getElementById('tabela-sem-nota').cloneNode(true);
-    const tabForaSlaContainer = document.getElementById('tabela-fora-sla').cloneNode(true);
-    
-    [tabSemNotaContainer, tabForaSlaContainer].forEach(container => {
-      const ths = container.querySelectorAll('th');
-      if (ths.length > 0) ths[ths.length - 1].remove();
-      const trs = container.querySelectorAll('tbody tr');
-      trs.forEach(tr => {
-        const tds = tr.querySelectorAll('td');
-        if (tds.length > 0) tds[tds.length - 1].remove();
-      });
-    });
-
-    const badgeSemNota = document.getElementById('badge-semNota').innerText;
-    const badgeForaSLA = document.getElementById('badge-foraSLA').innerText;
-
-    // 4. Montar a String HTML do PDF isolada do ecrã
-    const pdfHTML = `
-      <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
-        * { box-sizing: border-box; }
-        body { margin: 0; padding: 0; background-color: #0b0f1a; }
-        .mini-table { width: 100%; border-collapse: collapse; font-family: 'DM Sans', sans-serif; color: #e8edf5; }
-        .mini-table th { font-size: 11px; color: #6b7a99; text-transform: uppercase; letter-spacing: .1em; padding: 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .mini-table td { font-size: 12px; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
-        .zendesk-link { font-family: 'Space Mono', monospace; background: rgba(61,127,255,.15); color: #3d7fff; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 11px; font-weight: 700; }
-        .sla-ok { color: #00e5c3; font-family: 'Space Mono', monospace; font-size: 12px; font-weight: 700; }
-        .sla-bad { color: #ff4d6d; font-family: 'Space Mono', monospace; font-size: 12px; font-weight: 700; }
-        .chip { display: inline-block; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; background: rgba(61,127,255,.12); color: #7aabff; }
-        .chip.profit { background: rgba(0,229,195,.1); color: #00e5c3; }
-        .chip.blackarrow { background: rgba(255,185,48,.1); color: #ffb930; }
-        .chip.akeloo { background: rgba(255,77,109,.1); color: #ff4d6d; }
-        .empty-state { text-align: center; padding: 40px 20px; color: #6b7a99; font-family: 'DM Sans', sans-serif; }
-      </style>
-
-      <div style="background-color:#0b0f1a; color:#e8edf5; font-family:'DM Sans', sans-serif; padding:40px; width:1000px; margin:0 auto;">
-        
-        <div style="text-align:center; margin-bottom: 50px;">
-          <h1 style="font-family:'Space Mono', monospace; color:#3d7fff; font-size:42px; margin-bottom:5px;">NELO<span style="color:#00e5c3">GICA</span></h1>
-          <h2 style="font-size:24px; color:#e8edf5; font-weight:normal; margin-bottom:10px;">Relatório de Customer Care</h2>
-          <p style="font-size:14px; color:#6b7a99;">Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
-        </div>
-        
-        <div style="display:flex; justify-content:space-between; margin-bottom:25px;">
-          <div style="width:48%; background:#131929; border:1px solid rgba(255,255,255,0.07); padding:30px; border-radius:12px; border-top:4px solid #3d7fff;">
-            <div style="font-size:14px; color:#6b7a99; text-transform:uppercase; margin-bottom:10px; font-weight:bold;">Total de Casos</div>
-            <div style="font-size:42px; font-family:'Space Mono', monospace; font-weight:bold;">${tot}</div>
-          </div>
-          <div style="width:48%; background:#131929; border:1px solid rgba(255,255,255,0.07); padding:30px; border-radius:12px; border-top:4px solid #00e5c3;">
-            <div style="font-size:14px; color:#6b7a99; text-transform:uppercase; margin-bottom:10px; font-weight:bold;">Resolvidos CC</div>
-            <div style="font-size:42px; font-family:'Space Mono', monospace; font-weight:bold; color:#00e5c3;">${res}</div>
-          </div>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:50px;">
-          <div style="width:48%; background:#131929; border:1px solid rgba(255,255,255,0.07); padding:30px; border-radius:12px; border-top:4px solid #00e5c3;">
-            <div style="font-size:14px; color:#6b7a99; text-transform:uppercase; margin-bottom:10px; font-weight:bold;">Dentro SLA (5d)</div>
-            <div style="font-size:42px; font-family:'Space Mono', monospace; font-weight:bold; color:#00e5c3;">${sla}</div>
-          </div>
-          <div style="width:48%; background:#131929; border:1px solid rgba(255,255,255,0.07); padding:30px; border-radius:12px; border-top:4px solid #ffb930;">
-            <div style="font-size:14px; color:#6b7a99; text-transform:uppercase; margin-bottom:10px; font-weight:bold;">Média de Dias</div>
-            <div style="font-size:42px; font-family:'Space Mono', monospace; font-weight:bold; color:#ffb930;">${tempo}</div>
-          </div>
-        </div>
-
-        <div style="page-break-before: always; padding-top: 20px;"></div>
-        <h2 style="font-size:24px; color:#e8edf5; text-align:center; margin-bottom:40px; font-family:'Space Mono', monospace;">Análise Gráfica</h2>
-        
-        <div style="display:flex; justify-content:space-between; margin-bottom:25px;">
-          <div style="width:48%; background:#131929; padding:25px; border-radius:12px; border:1px solid rgba(255,255,255,0.07); text-align:center;">
-             <h3 style="font-size:14px; color:#6b7a99; text-transform:uppercase; margin-bottom:20px; font-weight:bold;">Status dos Casos</h3>
-             ${imgStatus ? `<img src="${imgStatus}" style="width:100%; height:auto;" />` : ''}
-          </div>
-          <div style="width:48%; background:#131929; padding:25px; border-radius:12px; border:1px solid rgba(255,255,255,0.07); text-align:center;">
-             <h3 style="font-size:14px; color:#6b7a99; text-transform:uppercase; margin-bottom:20px; font-weight:bold;">Casos por Produto</h3>
-             ${imgProd ? `<img src="${imgProd}" style="width:100%; height:auto;" />` : ''}
-          </div>
-        </div>
-
-        <div style="background:#131929; padding:25px; border-radius:12px; border:1px solid rgba(255,255,255,0.07); text-align:center; margin-bottom:25px;">
-           <h3 style="font-size:14px; color:#6b7a99; text-transform:uppercase; margin-bottom:20px; font-weight:bold;">Casos por Categoria</h3>
-           ${imgCat ? `<img src="${imgCat}" style="width:100%; height:auto; max-height:300px; object-fit:contain;" />` : ''}
-        </div>
-
-        <div style="background:#131929; padding:25px; border-radius:12px; border:1px solid rgba(255,255,255,0.07); text-align:center;">
-           <h3 style="font-size:14px; color:#6b7a99; text-transform:uppercase; margin-bottom:20px; font-weight:bold;">Tempo de Resolução</h3>
-           ${imgTempo ? `<img src="${imgTempo}" style="width:100%; height:auto; max-height:300px; object-fit:contain;" />` : ''}
-        </div>
-
-        <div style="page-break-before: always; padding-top: 20px;"></div>
-        <h2 style="font-size:24px; color:#e8edf5; text-align:center; margin-bottom:40px; font-family:'Space Mono', monospace;">Detalhamento de Casos Críticos</h2>
-        
-        <div style="width:100%; margin:0 auto 40px auto; background:#131929; padding:30px; border-radius:12px; border:1px solid rgba(255,255,255,0.07);">
-          <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
-             <h3 style="font-size:14px; color:#6b7a99; text-transform:uppercase; font-weight:bold; margin:0;">⚠️ Casos sem nota RA</h3>
-             <span style="font-size:12px; padding:4px 12px; background:rgba(255,185,48,.15); color:#ffb930; border-radius:20px; font-weight:bold;">${badgeSemNota}</span>
-          </div>
-          ${tabSemNotaContainer.innerHTML}
-        </div>
-
-        <div style="width:100%; margin:0 auto; background:#131929; padding:30px; border-radius:12px; border:1px solid rgba(255,255,255,0.07);">
-          <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
-             <h3 style="font-size:14px; color:#6b7a99; text-transform:uppercase; font-weight:bold; margin:0;">🔴 Casos fora do SLA (>5 dias)</h3>
-             <span style="font-size:12px; padding:4px 12px; background:rgba(255,77,109,.15); color:#ff4d6d; border-radius:20px; font-weight:bold;">${badgeForaSLA}</span>
-          </div>
-          ${tabForaSlaContainer.innerHTML}
-        </div>
-
-      </div>
+    // 2. Tela de carregamento preta e gigante para esconder a "mágica"
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.inset = '0';
+    overlay.style.background = '#0b0f1a';
+    overlay.style.zIndex = '999999';
+    overlay.style.display = 'flex';
+    overlay.style.flexDirection = 'column';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.innerHTML = `
+      <h2 style="color:#3d7fff;font-family:'Space Mono',monospace;font-size:40px;margin-bottom:10px;">NELO<span style="color:#00e5c3">GICA</span></h2>
+      <p style="color:#e8edf5;font-family:'DM Sans',sans-serif;font-size:16px;">📸 A preparar o PDF Oficial... aguarde uns segundos.</p>
     `;
+    document.body.appendChild(overlay);
 
-    // 5. Configurar e Gerar usando a string diretamente
-    const opt = {
-      margin:       [10, 0, 10, 0], // Margem no topo e fundo do PDF
-      filename:     'CustomerCare_RA.pdf',
-      image:        { type: 'jpeg', quality: 1.0 },
-      html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#0b0f1a', windowWidth: 1000 },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
+    const main = document.querySelector('.main');
+    const abaRa = document.getElementById('aba-ra');
+    const sidebar = document.querySelector('.sidebar');
+    const uploadBar = document.querySelector('.upload-bar');
+
+    // 3. Salvar o layout original do seu ecrã
+    const sDisplay = sidebar.style.display;
+    const uDisplay = uploadBar.style.display;
+    const mMargin = main.style.marginLeft;
+    const mWidth = main.style.width;
+
+    // 4. Modificar layout EXCLUSIVAMENTE para a fotografia
+    sidebar.style.display = 'none'; // Some com o menu lateral
+    uploadBar.style.display = 'none'; // Some com a barra de botões
+    main.style.marginLeft = '0'; // Puxa tudo para a esquerda
+    main.style.width = '1000px'; // Força largura exata para caber perfeito na folha A4 em pé
+
+    // 5. Esconder a coluna dos lixos/lápis
+    const acoes = document.querySelectorAll('#aba-ra .mini-table th:last-child, #aba-ra .mini-table td:last-child');
+    acoes.forEach(el => el.style.display = 'none');
+
+    // 6. Criar um Cabeçalho Bonito no Topo
+    const cabecalho = document.createElement('div');
+    cabecalho.style.textAlign = 'center';
+    cabecalho.style.marginBottom = '40px';
+    cabecalho.innerHTML = `
+      <h1 style="font-family:'Space Mono'; color:#3d7fff; font-size:36px; margin-bottom:5px;">NELO<span style="color:#00e5c3">GICA</span></h1>
+      <h2 style="font-size:22px; color:#e8edf5; font-family:'DM Sans';">Relatório de Customer Care</h2>
+      <p style="font-size:12px; color:#6b7a99;">Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
+    `;
+    abaRa.insertBefore(cabecalho, abaRa.firstChild);
+
+    // 7. Forçar as Quebras de Página da Biblioteca (Page Breaks)
+    const grids = document.querySelectorAll('.charts-grid');
+    if (grids.length > 0) {
+      grids[0].classList.add('html2pdf__page-break');
+    }
     
-    html2pdf().set(opt).from(pdfHTML).save().then(() => {
-      showToast('✅ PDF gerado com sucesso!', 'ok');
-    });
+    const cards = document.querySelectorAll('.detractors-card');
+    if (cards.length > 0) {
+      cards[0].classList.add('html2pdf__page-break');
+    }
+
+    // 8. Tira a foto 📸 (espera meio segundo para o navegador pintar a tela)
+    setTimeout(() => {
+      const opt = {
+        margin:       10, // Margem de 10mm na folha toda
+        filename:     'CustomerCare_RA.pdf',
+        image:        { type: 'jpeg', quality: 1.0 },
+        html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#0b0f1a', windowWidth: 1000, scrollY: 0 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(main).save().then(() => {
+        // 9. Restaurar tudo como se nada tivesse acontecido!
+        sidebar.style.display = sDisplay;
+        uploadBar.style.display = uDisplay;
+        main.style.marginLeft = mMargin;
+        main.style.width = mWidth;
+        acoes.forEach(el => el.style.display = ''); // Traz os botões de volta
+        
+        cabecalho.remove();
+        if (grids.length > 0) grids[0].classList.remove('html2pdf__page-break');
+        if (cards.length > 0) cards[0].classList.remove('html2pdf__page-break');
+        
+        overlay.remove(); // Tira a tela preta de carregamento
+        showToast('✅ PDF exportado com sucesso!', 'ok');
+      });
+    }, 500);
+
     return;
   }
 
+  // --- Exportações CSV e XLSX mantidas normais ---
   if (!dadosFiltrados.length) { showToast('⚠️ Nenhum dado para exportar', 'err'); return; }
 
   const headers = ['Ticket Zendesk','ID ReclameAqui','Cliente','Produto','Categoria','Data abertura','Data resolução','Tempo resolução','Contato feito CC','Resolvido CC','Nota RA','Voltaria a Fazer Negócio', 'Ultima Alteração', 'Data Alteração'];
@@ -1012,6 +965,7 @@ function tentarLogin() {
   }
 }
 
+// Limpa a sessão e recarrega a página
 function fazerLogout() {
   sessionStorage.removeItem(SESSION_KEY);
   window.location.reload(); 
