@@ -321,9 +321,9 @@
   },
   {
     "Ticket Zendesk": 3212253,
-    "ID ReclameAqui": 245360915,
+    "ID ReclameAqui": "",
     "Cliente": "FERNANDA DE MIRANDA CLIMACO",
-    "Produto": "Profit",
+    "Produto": "",
     "Categoria": "Ordem",
     "Data abertura": 46119,
     "Data resolução": "",
@@ -333,6 +333,6 @@
     "Nota RA": "",
     "Voltaria a Fazer Negócio": false,
     "ultimaAlteracaoPor": "antony",
-    "dataUltimaAlteracao": "07/04/2026, 15:38:07"
+    "dataUltimaAlteracao": "07/04/2026, 15:38:58"
   }
 ]
