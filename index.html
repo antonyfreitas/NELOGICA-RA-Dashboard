@@ -943,4 +943,104 @@ function exportar(formato) {
   if (formato === 'csv') {
     const sep = ';';
     const csvContent = [headers, ...rows].map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(sep)).join('\n');
-    const blob = new Blob(['\uFEFF' + csv
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    downloadBlob(blob, 'reclame_aqui.csv');
+    showToast('✅ CSV exportado!', 'ok');
+  } else if (formato === 'xlsx') {
+    let xml = `<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Reclame Aqui"><Table>`;
+    const allRows = [headers, ...rows];
+    allRows.forEach(row => {
+      xml += '<Row>';
+      row.forEach(cell => {
+        const v = String(cell ?? '');
+        const type = !isNaN(v) && v !== '' ? 'Number' : 'String';
+        xml += `<Cell><Data ss:Type="${type}">${v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</Data></Cell>`;
+      });
+      xml += '</Row>';
+    });
+    xml += '</Table></Worksheet></Workbook>';
+    const blob = new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    downloadBlob(blob, 'reclame_aqui.xls');
+    showToast('✅ XLSX exportado!', 'ok');
+  }
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ─── LOGIN & INICIALIZAÇÃO ────────────────────────────────────────────────────
+const USUARIOS = [
+  { user: 'antony',  senha: 'nelogica2026' },
+  { user: 'suporte', senha: 'ra@2026'      },
+  { user: 'lider',   senha: 'gestao@2026'  },
+];
+const SESSION_KEY = 'ra_dash_auth';
+const SESSION_TTL = 8 * 60 * 60 * 1000;
+
+function verificarSessao() {
+  try {
+    const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
+    if (s && Date.now() - s.ts < SESSION_TTL) {
+      document.getElementById('loginScreen').classList.add('hidden');
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+function tentarLogin() {
+  const user  = document.getElementById('loginUser').value.trim().toLowerCase();
+  const senha = document.getElementById('loginPass').value;
+  const err   = document.getElementById('loginErr');
+
+  const match = USUARIOS.find(u => u.user === user && u.senha === senha);
+  if (match) {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user, ts: Date.now() }));
+    document.getElementById('loginScreen').classList.add('hidden');
+    carregarDados();
+    err.textContent = '';
+  } else {
+    err.textContent = 'Usuário ou senha incorretos.';
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginPass').focus();
+  }
+}
+
+function fazerLogout() {
+  sessionStorage.removeItem(SESSION_KEY);
+  window.location.reload(); 
+}
+
+window.onload = () => {
+  if (verificarSessao()) carregarDados();
+  setInterval(() => { if (verificarSessao()) carregarDados(); }, 120000);
+};
+</script>
+
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">NELO<span>GICA</span></div>
+    <div class="login-sub">RA Dashboard</div>
+    <div class="login-title">Acesso restrito — faça login para continuar</div>
+    <div class="login-field">
+      <label>Usuário</label>
+      <input type="text" id="loginUser" placeholder="seu usuário" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
+    </div>
+    <div class="login-field">
+      <label>Senha</label>
+      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')tentarLogin()">
+    </div>
+    <button class="login-btn" onclick="tentarLogin()">Entrar →</button>
+    <div class="login-err" id="loginErr"></div>
+    <div class="login-footer">Nelogica · v10.0 · 2026</div>
+  </div>
+</div>
+
+</body>
+</html>
