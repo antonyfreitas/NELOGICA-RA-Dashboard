@@ -125,6 +125,41 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
 .kpi-card:nth-child(2){animation-delay:.1s;}
 .kpi-card:nth-child(3){animation-delay:.15s;}
 .kpi-card:nth-child(4){animation-delay:.2s;}
+
+/* ===== LOGIN ===== */
+#loginScreen {
+  position:fixed; inset:0; z-index:99999;
+  background:var(--bg);
+  display:flex; align-items:center; justify-content:center;
+}
+#loginScreen.hidden { display:none; }
+.login-box {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:16px; padding:48px 40px; width:380px;
+  box-shadow:0 24px 60px rgba(0,0,0,0.6);
+  display:flex; flex-direction:column; align-items:center; gap:0;
+}
+.login-logo { font-family:var(--mono); font-size:18px; color:var(--accent); margin-bottom:4px; }
+.login-logo span { color:var(--accent2); }
+.login-sub { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.12em; margin-bottom:36px; }
+.login-title { font-size:13px; color:var(--muted); margin-bottom:20px; }
+.login-field { width:100%; display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+.login-field label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; font-weight:600; }
+.login-field input {
+  background:var(--surface2); border:1px solid var(--border); color:var(--text);
+  padding:10px 14px; border-radius:8px; font-size:14px; font-family:var(--sans);
+  transition:.2s; outline:none; width:100%;
+}
+.login-field input:focus { border-color:var(--accent); }
+.login-btn {
+  width:100%; background:var(--accent); color:white; border:none;
+  padding:12px; border-radius:8px; font-size:13px; font-family:var(--sans);
+  font-weight:700; cursor:pointer; transition:.2s; margin-top:8px;
+  letter-spacing:.04em;
+}
+.login-btn:hover { background:#5a91ff; transform:translateY(-1px); }
+.login-err { font-size:12px; color:var(--danger); margin-top:8px; min-height:18px; text-align:center; }
+.login-footer { font-size:10px; color:#3a4560; margin-top:28px; }
 </style>
 </head>
 <body>
@@ -754,7 +789,28 @@ function exportar(formato) {
           <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
           <tbody>${tableRows}</tbody>
         </table>
-      </body></html>`);
+      
+<!-- ===== TELA DE LOGIN ===== -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">NELO<span>GICA</span></div>
+    <div class="login-sub">RA Dashboard</div>
+    <div class="login-title">Acesso restrito — faça login para continuar</div>
+    <div class="login-field">
+      <label>Usuário</label>
+      <input type="text" id="loginUser" placeholder="seu usuário" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
+    </div>
+    <div class="login-field">
+      <label>Senha</label>
+      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')tentarLogin()">
+    </div>
+    <button class="login-btn" onclick="tentarLogin()">Entrar →</button>
+    <div class="login-err" id="loginErr"></div>
+    <div class="login-footer">Nelogica · v10.0 · 2026</div>
+  </div>
+</div>
+
+</body></html>`);
     win.document.close();
     win.print();
     showToast('✅ PDF gerado!', 'ok');
@@ -771,9 +827,54 @@ function downloadBlob(blob, filename) {
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
+
+// ===== LOGIN =====
+// Credenciais — edite à vontade. Pode adicionar mais usuários no array.
+const USUARIOS = [
+  { user: 'antony',  senha: 'nelogica2026' },
+  { user: 'suporte', senha: 'ra@2026'      },
+  { user: 'lider',   senha: 'gestao@2026'  },
+];
+const SESSION_KEY = 'ra_dash_auth';
+const SESSION_TTL = 8 * 60 * 60 * 1000; // 8 horas em ms
+
+function verificarSessao() {
+  try {
+    const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
+    if (s && Date.now() - s.ts < SESSION_TTL) {
+      document.getElementById('loginScreen').classList.add('hidden');
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+function tentarLogin() {
+  const user  = document.getElementById('loginUser').value.trim().toLowerCase();
+  const senha = document.getElementById('loginPass').value;
+  const err   = document.getElementById('loginErr');
+
+  const match = USUARIOS.find(u => u.user === user && u.senha === senha);
+  if (match) {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user, ts: Date.now() }));
+    document.getElementById('loginScreen').classList.add('hidden');
+    carregarDados();
+    err.textContent = '';
+  } else {
+    err.textContent = 'Usuário ou senha incorretos.';
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginPass').focus();
+  }
+}
+
 window.onload = () => {
-  carregarDados();
-  setInterval(carregarDados, 120000);
+  // Só carrega dados se já estiver autenticado
+  if (verificarSessao()) {
+    carregarDados();
+  }
+  setInterval(() => {
+    if (verificarSessao()) carregarDados();
+  }, 120000);
 };
 </script>
 </body>
