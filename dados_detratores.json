@@ -451,7 +451,7 @@
     "data_atuacao": "N/A",
     "status_recuperacao": "Pendente",
     "satisfacao_pos_contato": "N/A",
-    "is_case": true
+    "is_case": false
   },
   {
     "ticket_detracao": "3211057",
