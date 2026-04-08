@@ -611,31 +611,96 @@ function renderTabelaAcaoDetratores(listaFiltrada) {
   
   const cont = document.getElementById('tabela-acao-detratores');
   if (!lista.length) { 
-    cont.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-text">Excelente! Sem casos críticos pendentes neste período.</div></div>'; 
+    cont.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-text">Excelente! Sem casos críticos pendentes.</div></div>'; 
     return; 
   }
 
-  const linhas = lista.map(d => {
+  const linhas = lista.map((d, index) => {
     const linkTicket = d.ticket_detracao.includes('http') ? d.ticket_detracao : `https://nelogica.zendesk.com/agent/tickets/${d.ticket_detracao}`;
     const tkDisplay = d.ticket_detracao.match(/\d+/) ? `#${d.ticket_detracao.match(/\d+/)[0]}` : 'Ver Ticket';
+    const recStatus = d.status_recuperacao === 'Recuperado' ? '🟩' : d.status_recuperacao === 'Perdido' ? '🟥' : '🟨';
+    const caseEstrela = d.is_case === true ? '⭐ ' : '';
+    
+    // O ID pode ser o próprio índice ou um campo _id se existir
+    const idUnico = d._id || d.ticket_detracao; 
     
     return `<tr>
-      <td><a href="${linkTicket}" target="_blank" class="zendesk-link">${tkDisplay}</a></td>
+      <td><a href="${linkTicket}" target="_blank" class="zendesk-link">${caseEstrela}${tkDisplay}</a></td>
       <td>${d.data_detracao || '—'}</td>
       <td style="font-weight:600">${d.agente_responsavel ? d.agente_responsavel.split('@')[0] : '—'}</td>
       <td>${isNotNA(d.lider_responsavel) ? `<span class="chip">${d.lider_responsavel}</span>` : '—'}</td>
-      <td style="font-size:11px; max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${d.comentario_cliente || ''}">${d.comentario_cliente || 'Sem comentário'}</td>
-      <td style="text-align:center">${String(d.necessario_atuacao).toUpperCase() === 'SIM' ? '🚨' : '—'}</td>
+      <td style="font-size:11px; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${d.comentarios_qa || ''}">${d.comentarios_qa || 'Sem comentário'}</td>
+      <td title="Status: ${d.status_recuperacao || 'Pendente'}">${recStatus}</td>
+      <td><button class="btn-edit-row" onclick="abrirModalEditarDetrator('${idUnico}')">✏</button></td>
     </tr>`;
   }).join('');
 
   cont.innerHTML = `
     <table class="mini-table">
       <thead>
-        <tr><th>Zendesk</th><th>Data</th><th>Agente</th><th>Líder Resp.</th><th>Comentário Cliente</th><th>Atuar?</th></tr>
+        <tr><th>Zendesk</th><th>Data</th><th>Agente</th><th>Líder Resp.</th><th>Comentários QA</th><th>Status</th><th>Atuar</th></tr>
       </thead>
       <tbody>${linhas}</tbody>
     </table>`;
+}
+
+// === FUNÇÕES DO MODAL DE DETRATORES ===
+function abrirModalEditarDetrator(idUnico) {
+  // Encontra o registo pelo ticket_detracao (ou _id)
+  const d = dadosDetratores.find(x => x._id === idUnico || x.ticket_detracao === idUnico);
+  if (!d) { showToast('Erro: Registo não encontrado', 'err'); return; }
+  
+  document.getElementById('edDetRecordId').value = idUnico;
+  document.getElementById('edDetTicket').innerText = '#' + (d.ticket_detracao.match(/\d+/) ? d.ticket_detracao.match(/\d+/)[0] : 'Ticket');
+  
+  document.getElementById('edDetLider').value = d.lider_responsavel && d.lider_responsavel !== 'N/A' ? d.lider_responsavel : '';
+  document.getElementById('edDetDataAtuacao').value = d.data_atuacao && d.data_atuacao !== 'N/A' ? d.data_atuacao : '';
+  document.getElementById('edDetStatusRec').value = d.status_recuperacao && d.status_recuperacao !== 'N/A' ? d.status_recuperacao : 'Pendente';
+  document.getElementById('edDetSatisfacao').value = d.satisfacao_pos_contato && d.satisfacao_pos_contato !== 'N/A' ? d.satisfacao_pos_contato : '';
+  document.getElementById('edDetComentarios').value = d.comentarios_qa && d.comentarios_qa !== 'N/A' ? d.comentarios_qa : '';
+  document.getElementById('edDetIsCase').checked = d.is_case === true;
+  
+  document.getElementById('modalEditarDetrator').classList.add('open');
+}
+
+function fecharModalEditarDetrator() {
+  document.getElementById('modalEditarDetrator').classList.remove('open');
+}
+
+async function salvarEdicaoDetrator() {
+  const idUnico = document.getElementById('edDetRecordId').value;
+  const idx = dadosDetratores.findIndex(x => x._id === idUnico || x.ticket_detracao === idUnico);
+  if (idx === -1) return;
+
+  // Atualiza os dados locais
+  dadosDetratores[idx].lider_responsavel = document.getElementById('edDetLider').value || 'N/A';
+  dadosDetratores[idx].data_atuacao = document.getElementById('edDetDataAtuacao').value || 'N/A';
+  dadosDetratores[idx].status_recuperacao = document.getElementById('edDetStatusRec').value;
+  dadosDetratores[idx].satisfacao_pos_contato = document.getElementById('edDetSatisfacao').value || 'N/A';
+  dadosDetratores[idx].comentarios_qa = document.getElementById('edDetComentarios').value || 'N/A';
+  dadosDetratores[idx].is_case = document.getElementById('edDetIsCase').checked;
+
+  try {
+    showToast('⏳ A guardar alterações...', 'ok');
+    
+    // Função para fazer PUT no GitHub (usa a mesma lógica do RA, mas para o ficheiro dos detratores)
+    const metaR = await fetch(URL_DETRATORES, { headers: API_HEADS });
+    const meta = await metaR.json();
+    const body = {
+      message: 'Atualização de Atuação (Via Dashboard)',
+      content: btoa(unescape(encodeURIComponent(JSON.stringify(dadosDetratores, null, 2)))),
+      sha: meta.sha
+    };
+    
+    const r = await fetch(URL_DETRATORES, { method: 'PUT', headers: API_HEADS, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error(`Erro HTTP: ${r.status}`);
+    
+    fecharModalEditarDetrator();
+    showToast('✅ Atuação registada com sucesso!', 'ok');
+    processarPainelDetratores(); // Recarrega os gráficos
+  } catch(e) {
+    showToast('❌ Erro ao guardar: ' + e.message, 'err');
+  }
 }
 
 // ─── LÓGICA: RECLAME AQUI ─────────────────────────────────────────────────────
@@ -1209,6 +1274,41 @@ window.onload = () => {
     <button class="login-btn" onclick="tentarLogin()">Entrar →</button>
     <div class="login-err" id="loginErr"></div>
     <div class="login-footer">Nelogica · Customer Care · v11.0 · 2026</div>
+  </div>
+</div>
+
+  <div id="modalEditarDetrator" class="edit-modal" onclick="if(event.target===this)fecharModalEditarDetrator()">
+  <div class="edit-box">
+    <h3>✏️ Atuação no Detrator <span id="edDetTicket"></span></h3>
+    <input type="hidden" id="edDetRecordId">
+    <div class="edit-grid">
+      <div class="ef"><label>Líder Responsável</label><input id="edDetLider" type="text"></div>
+      <div class="ef"><label>Data de Atuação</label><input id="edDetDataAtuacao" type="date"></div>
+      
+      <div class="ef"><label>Status da Recuperação</label>
+        <select id="edDetStatusRec">
+          <option value="Pendente">Pendente</option>
+          <option value="Recuperado">Recuperado (Sucesso)</option>
+          <option value="Perdido">Perdido (Não revertido)</option>
+          <option value="Neutro">Neutro / Apenas Contato</option>
+        </select>
+      </div>
+      <div class="ef"><label>Satisfação Pós-Contato (1 a 5)</label><input id="edDetSatisfacao" type="number" min="1" max="5"></div>
+      
+      <div class="ef" style="grid-column: span 2;">
+        <label>Comentários da Atuação (QA / Líder)</label>
+        <textarea id="edDetComentarios" rows="3" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:7px;font-family:var(--sans);width:100%;resize:none;"></textarea>
+      </div>
+      
+      <div class="ef" style="flex-direction: row; align-items: center; gap: 10px; grid-column: span 2; margin-top: 10px;">
+        <input type="checkbox" id="edDetIsCase" style="width: 18px; height: 18px; accent-color: var(--accent);">
+        <label for="edDetIsCase" style="font-size: 12px; color: var(--accent2);">⭐ Marcar como Case de Destaque (Impactante)</label>
+      </div>
+    </div>
+    <div class="edit-actions">
+      <button class="btn-cancel-edit" onclick="fecharModalEditarDetrator()">Cancelar</button>
+      <button class="btn-save-edit" onclick="salvarEdicaoDetrator()">💾 Salvar Atuação</button>
+    </div>
   </div>
 </div>
 
