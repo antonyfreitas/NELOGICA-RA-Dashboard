@@ -2,10 +2,10 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Nelogica | RA Dashboard</title>
+<title>Nelogica | Customer Care</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>  
 <style>
 :root {
   --bg:#0b0f1a;--surface:#131929;--surface2:#1a2236;--border:rgba(255,255,255,0.07);
@@ -28,14 +28,17 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 .status-dot.ok{background:var(--success);box-shadow:0 0 6px var(--success);}
 .status-dot.loading{background:var(--warning);animation:pulse 1s infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
-.btn-logout { background: none; border: 1px solid var(--border); color: var(--muted); padding: 6px; border-radius: 6px; font-size: 10px; font-family: var(--sans); cursor: pointer; transition: 0.2s; margin-top: 12px; width: 100%; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
-.btn-logout:hover { color: var(--danger); border-color: rgba(255,77,109,.3); background: rgba(255,77,109,.05); }
 .main{margin-left:220px;padding:36px 40px;width:calc(100% - 220px);}
+/* PAGES */
+.page{display:none;}
+.page.active{display:block;}
+/* PAGE HEADER */
 .page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:32px;}
 .page-title{font-family:var(--mono);font-size:22px;font-weight:700;}
 .page-title span{color:var(--accent2);}
 .page-subtitle{font-size:12px;color:var(--muted);margin-top:4px;}
 .version-tag{font-family:var(--mono);font-size:10px;color:var(--muted);background:var(--surface2);padding:4px 10px;border-radius:20px;border:1px solid var(--border);}
+/* TOOLBAR */
 .upload-bar{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 22px;display:flex;align-items:center;gap:20px;margin-bottom:24px;flex-wrap:wrap;}
 .filter-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .btn-periodo{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:11px;font-family:var(--sans);font-weight:600;transition:all .2s;}
@@ -47,6 +50,7 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
 .divider-v{width:1px;height:28px;background:var(--border);}
 .btn-export{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-family:var(--sans);font-weight:600;transition:all .2s;}
 .btn-export:hover{border-color:var(--accent2);color:var(--accent2);}
+/* KPIs */
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
 .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px 22px 18px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;}
 .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);opacity:0;transition:opacity .2s;}
@@ -63,10 +67,12 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
 .kpi-sub{font-size:11px;color:var(--muted);margin-top:8px;}
 .progress-bar-bg{background:var(--surface2);border-radius:4px;height:6px;margin-top:8px;overflow:hidden;}
 .progress-bar-fill{height:100%;border-radius:4px;transition:width .8s ease;}
+/* CHARTS */
 .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
 .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;}
 .chart-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:18px;}
 .chart-wrap{position:relative;height:260px;}
+/* TABLES */
 .detractors-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;margin-bottom:20px;}
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
 .section-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-weight:600;}
@@ -89,6 +95,7 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
 .empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
 .empty-icon{font-size:40px;margin-bottom:16px;opacity:.4;}
 .empty-text{font-size:13px;}
+/* MODALS */
 .modal{display:none;position:fixed;z-index:9999;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);}
 .modal-content{background:var(--surface);border:1px solid var(--border);border-radius:16px;margin:3% auto;padding:32px;width:88%;max-width:960px;max-height:85vh;overflow-y:auto;}
 .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
@@ -115,98 +122,97 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
 .btn-edit-row:hover{background:rgba(61,127,255,.15);border-color:var(--accent);}
 .btn-del-row{background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.25);color:var(--danger);padding:4px 10px;border-radius:5px;cursor:pointer;font-size:11px;font-family:var(--sans);font-weight:600;transition:.2s;margin-left:4px;}
 .btn-del-row:hover{background:rgba(255,77,109,.2);border-color:var(--danger);}
+/* TOAST */
 .toast{position:fixed;bottom:24px;right:24px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:12px 20px;border-radius:10px;font-size:13px;transform:translateY(80px);opacity:0;transition:all .3s;z-index:99999;pointer-events:none;}
 .toast.show{transform:translateY(0);opacity:1;}
 .toast.ok{border-left:3px solid var(--success);}
 .toast.err{border-left:3px solid var(--danger);}
+/* SCROLLBAR */
 ::-webkit-scrollbar{width:6px;height:6px;}
 ::-webkit-scrollbar-track{background:var(--surface);}
 ::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:3px;}
+/* ANIMATIONS */
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
 .kpi-card,.chart-card,.detractors-card{animation:fadeUp .4s ease both;}
 .kpi-card:nth-child(1){animation-delay:.05s;}
 .kpi-card:nth-child(2){animation-delay:.1s;}
 .kpi-card:nth-child(3){animation-delay:.15s;}
 .kpi-card:nth-child(4){animation-delay:.2s;}
-
-/* ===== LOGIN ===== */
-#loginScreen {
-  position:fixed; inset:0; z-index:99999;
-  background:var(--bg);
-  display:flex; align-items:center; justify-content:center;
-}
-#loginScreen.hidden { display:none; }
-.login-box {
-  background:var(--surface); border:1px solid var(--border);
-  border-radius:16px; padding:48px 40px; width:380px;
-  box-shadow:0 24px 60px rgba(0,0,0,0.6);
-  display:flex; flex-direction:column; align-items:center; gap:0;
-}
-.login-logo { font-family:var(--mono); font-size:18px; color:var(--accent); margin-bottom:4px; }
-.login-logo span { color:var(--accent2); }
-.login-sub { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.12em; margin-bottom:36px; }
-.login-title { font-size:13px; color:var(--muted); margin-bottom:20px; }
-.login-field { width:100%; display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
-.login-field label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; font-weight:600; }
-.login-field input {
-  background:var(--surface2); border:1px solid var(--border); color:var(--text);
-  padding:10px 14px; border-radius:8px; font-size:14px; font-family:var(--sans);
-  transition:.2s; outline:none; width:100%;
-}
-.login-field input:focus { border-color:var(--accent); }
-.login-btn {
-  width:100%; background:var(--accent); color:white; border:none;
-  padding:12px; border-radius:8px; font-size:13px; font-family:var(--sans);
-  font-weight:700; cursor:pointer; transition:.2s; margin-top:8px;
-  letter-spacing:.04em;
-}
-.login-btn:hover { background:#5a91ff; transform:translateY(-1px); }
-.login-err { font-size:12px; color:var(--danger); margin-top:8px; min-height:18px; text-align:center; }
-.login-footer { font-size:10px; color:#3a4560; margin-top:28px; }
+/* EDIT INFO */
+.edit-info{font-size:10px;color:var(--muted);font-style:italic;margin-top:6px;}
+/* DETRATORES PAGE */
+.detratores-page{width:100%;height:calc(100vh - 130px);border:none;border-radius:12px;background:var(--surface);}
+.detratores-header{margin-bottom:24px;}
+.iframe-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;height:calc(100vh - 160px);}
+/* SPINNER PDF */
+.pdf-spinner{position:fixed;inset:0;background:rgba(11,15,26,.9);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+.pdf-spinner p{color:var(--muted);font-size:13px;}
+.spinner-ring{width:40px;height:40px;border:3px solid var(--surface2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+/* LOGIN */
+#loginScreen{position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;align-items:center;justify-content:center;}
+#loginScreen.hidden{display:none;}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:48px 40px;width:380px;box-shadow:0 24px 60px rgba(0,0,0,0.6);display:flex;flex-direction:column;align-items:center;}
+.login-logo{font-family:var(--mono);font-size:18px;color:var(--accent);margin-bottom:4px;}
+.login-logo span{color:var(--accent2);}
+.login-sub{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:36px;}
+.login-title{font-size:13px;color:var(--muted);margin-bottom:20px;}
+.login-field{width:100%;display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.login-field label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-weight:600;}
+.login-field input{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:14px;font-family:var(--sans);transition:.2s;outline:none;width:100%;}
+.login-field input:focus{border-color:var(--accent);}
+.login-btn{width:100%;background:var(--accent);color:white;border:none;padding:12px;border-radius:8px;font-size:13px;font-family:var(--sans);font-weight:700;cursor:pointer;transition:.2s;margin-top:8px;letter-spacing:.04em;}
+.login-btn:hover{background:#5a91ff;transform:translateY(-1px);}
+.login-err{font-size:12px;color:var(--danger);margin-top:8px;min-height:18px;text-align:center;}
+.login-footer{font-size:10px;color:#3a4560;margin-top:28px;}
 </style>
 </head>
 <body>
 
 <div class="sidebar">
   <div class="logo">NELO<span>GICA</span></div>
-  <div class="logo-sub">Ações Customer Care</div>
-  <div class="nav-label">Visões</div>
-  
-  <div class="nav-item active" onclick="mudarAba('ra')" id="nav-ra">
-    <span class="nav-icon">📊</span> Reclame Aqui
-  </div>
-  <div class="nav-item" onclick="mudarAba('detratores')" id="nav-detratores">
-    <span class="nav-icon">⚠️</span> Detratores
-  </div>
-
+  <div class="logo-sub">Customer Care</div>
+  <div class="nav-label">Projetos</div>
+  <div class="nav-item active" onclick="navegarPara('ra')" id="nav-ra"><span class="nav-icon">📊</span> Reclame Aqui</div>
+  <div class="nav-item" onclick="navegarPara('detratores')" id="nav-detratores"><span class="nav-icon">⚠️</span> Detratores</div>
   <div class="sidebar-status">
     <div><span class="status-dot" id="statusDot"></span><span id="statusText">Carregando...</span></div>
-    <div style="margin-top:6px;font-family:var(--mono);font-size:9px;color:#3a4560;margin-bottom:12px;">BOB v10.0</div>
-    <button class="btn-logout" onclick="fazerLogout()">Sair da conta</button>
+    <div style="margin-top:6px;font-family:var(--mono);font-size:9px;color:#3a4560;" id="statusUser"></div>
   </div>
 </div>
 
+<!-- ═══ PAGE: RECLAME AQUI ═══ -->
 <div class="main">
-  <div id="aba-ra" style="display: block;">
-    <div class="upload-bar">
-      <div class="filter-group">
-        <button class="btn-periodo" onclick="definirPeriodo('semana')">7 Dias</button>
-        <button class="btn-periodo" onclick="definirPeriodo('mes')">Último Mês</button> 
-        <button class="btn-periodo" onclick="definirPeriodo('ano')">Ano 2026</button>
-        <button class="btn-periodo" onclick="definirPeriodo('tudo')">Tudo</button>
-        <input type="date" id="dataInicio">
-        <input type="date" id="dataFim">
-        <button class="btn-atualizar" onclick="processarDados()">↻ Filtrar</button>
-        <div class="divider-v"></div>
-        <button class="btn-atualizar" onclick="carregarDados()">⟳ Sincronizar</button>
-        <button class="btn-atualizar" onclick="abrirModalAdicionar()" style="background:var(--success);color:#0b0f1a;">＋ Novo Caso</button>
-        <div class="divider-v"></div>
-        <button class="btn-export" onclick="exportar('csv')">⬇ CSV</button>
-        <button class="btn-export" onclick="exportar('xlsx')">⬇ XLSX</button>
-        <button class="btn-export" onclick="exportar('pdf')">⬇ PDF</button>
-      </div>
+<div id="page-ra" class="page active">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Reclame <span>Aqui</span></div>
+      <div class="page-subtitle">Análise de atendimentos e indicadores de qualidade</div>
     </div>
+    <div class="version-tag">v11.0 · 2026</div>
+  </div>
 
+  <div class="upload-bar">
+    <div class="filter-group">
+      <button class="btn-periodo" onclick="definirPeriodo('semana',event)">7 Dias</button>
+      <button class="btn-periodo" onclick="definirPeriodo('mes',event)">Último mês</button>
+      <button class="btn-periodo" onclick="definirPeriodo('ano',event)">Ano 2026</button>
+      <button class="btn-periodo" onclick="definirPeriodo('tudo',event)">Tudo</button>
+      <input type="date" id="dataInicio">
+      <input type="date" id="dataFim">
+      <button class="btn-atualizar" onclick="processarDados()">↻ Filtrar</button>
+      <div class="divider-v"></div>
+      <button class="btn-atualizar" onclick="carregarDados()">⟳ Sincronizar</button>
+      <button class="btn-atualizar" onclick="abrirModalAdicionar()" style="background:var(--success);color:#0b0f1a;">＋ Novo Caso</button>
+      <div class="divider-v"></div>
+      <button class="btn-export" onclick="exportar('csv')">⬇ CSV</button>
+      <button class="btn-export" onclick="exportar('xlsx')">⬇ XLSX</button>
+      <button class="btn-export" onclick="exportarPDFVisual()">⬇ PDF</button>
+    </div>
+  </div>
+
+  <!-- KPIs — capturado no PDF visual -->
+  <div id="dashboard-capture">
     <div class="kpi-grid">
       <div class="kpi-card" onclick="abrirModal('total')">
         <div class="kpi-label">Total de Casos</div>
@@ -238,33 +244,48 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
       <div class="chart-card"><div class="chart-title">Casos por Produto</div><div class="chart-wrap"><canvas id="chartProduto"></canvas></div></div>
       <div class="chart-card"><div class="chart-title">Distribuição Tempo de Resolução</div><div class="chart-wrap"><canvas id="chartTempo"></canvas></div></div>
     </div>
+  </div><!-- fim dashboard-capture -->
 
-    <div class="detractors-card">
-      <div class="section-header">
-        <div class="section-title">⚠️ Casos sem nota RA</div>
-        <span class="badge badge-warning" id="badge-semNota">0 casos</span>
-      </div>
-      <div id="tabela-sem-nota"><div class="empty-state"><div class="empty-icon">📂</div><div class="empty-text">Carregando dados...</div></div></div>
+  <div class="detractors-card">
+    <div class="section-header">
+      <div class="section-title">⚠️ Casos sem nota RA</div>
+      <span class="badge badge-warning" id="badge-semNota">0 casos</span>
     </div>
+    <div id="tabela-sem-nota"><div class="empty-state"><div class="empty-icon">📂</div><div class="empty-text">Carregando dados...</div></div></div>
+  </div>
 
-    <div class="detractors-card">
-      <div class="section-header">
-        <div class="section-title">🔴 Casos fora do SLA (&gt;5 dias)</div>
-        <span class="badge badge-danger" id="badge-foraSLA">0 casos</span>
-      </div>
-      <div id="tabela-fora-sla"><div class="empty-state"><div class="empty-icon">📂</div><div class="empty-text">Carregando dados...</div></div></div>
+  <div class="detractors-card">
+    <div class="section-header">
+      <div class="section-title">🔴 Casos fora do SLA (&gt;5 dias)</div>
+      <span class="badge badge-danger" id="badge-foraSLA">0 casos</span>
     </div>
-  </div> <div id="aba-detratores" style="display: none; height: calc(100vh - 80px);">
-    <div class="page-header" style="margin-bottom: 16px;">
-      <div>
-        <div class="page-title">Projeto <span>Detratores</span></div>
-        <div class="page-subtitle">Atuação de detratores dos tickets</div>
-      </div>
+    <div id="tabela-fora-sla"><div class="empty-state"><div class="empty-icon">📂</div><div class="empty-text">Carregando dados...</div></div></div>
+  </div>
+</div><!-- fim page-ra -->
+
+<!-- ═══ PAGE: DETRATORES ═══ -->
+<div id="page-detratores" class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Projeto <span>Detratores</span></div>
+      <div class="page-subtitle">Registro e acompanhamento de ações com detratores via Customer Care</div>
     </div>
-    <iframe src="https://forms.office.com/Pages/ResponsePage.aspx?id=jchkxOlNv0aI6XiDm_4y12D-Yv6pu8tJvhm51FOsNkFUNkJET0I4Q1RGMlhKV1BaVjQ1Qk9RSVBTUC4u" width="100%" height="100%" frameborder="0" style="border: none; border-radius: 12px; background: white;"></iframe>
+    <div class="version-tag">Customer Care · 2026</div>
+  </div>
+  <div class="iframe-wrap">
+    <iframe
+      src="https://forms.office.com/Pages/ResponsePage.aspx?id=jchkxOlNv0aI6XiDm_4y12D-Yv6pu8tJvhm51FOsNkFUNkJET0I4Q1RGMlhKV1BaVjQ1Qk9RSVBTUC4u"
+      class="detratores-page"
+      frameborder="0"
+      allow="autoplay"
+      title="Formulário Detratores">
+    </iframe>
   </div>
 </div>
 
+</div><!-- fim .main -->
+
+<!-- MODAL DETALHES -->
 <div id="modalTickets" class="modal" onclick="fecharModalOutside(event)">
   <div class="modal-content">
     <div class="modal-header">
@@ -278,6 +299,7 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
   </div>
 </div>
 
+<!-- MODAL EDITAR -->
 <div id="modalEditar" class="edit-modal" onclick="if(event.target===this)fecharModalEditar()">
   <div class="edit-box">
     <h3>✏️ Editando Ticket <span id="editTicketLabel"></span></h3>
@@ -291,8 +313,8 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
       </div>
       <div class="ef"><label>Categoria</label><input id="eCategoria" type="text"></div>
       <div class="ef"><label>Data Abertura</label><input id="eDataAbertura" type="date"></div>
-      <div class="ef"><label>Data Resolução</label><input id="eDataResolucao" type="date"></div>
-      <div class="ef"><label>Tempo (dias)</label><input id="eTempo" type="number" readonly style="opacity:0.6; cursor:not-allowed;" title="Calculado automaticamente"></div>
+      <div class="ef"><label>Data Resolução <small style="color:var(--accent2)">(auto-calcula dias)</small></label><input id="eDataResolucao" type="date" onchange="autoCalcularTempo('e')"></div>
+      <div class="ef"><label>Tempo (dias) — calculado</label><input id="eTempo" type="number" readonly style="opacity:.7;cursor:not-allowed;"></div>
       <div class="ef"><label>Contato feito CC</label>
         <select id="eContato"><option value="">—</option><option>Sim</option><option>Não</option></select>
       </div>
@@ -311,6 +333,7 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
   </div>
 </div>
 
+<!-- MODAL ADICIONAR -->
 <div id="modalAdicionar" class="edit-modal" onclick="if(event.target===this)fecharModalAdicionar()">
   <div class="edit-box">
     <h3>＋ Novo Caso</h3>
@@ -323,8 +346,8 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
       </div>
       <div class="ef"><label>Categoria</label><input id="nCategoria" type="text"></div>
       <div class="ef"><label>Data Abertura</label><input id="nDataAbertura" type="date"></div>
-      <div class="ef"><label>Data Resolução</label><input id="nDataResolucao" type="date"></div>
-      <div class="ef"><label>Tempo (dias)</label><input id="nTempo" type="number" readonly style="opacity:0.6; cursor:not-allowed;" title="Calculado automaticamente"></div>
+      <div class="ef"><label>Data Resolução <small style="color:var(--accent2)">(auto-calcula dias)</small></label><input id="nDataResolucao" type="date" onchange="autoCalcularTempo('n')"></div>
+      <div class="ef"><label>Tempo (dias) — calculado</label><input id="nTempo" type="number" readonly style="opacity:.7;cursor:not-allowed;"></div>
       <div class="ef"><label>Contato feito CC</label>
         <select id="nContato"><option value="">—</option><option>Sim</option><option>Não</option></select>
       </div>
@@ -349,7 +372,7 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
 // ─── CONFIGURAÇÃO GITHUB ─────────────────────────────────────────────────────
 const GITHUB_USER  = 'antonyfreitas';
 const GITHUB_REPO  = 'NELOGICA-RA-Dashboard';
-const GITHUB_TOKEN = '__GH_TOKEN__'; // COLE O SEU TOKEN AQUI!
+const GITHUB_TOKEN = '__GH_TOKEN__';
 const JSON_URL     = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/dados_ra.json`;
 const API_URL      = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/dados_ra.json`;
 const API_HEADS    = { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' };
@@ -359,36 +382,23 @@ const CHART_COLORS = ['#3d7fff','#00e5c3','#ffb930','#ff4d6d','#a78bfa','#38bdf8
 
 let dadosGerais = [], dadosFiltrados = [];
 let chartStatus, chartCategorias, chartProduto, chartTempo;
+let usuarioLogado = '';
 
-// ─── NAVEGAÇÃO DE ABAS ────────────────────────────────────────────────────────
-function mudarAba(aba) {
-  if(aba === 'ra') {
-    document.getElementById('aba-ra').style.display = 'block';
-    document.getElementById('aba-detratores').style.display = 'none';
-    document.getElementById('nav-ra').classList.add('active');
-    document.getElementById('nav-detratores').classList.remove('active');
-  } else {
-    document.getElementById('aba-ra').style.display = 'none';
-    document.getElementById('aba-detratores').style.display = 'block';
-    document.getElementById('nav-detratores').classList.add('active');
-    document.getElementById('nav-ra').classList.remove('active');
-  }
+// ─── NAVEGAÇÃO ────────────────────────────────────────────────────────────────
+function navegarPara(pagina) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + pagina).classList.add('active');
+  document.getElementById('nav-' + pagina).classList.add('active');
 }
 
 // ─── GITHUB API ───────────────────────────────────────────────────────────────
 async function carregarDados() {
   setStatus('loading', 'Carregando...');
   try {
-    const r = await fetch(API_URL, { 
-      headers: API_HEADS, 
-      cache: 'no-store' 
-    });
-    
+    const r = await fetch(JSON_URL + '?t=' + Date.now());
     if (!r.ok) throw new Error(`Erro ${r.status}`);
-    const meta = await r.json();
-    
-    const jsonString = decodeURIComponent(escape(atob(meta.content)));
-    const records = JSON.parse(jsonString);
+    const records = await r.json();
 
     const serialParaData = (v) => {
       if (!v) return '';
@@ -400,21 +410,20 @@ async function carregarDados() {
     };
 
     dadosGerais = records.map((f, i) => ({
-      _id:       String(i),
-      ticket:    f['Ticket Zendesk'] || '',
-      ra:        f['ID ReclameAqui'] || '',
-      cliente:   f['Cliente'] || '',
-      produto:   f['Produto'] || '',
-      categoria: f['Categoria'] || '',
-      data:      serialParaData(f['Data abertura']),
-      dataRes:   serialParaData(f['Data resolução']),
-      tempo:     f['Tempo resolução'] ?? '',
-      contato:   f['Contato feito CC'] || '',
-      resolvido: (f['Resolvido CC'] === true || String(f['Resolvido CC']).toUpperCase() === 'TRUE') ? 'True' : 'False',
-      nota:      f['Nota RA'] ?? '',
-      voltaria:  (f['Voltaria a Fazer Negócio'] === true || String(f['Voltaria a Fazer Negócio']).toUpperCase() === 'TRUE') ? 'True' : 'False',
-      ultimaAlteracaoPor: f['ultimaAlteracaoPor'] || '',
-      dataUltimaAlteracao: f['dataUltimaAlteracao'] || ''
+      _id:          String(i),
+      ticket:       f['Ticket Zendesk'] || '',
+      ra:           f['ID ReclameAqui'] || '',
+      cliente:      f['Cliente'] || '',
+      produto:      f['Produto'] || '',
+      categoria:    f['Categoria'] || '',
+      data:         serialParaData(f['Data abertura']),
+      dataRes:      serialParaData(f['Data resolução']),
+      tempo:        f['Tempo resolução'] ?? '',
+      contato:      f['Contato feito CC'] || '',
+      resolvido:    (f['Resolvido CC'] === true || String(f['Resolvido CC']).toUpperCase() === 'TRUE') ? 'True' : 'False',
+      nota:         f['Nota RA'] ?? '',
+      voltaria:     (f['Voltaria a Fazer Negócio'] === true || String(f['Voltaria a Fazer Negócio']).toUpperCase() === 'TRUE') ? 'True' : 'False',
+      ultimaAlteracao: f['Ultima Alteracao'] || '',
     }));
 
     setStatus('ok', `${dadosGerais.length} registros`);
@@ -433,27 +442,26 @@ async function salvarJSON() {
   const dataParaSerial = (v) => {
     if (!v) return '';
     if (v.includes('-')) {
-      const d = new Date(v);
+      const d = new Date(v + 'T12:00:00');
       return Math.round((d.getTime() / 86400000) + 25569);
     }
     return v;
   };
 
   const records = dadosGerais.map(r => ({
-    'Ticket Zendesk':          parseInt(r.ticket) || r.ticket,
-    'ID ReclameAqui':          parseInt(r.ra) || r.ra,
-    'Cliente':                 r.cliente,
-    'Produto':                 r.produto,
-    'Categoria':               r.categoria,
-    'Data abertura':           dataParaSerial(r.data),
-    'Data resolução':          dataParaSerial(r.dataRes),
-    'Tempo resolução':         parseFloat(r.tempo) || 0,
-    'Contato feito CC':        r.contato,
-    'Resolvido CC':            r.resolvido === 'True',
-    'Nota RA':                 r.nota || '',
-    'Voltaria a Fazer Negócio':r.voltaria === 'True',
-    'ultimaAlteracaoPor':      r.ultimaAlteracaoPor || '',
-    'dataUltimaAlteracao':     r.dataUltimaAlteracao || ''
+    'Ticket Zendesk':           parseInt(r.ticket) || r.ticket,
+    'ID ReclameAqui':           parseInt(r.ra) || r.ra,
+    'Cliente':                  r.cliente,
+    'Produto':                  r.produto,
+    'Categoria':                r.categoria,
+    'Data abertura':            dataParaSerial(r.data),
+    'Data resolução':           dataParaSerial(r.dataRes),
+    'Tempo resolução':          parseFloat(r.tempo) || 0,
+    'Contato feito CC':         r.contato,
+    'Resolvido CC':             r.resolvido === 'True',
+    'Nota RA':                  r.nota || '',
+    'Voltaria a Fazer Negócio': r.voltaria === 'True',
+    'Ultima Alteracao':         r.ultimaAlteracao || '',
   }));
 
   const body = {
@@ -467,28 +475,57 @@ async function salvarJSON() {
   return r.json();
 }
 
-// ─── STATUS & FILTROS ─────────────────────────────────────────────────────────
+// ─── AUTO-CALCULAR TEMPO ──────────────────────────────────────────────────────
+function autoCalcularTempo(prefixo) {
+  const abertura = document.getElementById(prefixo + 'DataAbertura').value;
+  const resolucao = document.getElementById(prefixo + 'DataResolucao').value;
+  if (abertura && resolucao) {
+    const dA = new Date(abertura + 'T12:00:00');
+    const dR = new Date(resolucao + 'T12:00:00');
+    const dias = Math.round((dR - dA) / (1000 * 60 * 60 * 24));
+    document.getElementById(prefixo + 'Tempo').value = dias >= 0 ? dias : 0;
+  }
+}
+
+// ─── STATUS ───────────────────────────────────────────────────────────────────
 function setStatus(tipo, msg) {
   document.getElementById('statusText').innerText = msg;
   const dot = document.getElementById('statusDot');
   dot.className = 'status-dot' + (tipo === 'ok' ? ' ok' : tipo === 'loading' ? ' loading' : '');
 }
 
-function definirPeriodo(tipo) {
+// ─── FILTROS ──────────────────────────────────────────────────────────────────
+function definirPeriodo(tipo, e) {
   document.querySelectorAll('.btn-periodo').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
+  if (e && e.target) e.target.classList.add('active');
   const hoje = new Date();
   let inicio = new Date();
-  if (tipo === 'semana') inicio.setDate(hoje.getDate() - 7);
-  else if (tipo === 'mes') inicio.setDate(hoje.getDate() - 30);
-  else if (tipo === 'ano') inicio = new Date(2026, 0, 1);
-  else { document.getElementById('dataInicio').value = ''; document.getElementById('dataFim').value = ''; processarDados(); return; }
+
+  if (tipo === 'semana') {
+    inicio.setDate(hoje.getDate() - 7);
+  } else if (tipo === 'mes') {
+    // Último mês calendário completo
+    inicio = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+    const fim = new Date(hoje.getFullYear(), hoje.getMonth(), 0);
+    document.getElementById('dataInicio').value = inicio.toISOString().split('T')[0];
+    document.getElementById('dataFim').value = fim.toISOString().split('T')[0];
+    processarDados(); return;
+  } else if (tipo === 'ano') {
+    inicio = new Date(2026, 0, 1);
+  } else {
+    document.getElementById('dataInicio').value = '';
+    document.getElementById('dataFim').value = '';
+    processarDados(); return;
+  }
   document.getElementById('dataInicio').value = inicio.toISOString().split('T')[0];
   document.getElementById('dataFim').value = hoje.toISOString().split('T')[0];
   processarDados();
 }
 
-function dataParaNum(val) { return val ? parseInt(String(val).replace(/-/g, '')) : 0; }
+function dataParaNum(val) {
+  if (!val) return 0;
+  return parseInt(String(val).replace(/-/g, ''));
+}
 
 function isResolvido(val) {
   if (val === null || val === undefined || val === '') return false;
@@ -503,7 +540,7 @@ function chipProduto(prod) {
   return `<span class="chip ${cls}">${prod}</span>`;
 }
 
-// ─── PROCESSAR & GRÁFICOS ─────────────────────────────────────────────────────
+// ─── PROCESSAR ────────────────────────────────────────────────────────────────
 function processarDados() {
   if (!dadosGerais.length) return;
   const nIni = dataParaNum(document.getElementById('dataInicio').value);
@@ -538,6 +575,7 @@ function processarDados() {
   renderTabelaForaSLA();
 }
 
+// ─── GRÁFICOS ─────────────────────────────────────────────────────────────────
 function atualizarGraficos(res, tot) {
   [chartStatus, chartCategorias, chartProduto, chartTempo].forEach(c => c && c.destroy());
   const font = { family: "'DM Sans', sans-serif", size: 11 };
@@ -545,7 +583,7 @@ function atualizarGraficos(res, tot) {
   chartStatus = new Chart(document.getElementById('chartStatus'), {
     type: 'doughnut',
     data: { labels: ['Resolvidos','Em aberto'], datasets: [{ data: [res, tot-res], backgroundColor: ['#00e5c3','#ff4d6d'], borderWidth: 0, hoverOffset: 6 }] },
-    options: { animation: false, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { labels: { color: '#6b7a99', font, padding: 16 } } }, onClick: (e,els) => { if(els.length) abrirModal(els[0].index===0?'resolvidos':'abertos'); } }
+    options: { maintainAspectRatio: false, cutout: '70%', plugins: { legend: { labels: { color: '#6b7a99', font, padding: 16 } } }, onClick: (e,els) => { if(els.length) abrirModal(els[0].index===0?'resolvidos':'abertos'); } }
   });
 
   const cMap = {};
@@ -554,7 +592,7 @@ function atualizarGraficos(res, tot) {
   chartCategorias = new Chart(document.getElementById('chartCategorias'), {
     type: 'bar',
     data: { labels: catSorted.map(e=>e[0]), datasets: [{ label:'Casos', data: catSorted.map(e=>e[1]), backgroundColor: CHART_COLORS, borderRadius: 5 }] },
-    options: { animation: false, maintainAspectRatio: false, indexAxis:'y', plugins:{ legend:{display:false} }, scales:{ x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#6b7a99',font}}, y:{grid:{display:false},ticks:{color:'#6b7a99',font}} }, onClick:(e,els)=>{ if(els.length) abrirModal('categoria', catSorted[els[0].index][0]); } }
+    options: { maintainAspectRatio: false, indexAxis:'y', plugins:{ legend:{display:false} }, scales:{ x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#6b7a99',font}}, y:{grid:{display:false},ticks:{color:'#6b7a99',font}} }, onClick:(e,els)=>{ if(els.length) abrirModal('categoria', catSorted[els[0].index][0]); } }
   });
 
   const pMap = {};
@@ -562,7 +600,7 @@ function atualizarGraficos(res, tot) {
   chartProduto = new Chart(document.getElementById('chartProduto'), {
     type: 'doughnut',
     data: { labels: Object.keys(pMap), datasets: [{ data: Object.values(pMap), backgroundColor: CHART_COLORS, borderWidth:0, hoverOffset:6 }] },
-    options: { animation: false, maintainAspectRatio: false, cutout:'60%', plugins:{ legend:{ position:'right', labels:{color:'#6b7a99',font,padding:12} } } }
+    options: { maintainAspectRatio: false, cutout:'60%', plugins:{ legend:{ position:'right', labels:{color:'#6b7a99',font,padding:12} } } }
   });
 
   const buckets = {'1d':0,'2-3d':0,'4-5d':0,'6-10d':0,'+10d':0};
@@ -573,17 +611,19 @@ function atualizarGraficos(res, tot) {
   chartTempo = new Chart(document.getElementById('chartTempo'), {
     type: 'bar',
     data: { labels: Object.keys(buckets), datasets: [{ label:'Casos', data: Object.values(buckets), backgroundColor:['#00e5c3','#3d7fff','#ffb930','#ff7a00','#ff4d6d'], borderRadius:6 }] },
-    options: { animation: false, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{grid:{display:false},ticks:{color:'#6b7a99',font}}, y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#6b7a99',font,stepSize:1}} } }
+    options: { maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{grid:{display:false},ticks:{color:'#6b7a99',font}}, y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#6b7a99',font,stepSize:1}} } }
   });
 }
 
-// ─── TABELAS & MODAIS ─────────────────────────────────────────────────────────
+// ─── TABELAS ──────────────────────────────────────────────────────────────────
 function linhaTabela(r) {
   const t = parseFloat(r.tempo)||0;
+  const altInfo = r.ultimaAlteracao
+    ? `<div class="edit-info">✎ ${r.ultimaAlteracao}</div>` : '';
   return `<tr>
     <td><a href="https://nelogica.zendesk.com/agent/tickets/${r.ticket}" target="_blank" class="zendesk-link">#${r.ticket}</a></td>
     <td style="color:var(--muted);font-size:11px">${r.ra||'—'}</td>
-    <td>${r.cliente||'—'}</td>
+    <td>${r.cliente||'—'}${altInfo}</td>
     <td>${chipProduto(r.produto)}</td>
     <td style="font-size:12px">${r.categoria||'—'}</td>
     <td class="${t>META_SLA?'sla-bad':'sla-ok'}">${t}d</td>
@@ -609,6 +649,7 @@ function renderTabelaForaSLA() {
   cont.innerHTML = `<table class="mini-table"><thead><tr><th>Zendesk</th><th>ID RA</th><th>Cliente</th><th>Produto</th><th>Categoria</th><th>Tempo</th><th>Status</th><th>Nota</th><th></th></tr></thead><tbody>${lista.map(linhaTabela).join('')}</tbody></table>`;
 }
 
+// ─── MODAL DETALHES ───────────────────────────────────────────────────────────
 function abrirModal(tipo, extra='') {
   const titleMap = {total:'Todos os Casos',resolvidos:'Casos Resolvidos',abertos:'Casos em Aberto',fora_sla:'Fora do SLA',categoria:`Categoria: ${extra}`};
   document.getElementById('modalTitle').innerText = titleMap[tipo]||'Detalhes';
@@ -623,7 +664,7 @@ function abrirModal(tipo, extra='') {
 function fecharModal() { document.getElementById('modalTickets').style.display = 'none'; }
 function fecharModalOutside(e) { if(e.target===document.getElementById('modalTickets')) fecharModal(); }
 
-// ─── CRUD (CRIAR E EDITAR) ────────────────────────────────────────────────────
+// ─── MODAL EDITAR ─────────────────────────────────────────────────────────────
 function abrirModalEditar(recordId) {
   const r = dadosGerais.find(x => x._id === recordId);
   if (!r) { showToast('Registro não encontrado', 'err'); return; }
@@ -650,42 +691,34 @@ async function salvarEdicao() {
   const idx = dadosGerais.findIndex(r => r._id === recordId);
   if (idx === -1) { showToast('❌ Registro não encontrado', 'err'); return; }
 
-  let tempoCalculado = document.getElementById('eTempo').value;
-  const isResolvido = document.getElementById('eResolvido').value === 'true';
-  const dtAbertura = document.getElementById('eDataAbertura').value;
-  const dtResolucao = document.getElementById('eDataResolucao').value;
-
-  if (isResolvido && dtAbertura && dtResolucao) {
-    const criacao = new Date(dtAbertura);
-    const resolucao = new Date(dtResolucao);
-    const diferencaTempo = Math.abs(resolucao - criacao);
-    tempoCalculado = Math.ceil(diferencaTempo / (1000 * 60 * 60 * 24));
-  } else if (!isResolvido) {
-    tempoCalculado = '';
+  // Recalcula tempo se tiver data de abertura e resolução
+  let tempo = document.getElementById('eTempo').value;
+  const dA = document.getElementById('eDataAbertura').value;
+  const dR = document.getElementById('eDataResolucao').value;
+  if (dA && dR) {
+    const diff = Math.round((new Date(dR+'T12:00:00') - new Date(dA+'T12:00:00')) / (1000*60*60*24));
+    tempo = diff >= 0 ? diff : 0;
   }
 
-  const sessao = JSON.parse(sessionStorage.getItem(SESSION_KEY));
-  const usuarioLogado = sessao && sessao.user ? sessao.user : 'Desconhecido';
-  const dataAlteracao = new Date().toLocaleString('pt-BR');
-
+  const agora = new Date().toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
   dadosGerais[idx] = {
     ...dadosGerais[idx],
     ra:        document.getElementById('eRA').value.trim(),
     cliente:   document.getElementById('eCliente').value.trim(),
     produto:   document.getElementById('eProduto').value,
     categoria: document.getElementById('eCategoria').value.trim(),
-    data:      dtAbertura,
-    dataRes:   dtResolucao,
-    tempo:     tempoCalculado,
+    data:      dA,
+    dataRes:   dR,
+    tempo:     tempo,
     contato:   document.getElementById('eContato').value,
-    resolvido: isResolvido ? 'True' : 'False',
+    resolvido: document.getElementById('eResolvido').value === 'true' ? 'True' : 'False',
     nota:      document.getElementById('eNota').value,
     voltaria:  document.getElementById('eVoltaria').value === 'true' ? 'True' : 'False',
-    ultimaAlteracaoPor: usuarioLogado,
-    dataUltimaAlteracao: dataAlteracao
+    ultimaAlteracao: `${usuarioLogado} · ${agora}`,
   };
 
   try {
+    showToast('⏳ Salvando...', 'ok');
     await salvarJSON();
     fecharModalEditar();
     showToast('✅ Ticket atualizado!', 'ok');
@@ -695,6 +728,7 @@ async function salvarEdicao() {
   }
 }
 
+// ─── MODAL ADICIONAR ──────────────────────────────────────────────────────────
 function abrirModalAdicionar() {
   ['nTicket','nRA','nCliente','nCategoria','nTempo','nNota'].forEach(id => document.getElementById(id).value = '');
   ['nProduto','nContato'].forEach(id => document.getElementById(id).value = '');
@@ -710,22 +744,15 @@ async function salvarNovoCaso() {
   const ticket = document.getElementById('nTicket').value.trim();
   if (!ticket) { showToast('⚠️ Ticket Zendesk é obrigatório', 'err'); return; }
 
-  let tempoCalculado = document.getElementById('nTempo').value;
-  const isResolvido = document.getElementById('nResolvido').value === 'true';
-  const dtAbertura = document.getElementById('nDataAbertura').value;
-  const dtResolucao = document.getElementById('nDataResolucao').value;
-
-  if (isResolvido && dtAbertura && dtResolucao) {
-    const criacao = new Date(dtAbertura);
-    const resolucao = new Date(dtResolucao);
-    const diferencaTempo = Math.abs(resolucao - criacao);
-    tempoCalculado = Math.ceil(diferencaTempo / (1000 * 60 * 60 * 24));
+  let tempo = document.getElementById('nTempo').value;
+  const dA = document.getElementById('nDataAbertura').value;
+  const dR = document.getElementById('nDataResolucao').value;
+  if (dA && dR) {
+    const diff = Math.round((new Date(dR+'T12:00:00') - new Date(dA+'T12:00:00')) / (1000*60*60*24));
+    tempo = diff >= 0 ? diff : 0;
   }
 
-  const sessao = JSON.parse(sessionStorage.getItem(SESSION_KEY));
-  const usuarioLogado = sessao && sessao.user ? sessao.user : 'Desconhecido';
-  const dataAlteracao = new Date().toLocaleString('pt-BR');
-
+  const agora = new Date().toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
   const novo = {
     _id:       String(Date.now()),
     ticket:    ticket,
@@ -733,20 +760,19 @@ async function salvarNovoCaso() {
     cliente:   document.getElementById('nCliente').value.trim(),
     produto:   document.getElementById('nProduto').value,
     categoria: document.getElementById('nCategoria').value.trim(),
-    data:      dtAbertura,
-    dataRes:   dtResolucao,
-    tempo:     tempoCalculado,
+    data:      dA,
+    dataRes:   dR,
+    tempo:     tempo,
     contato:   document.getElementById('nContato').value,
-    resolvido: isResolvido ? 'True' : 'False',
+    resolvido: document.getElementById('nResolvido').value === 'true' ? 'True' : 'False',
     nota:      document.getElementById('nNota').value,
     voltaria:  document.getElementById('nVoltaria').value === 'true' ? 'True' : 'False',
-    ultimaAlteracaoPor: usuarioLogado,
-    dataUltimaAlteracao: dataAlteracao
+    ultimaAlteracao: `${usuarioLogado} · ${agora}`,
   };
 
   dadosGerais.push(novo);
-
   try {
+    showToast('⏳ Salvando...', 'ok');
     await salvarJSON();
     fecharModalAdicionar();
     showToast('✅ Caso adicionado!', 'ok');
@@ -757,6 +783,7 @@ async function salvarNovoCaso() {
   }
 }
 
+// ─── EXCLUIR ──────────────────────────────────────────────────────────────────
 async function confirmarExcluir(recordId, ticket) {
   if (!confirm(`Excluir o ticket #${ticket}?\nEssa ação não pode ser desfeita.`)) return;
   const idx = dadosGerais.findIndex(r => r._id === recordId);
@@ -773,7 +800,7 @@ async function confirmarExcluir(recordId, ticket) {
   }
 }
 
-// ─── EXPORTAÇÃO E UTILITÁRIOS ─────────────────────────────────────────────────
+// ─── TOAST ────────────────────────────────────────────────────────────────────
 function showToast(msg, tipo='ok') {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -781,165 +808,16 @@ function showToast(msg, tipo='ok') {
   setTimeout(() => t.classList.remove('show'), 3500);
 }
 
+// ─── EXPORTAR ─────────────────────────────────────────────────────────────────
 function exportar(formato) {
-  if (formato === 'pdf') {
-    // Rolar para cima para garantir fotografia sem cortes laterais
-    window.scrollTo(0, 0);
-    showToast('⏳ A preparar o ficheiro PDF Paisagem...', 'loading');
-    
-    // Extração de dados da tela original
-    const tot = document.getElementById('kpi-total').innerText;
-    const res = document.getElementById('kpi-resolvidos').innerText;
-    const sla = document.getElementById('kpi-sla').innerText;
-    const tempo = document.getElementById('kpi-tempo').innerText;
-    
-    const imgStatus = chartStatus ? chartStatus.toBase64Image() : '';
-    const imgCat = chartCategorias ? chartCategorias.toBase64Image() : '';
-    const imgProd = chartProduto ? chartProduto.toBase64Image() : '';
-    const imgTempo = chartTempo ? chartTempo.toBase64Image() : '';
-    
-    const tabSemNota = document.getElementById('tabela-sem-nota').cloneNode(true);
-    const tabForaSla = document.getElementById('tabela-fora-sla').cloneNode(true);
-    
-    [tabSemNota, tabForaSla].forEach(tab => {
-        const ths = tab.querySelectorAll('th');
-        if (ths.length > 0) ths[ths.length - 1].remove(); 
-        const trs = tab.querySelectorAll('tbody tr');
-        trs.forEach(tr => {
-            const tds = tr.querySelectorAll('td');
-            if (tds.length > 0) tds[tds.length - 1].remove(); 
-        });
-    });
-
-    const badgeSemNota = document.getElementById('badge-semNota').innerText;
-    const badgeForaSLA = document.getElementById('badge-foraSLA').innerText;
-
-    // Contentor com LARGURA LARGA (1400px) para bater certo com A4 Paisagem
-    const pdfContainer = document.createElement('div');
-    pdfContainer.id = 'pdf-container';
-    pdfContainer.style.cssText = 'width: 1400px; margin: 0 auto; background: #0b0f1a; padding: 40px;';
-    
-    pdfContainer.innerHTML = `
-      <div style="text-align:center; margin-bottom: 50px;">
-        <h1 style="font-family:'Space Mono', monospace; color:#3d7fff; font-size:48px; margin-bottom:10px;">NELO<span style="color:#00e5c3">GICA</span></h1>
-        <h2 style="font-size:28px; color:#e8edf5; font-weight:normal; margin-bottom:10px;">Relatório de Customer Care</h2>
-        <p style="font-size:16px; color:#6b7a99;">Extraído em: ${new Date().toLocaleString('pt-BR')}</p>
-      </div>
-      
-      <div style="display:flex; justify-content:space-between; margin-bottom:60px;">
-        <div style="width:23%; background:#131929; border:1px solid rgba(255,255,255,0.07); padding:30px; border-radius:12px; border-top:4px solid #3d7fff; text-align:center;">
-          <div style="font-size:14px; color:#6b7a99; text-transform:uppercase; margin-bottom:10px; font-weight:bold;">Total de Casos</div>
-          <div style="font-size:46px; font-family:'Space Mono', monospace; font-weight:bold;">${tot}</div>
-        </div>
-        <div style="width:23%; background:#131929; border:1px solid rgba(255,255,255,0.07); padding:30px; border-radius:12px; border-top:4px solid #00e5c3; text-align:center;">
-          <div style="font-size:14px; color:#6b7a99; text-transform:uppercase; margin-bottom:10px; font-weight:bold;">Resolvidos CC</div>
-          <div style="font-size:46px; font-family:'Space Mono', monospace; font-weight:bold; color:#00e5c3;">${res}</div>
-        </div>
-        <div style="width:23%; background:#131929; border:1px solid rgba(255,255,255,0.07); padding:30px; border-radius:12px; border-top:4px solid #00e5c3; text-align:center;">
-          <div style="font-size:14px; color:#6b7a99; text-transform:uppercase; margin-bottom:10px; font-weight:bold;">Dentro SLA (5d)</div>
-          <div style="font-size:46px; font-family:'Space Mono', monospace; font-weight:bold; color:#00e5c3;">${sla}</div>
-        </div>
-        <div style="width:23%; background:#131929; border:1px solid rgba(255,255,255,0.07); padding:30px; border-radius:12px; border-top:4px solid #ffb930; text-align:center;">
-          <div style="font-size:14px; color:#6b7a99; text-transform:uppercase; margin-bottom:10px; font-weight:bold;">Média de Dias</div>
-          <div style="font-size:46px; font-family:'Space Mono', monospace; font-weight:bold; color:#ffb930;">${tempo}</div>
-        </div>
-      </div>
-
-      <div class="html2pdf__page-break"></div>
-
-      <h2 style="font-size:28px; color:#e8edf5; text-align:center; margin-bottom:40px; font-family:'Space Mono', monospace;">Análise Gráfica</h2>
-      
-      <div style="display:flex; justify-content:space-between; margin-bottom:30px;">
-        <div style="width:48%; background:#131929; padding:25px; border-radius:12px; border:1px solid rgba(255,255,255,0.07); text-align:center;">
-           <h3 style="font-size:16px; color:#6b7a99; text-transform:uppercase; margin-bottom:20px; font-weight:bold;">Status dos Casos</h3>
-           ${imgStatus ? `<img src="${imgStatus}" style="width:100%; height:auto; max-height:300px; object-fit:contain;" />` : ''}
-        </div>
-        <div style="width:48%; background:#131929; padding:25px; border-radius:12px; border:1px solid rgba(255,255,255,0.07); text-align:center;">
-           <h3 style="font-size:16px; color:#6b7a99; text-transform:uppercase; margin-bottom:20px; font-weight:bold;">Casos por Produto</h3>
-           ${imgProd ? `<img src="${imgProd}" style="width:100%; height:auto; max-height:300px; object-fit:contain;" />` : ''}
-        </div>
-      </div>
-
-      <div style="display:flex; justify-content:space-between; margin-bottom:30px;">
-        <div style="width:48%; background:#131929; padding:25px; border-radius:12px; border:1px solid rgba(255,255,255,0.07); text-align:center;">
-           <h3 style="font-size:16px; color:#6b7a99; text-transform:uppercase; margin-bottom:20px; font-weight:bold;">Casos por Categoria</h3>
-           ${imgCat ? `<img src="${imgCat}" style="width:100%; height:auto; max-height:300px; object-fit:contain;" />` : ''}
-        </div>
-        <div style="width:48%; background:#131929; padding:25px; border-radius:12px; border:1px solid rgba(255,255,255,0.07); text-align:center;">
-           <h3 style="font-size:16px; color:#6b7a99; text-transform:uppercase; margin-bottom:20px; font-weight:bold;">Tempo de Resolução</h3>
-           ${imgTempo ? `<img src="${imgTempo}" style="width:100%; height:auto; max-height:300px; object-fit:contain;" />` : ''}
-        </div>
-      </div>
-
-      <div class="html2pdf__page-break"></div>
-
-      <h2 style="font-size:28px; color:#e8edf5; text-align:center; margin-bottom:40px; font-family:'Space Mono', monospace;">Detalhamento de Casos Críticos</h2>
-      
-      <div style="width:100%; background:#131929; padding:30px; border-radius:12px; border:1px solid rgba(255,255,255,0.07); margin-bottom:40px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
-           <h3 style="font-size:16px; color:#6b7a99; text-transform:uppercase; font-weight:bold; margin:0;">⚠️ Casos sem nota RA</h3>
-           <span style="font-size:14px; padding:6px 16px; background:rgba(255,185,48,.15); color:#ffb930; border-radius:20px; font-weight:bold;">${badgeSemNota}</span>
-        </div>
-        ${tabSemNota.innerHTML}
-      </div>
-
-      <div style="width:100%; background:#131929; padding:30px; border-radius:12px; border:1px solid rgba(255,255,255,0.07);">
-        <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
-           <h3 style="font-size:16px; color:#6b7a99; text-transform:uppercase; font-weight:bold; margin:0;">🔴 Casos fora do SLA (>5 dias)</h3>
-           <span style="font-size:14px; padding:6px 16px; background:rgba(255,77,109,.15); color:#ff4d6d; border-radius:20px; font-weight:bold;">${badgeForaSLA}</span>
-        </div>
-        ${tabForaSla.innerHTML}
-      </div>
-    `;
-
-    // Suspender a exibição dos elementos originais para desenhar o PDF à vontade
-    const sidebar = document.querySelector('.sidebar');
-    const main = document.querySelector('.main');
-    sidebar.style.display = 'none';
-    main.style.display = 'none';
-    
-    document.body.appendChild(pdfContainer);
-
-    // Mágica do formato LANDSCAPE entra aqui:
-    setTimeout(() => {
-        const opt = {
-            margin:       10, 
-            filename:     'CustomerCare_RA.pdf',
-            image:        { type: 'jpeg', quality: 1.0 },
-            html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#0b0f1a' },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }, // Paisagem a sério!
-            pagebreak:    { mode: ['css', 'legacy'] }
-        };
-        
-        html2pdf().set(opt).from(pdfContainer).save().then(() => {
-            // Restaurar tudo à normalidade
-            pdfContainer.remove();
-            sidebar.style.display = '';
-            main.style.display = '';
-            showToast('✅ PDF exportado em Paisagem Perfeita!', 'ok');
-        }).catch(err => {
-            pdfContainer.remove();
-            sidebar.style.display = '';
-            main.style.display = '';
-            showToast('❌ Ocorreu um erro no PDF', 'err');
-        });
-    }, 800);
-
-    return;
-  }
-
-  // --- Exportações CSV e XLSX mantidas normais ---
   if (!dadosFiltrados.length) { showToast('⚠️ Nenhum dado para exportar', 'err'); return; }
-
-  const headers = ['Ticket Zendesk','ID ReclameAqui','Cliente','Produto','Categoria','Data abertura','Data resolução','Tempo resolução','Contato feito CC','Resolvido CC','Nota RA','Voltaria a Fazer Negócio', 'Ultima Alteração', 'Data Alteração'];
-  
+  const headers = ['Ticket Zendesk','ID ReclameAqui','Cliente','Produto','Categoria','Data abertura','Data resolução','Tempo resolução','Contato feito CC','Resolvido CC','Nota RA','Voltaria a Fazer Negócio'];
   const rows = dadosFiltrados.map(r => [
     r.ticket, r.ra, r.cliente, r.produto, r.categoria,
     r.data, r.dataRes, r.tempo, r.contato,
     isResolvido(r.resolvido) ? 'Sim' : 'Não',
     r.nota,
-    isResolvido(r.voltaria) ? 'Sim' : 'Não',
-    r.ultimaAlteracaoPor, r.dataUltimaAlteracao
+    isResolvido(r.voltaria) ? 'Sim' : 'Não'
   ]);
 
   if (formato === 'csv') {
@@ -950,8 +828,7 @@ function exportar(formato) {
     showToast('✅ CSV exportado!', 'ok');
   } else if (formato === 'xlsx') {
     let xml = `<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Reclame Aqui"><Table>`;
-    const allRows = [headers, ...rows];
-    allRows.forEach(row => {
+    [headers, ...rows].forEach(row => {
       xml += '<Row>';
       row.forEach(cell => {
         const v = String(cell ?? '');
@@ -961,22 +838,75 @@ function exportar(formato) {
       xml += '</Row>';
     });
     xml += '</Table></Worksheet></Workbook>';
-    const blob = new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
-    downloadBlob(blob, 'reclame_aqui.xls');
+    downloadBlob(new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8;' }), 'reclame_aqui.xls');
     showToast('✅ XLSX exportado!', 'ok');
+  }
+}
+
+// ─── PDF VISUAL DO DASHBOARD ──────────────────────────────────────────────────
+async function exportarPDFVisual() {
+  if (!dadosFiltrados.length) { showToast('⚠️ Nenhum dado para exportar', 'err'); return; }
+
+  // Mostra spinner
+  const spinner = document.createElement('div');
+  spinner.className = 'pdf-spinner';
+  spinner.innerHTML = '<div class="spinner-ring"></div><p>Gerando snapshot do dashboard...</p>';
+  document.body.appendChild(spinner);
+
+  try {
+    // Aguarda um tick para o spinner renderizar
+    await new Promise(r => setTimeout(r, 100));
+
+    const el = document.getElementById('dashboard-capture');
+    const canvas = await html2canvas(el, {
+      backgroundColor: '#0b0f1a',
+      scale: 2,
+      useCORS: true,
+      logging: false,
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+    const win = window.open('', '_blank');
+    const periodo = document.getElementById('dataInicio').value && document.getElementById('dataFim').value
+      ? `${document.getElementById('dataInicio').value} → ${document.getElementById('dataFim').value}`
+      : 'Todos os dados';
+
+    win.document.write(`
+      <!DOCTYPE html><html><head><title>RA Dashboard — Snapshot</title>
+      <style>
+        @page { margin: 10mm; }
+        body { margin:0; background:#0b0f1a; font-family: Arial, sans-serif; }
+        .header { padding: 16px 20px 12px; border-bottom: 1px solid #1a2236; display:flex; justify-content:space-between; align-items:center; }
+        .header h1 { font-size:14px; color:#3d7fff; margin:0; letter-spacing:.05em; }
+        .header span { font-size:11px; color:#6b7a99; }
+        img { width:100%; display:block; }
+        .footer { padding:12px 20px; font-size:10px; color:#3a4560; text-align:right; }
+      </style></head><body>
+      <div class="header">
+        <h1>NELOGICA · Controle Reclame Aqui</h1>
+        <span>Período: ${periodo} · ${dadosFiltrados.length} registros · Exportado em ${new Date().toLocaleString('pt-BR')}</span>
+      </div>
+      <img src="${imgData}" />
+      <div class="footer">Nelogica Customer Care · v11.0</div>
+      <script>window.onload = () => { window.print(); }<\/script>
+      </body></html>`);
+    win.document.close();
+    showToast('✅ PDF visual gerado!', 'ok');
+  } catch(e) {
+    showToast('❌ Erro ao gerar PDF: ' + e.message, 'err');
+  } finally {
+    document.body.removeChild(spinner);
   }
 }
 
 function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
+  a.href = url; a.download = filename; a.click();
   URL.revokeObjectURL(url);
 }
 
-// ─── LOGIN & INICIALIZAÇÃO ────────────────────────────────────────────────────
+// ═══ LOGIN ════════════════════════════════════════════════════════════════════
 const USUARIOS = [
   { user: 'antony',  senha: 'nelogica2026' },
   { user: 'suporte', senha: 'ra@2026'      },
@@ -989,7 +919,9 @@ function verificarSessao() {
   try {
     const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
     if (s && Date.now() - s.ts < SESSION_TTL) {
+      usuarioLogado = s.user;
       document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('statusUser').innerText = `👤 ${s.user} · v11.0`;
       return true;
     }
   } catch(e) {}
@@ -1000,11 +932,12 @@ function tentarLogin() {
   const user  = document.getElementById('loginUser').value.trim().toLowerCase();
   const senha = document.getElementById('loginPass').value;
   const err   = document.getElementById('loginErr');
-
   const match = USUARIOS.find(u => u.user === user && u.senha === senha);
   if (match) {
     sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user, ts: Date.now() }));
+    usuarioLogado = user;
     document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('statusUser').innerText = `👤 ${user} · v11.0`;
     carregarDados();
     err.textContent = '';
   } else {
@@ -1014,21 +947,17 @@ function tentarLogin() {
   }
 }
 
-function fazerLogout() {
-  sessionStorage.removeItem(SESSION_KEY);
-  window.location.reload(); 
-}
-
 window.onload = () => {
   if (verificarSessao()) carregarDados();
   setInterval(() => { if (verificarSessao()) carregarDados(); }, 120000);
 };
 </script>
 
+<!-- LOGIN SCREEN -->
 <div id="loginScreen">
   <div class="login-box">
     <div class="login-logo">NELO<span>GICA</span></div>
-    <div class="login-sub">RA Dashboard</div>
+    <div class="login-sub">Customer Care</div>
     <div class="login-title">Acesso restrito — faça login para continuar</div>
     <div class="login-field">
       <label>Usuário</label>
@@ -1040,7 +969,7 @@ window.onload = () => {
     </div>
     <button class="login-btn" onclick="tentarLogin()">Entrar →</button>
     <div class="login-err" id="loginErr"></div>
-    <div class="login-footer">Nelogica · v10.0 · 2026</div>
+    <div class="login-footer">Nelogica · Customer Care · v11.0 · 2026</div>
   </div>
 </div>
 
