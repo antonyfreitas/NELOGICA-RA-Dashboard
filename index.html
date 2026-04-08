@@ -573,7 +573,7 @@ function atualizarGraficosDetratores(sinalizados, semSinalizacao) {
     options: { animation: false, maintainAspectRatio: false, cutout:'60%', plugins:{ legend:{ position:'right', labels:{color:'#6b7a99',font,padding:12} } } }
   });
 
-  const iMap = {'Alto':0, 'Médio':0, 'Baixo':0};
+  const iMap = {'Alto (Falha grave de processo, Falta de chamado, prejuízo direto ao cliente, detrator severo)':0, 'Médio (retrabalho, demora ao cliente)':0, 'Baixo (Desalinhamento leve, dúvida simples não esclarecida, sem impacto operacional)':0};
   dadosDetratores.forEach(d => {
     if(isNotNA(d.impacto)) {
       const imp = d.impacto.trim();
