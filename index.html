@@ -279,10 +279,14 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
       <div class="version-tag">Customer Care · 2026</div>
     </div>
 
-    <div class="upload-bar">
+<div class="upload-bar">
       <div class="filter-group">
         <button class="btn-periodo active" id="btn-sub-dash" onclick="alternarVisaoDetratores('dash')">📊 Visão Geral</button>
         <button class="btn-periodo" id="btn-sub-form" onclick="alternarVisaoDetratores('form')">📝 Inserir Dados</button>
+        <div class="divider-v"></div>
+        <input type="date" id="dataInicioDet">
+        <input type="date" id="dataFimDet">
+        <button class="btn-atualizar" onclick="processarPainelDetratores()">↻ Filtrar</button>
         <div class="divider-v"></div>
         <button class="btn-atualizar" onclick="carregarDadosDetratores()">⟳ Sincronizar</button>
       </div>
@@ -515,10 +519,22 @@ function isNotNA(val) {
 function processarPainelDetratores() {
   if (!dadosDetratores.length) return;
 
-  const total = dadosDetratores.length;
-  const sinalizados = dadosDetratores.filter(d => String(d.status_sinalizacao).includes('COM sinalização')).length;
+  // Lógica de filtro por data
+  const nIni = dataParaNum(document.getElementById('dataInicioDet').value);
+  const nFim = dataParaNum(document.getElementById('dataFimDet').value);
+
+  const listaFiltrada = dadosDetratores.filter(d => {
+    const dt = dataParaNum(d.data_detracao);
+    if (!dt) return true;
+    if (nIni && dt < nIni) return false;
+    if (nFim && dt > nFim) return false;
+    return true;
+  });
+
+  const total = listaFiltrada.length;
+  const sinalizados = listaFiltrada.filter(d => String(d.status_sinalizacao).includes('COM sinalização')).length;
   const semSinalizacao = total - sinalizados;
-  const atuacao = dadosDetratores.filter(d => String(d.necessario_atuacao).toUpperCase() === 'SIM').length;
+  const atuacao = listaFiltrada.filter(d => String(d.necessario_atuacao).toUpperCase() === 'SIM').length;
 
   document.getElementById('det-kpi-total').innerText = total;
   document.getElementById('det-kpi-sinalizados').innerText = sinalizados;
@@ -529,11 +545,12 @@ function processarPainelDetratores() {
   
   document.getElementById('det-kpi-ok').innerText = semSinalizacao;
 
-  atualizarGraficosDetratores(sinalizados, semSinalizacao);
-  renderTabelaAcaoDetratores();
+  // Passa a lista filtrada para os gráficos e tabela
+  atualizarGraficosDetratores(sinalizados, semSinalizacao, listaFiltrada);
+  renderTabelaAcaoDetratores(listaFiltrada);
 }
 
-function atualizarGraficosDetratores(sinalizados, semSinalizacao) {
+function atualizarGraficosDetratores(sinalizados, semSinalizacao, listaFiltrada) {
   [chartSinalizacao, chartMotivos, chartCanal, chartImpacto].forEach(c => c && c.destroy());
   const font = { family: "'DM Sans', sans-serif", size: 11 };
 
@@ -547,7 +564,7 @@ function atualizarGraficosDetratores(sinalizados, semSinalizacao) {
   });
 
   const mMap = {};
-  dadosDetratores.forEach(d => {
+  listaFiltrada.forEach(d => {
     if (isNotNA(d.motivo_detracao)) {
       const motivos = d.motivo_detracao.split(';');
       motivos.forEach(m => {
@@ -564,7 +581,7 @@ function atualizarGraficosDetratores(sinalizados, semSinalizacao) {
   });
 
   const cMap = {};
-  dadosDetratores.forEach(d => {
+  listaFiltrada.forEach(d => {
     if(isNotNA(d.canal)) { const c = d.canal.trim(); cMap[c] = (cMap[c]||0)+1; }
   });
   chartCanal = new Chart(document.getElementById('chartCanal'), {
@@ -573,10 +590,11 @@ function atualizarGraficosDetratores(sinalizados, semSinalizacao) {
     options: { animation: false, maintainAspectRatio: false, cutout:'60%', plugins:{ legend:{ position:'right', labels:{color:'#6b7a99',font,padding:12} } } }
   });
 
-  const iMap = {'Alto (Falha grave de processo, Falta de chamado, prejuízo direto ao cliente, detrator severo)':0, 'Médio (retrabalho, demora ao cliente)':0, 'Baixo (Desalinhamento leve, dúvida simples não esclarecida, sem impacto operacional)':0};
-  dadosDetratores.forEach(d => {
+  const iMap = {'Alto':0, 'Médio':0, 'Baixo':0};
+  listaFiltrada.forEach(d => {
     if(isNotNA(d.impacto)) {
-      const imp = d.impacto.trim();
+      // CORREÇÃO: Corta a string no "(" e remove os espaços extras
+      const imp = d.impacto.split('(')[0].trim();
       if(iMap[imp] !== undefined) iMap[imp]++; else iMap[imp] = 1;
     }
   });
@@ -587,13 +605,13 @@ function atualizarGraficosDetratores(sinalizados, semSinalizacao) {
   });
 }
 
-function renderTabelaAcaoDetratores() {
-  const lista = dadosDetratores.filter(d => String(d.status_sinalizacao).includes('COM sinalização')).reverse();
+function renderTabelaAcaoDetratores(listaFiltrada) {
+  const lista = listaFiltrada.filter(d => String(d.status_sinalizacao).includes('COM sinalização')).reverse();
   document.getElementById('badge-detratores-acao').innerText = lista.length + ' casos';
   
   const cont = document.getElementById('tabela-acao-detratores');
   if (!lista.length) { 
-    cont.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-text">Excelente! Sem casos críticos pendentes.</div></div>'; 
+    cont.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-text">Excelente! Sem casos críticos pendentes neste período.</div></div>'; 
     return; 
   }
 
