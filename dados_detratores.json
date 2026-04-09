@@ -182,7 +182,12 @@
     "necessario_atuacao": "Sim",
     "ticket_atuacao": "3205120",
     "lider_responsavel": "Mrosa@nelogica.com.br",
-    "comentarios_qa": "Cliente com dúvida sobre contratação fora do horário comercial. O agente não informou sobre o horário de atendimento, não respondeu à pergunta e não fez o repasse para o setor responsável, informou e-mail errado para contato com o comercial. Citado que teria um chamado sobre o comportamento do replay, e não foi criado ou anexado ao ticket."
+    "comentarios_qa": "Cliente com dúvida sobre contratação fora do horário comercial. O agente não informou sobre o horário de atendimento, não respondeu à pergunta e não fez o repasse para o setor responsável, informou e-mail errado para contato com o comercial. Citado que teria um chamado sobre o comportamento do replay, e não foi criado ou anexado ao ticket.",
+    "data_atuacao": "N/A",
+    "status_recuperacao": "Neutro",
+    "satisfacao_pos_contato": "Neutro",
+    "is_case": false,
+    "ultimaAlteracao": "Atuado por antony em 09/04/2026, 13:05:27"
   },
   {
     "ticket_detracao": "3203847",
