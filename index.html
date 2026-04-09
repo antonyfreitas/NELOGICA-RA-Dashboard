@@ -742,6 +742,15 @@ function isNotNA(val) {
     return v !== 'N/A' && v !== 'N/A ' && v !== 'NA' && v !== ''; 
 }
 
+function formatarNome(nome) {
+    if (!nome || nome === 'N/A') return nome;
+    const excecoes = ['de', 'da', 'do', 'das', 'dos', 'e'];
+    return String(nome).toLowerCase().split(' ').map((palavra, i) => {
+        if (excecoes.includes(palavra) && i !== 0) return palavra;
+        return palavra.charAt(0).toUpperCase() + palavra.slice(1);
+    }).join(' ');
+}
+
 function getMesAno(dataString) {
     if (!dataString) return 'Desconhecido';
     const partes = dataString.split('-');
