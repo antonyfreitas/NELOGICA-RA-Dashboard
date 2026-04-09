@@ -129,6 +129,8 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
 .btn-save-edit.green:hover{background:#00ffdb;}
 .btn-edit-row{background:rgba(61,127,255,.08);border:1px solid rgba(61,127,255,.2);color:var(--accent);padding:4px 10px;border-radius:5px;cursor:pointer;font-size:11px;font-family:var(--sans);font-weight:600;transition:.2s;}
 .btn-edit-row:hover{background:rgba(61,127,255,.15);border-color:var(--accent);}
+.btn-del-row{background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.25);color:var(--danger);padding:4px 10px;border-radius:5px;cursor:pointer;font-size:11px;font-family:var(--sans);font-weight:600;transition:.2s;margin-left:4px;}
+.btn-del-row:hover{background:rgba(255,77,109,.2);border-color:var(--danger);}
 
 /* UTILS */
 .toast{position:fixed;bottom:24px;right:24px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:12px 20px;border-radius:10px;font-size:13px;transform:translateY(80px);opacity:0;transition:all .3s;z-index:99999;pointer-events:none;}
@@ -188,17 +190,17 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
         <div class="page-title">Reclame <span>Aqui</span></div>
         <div class="page-subtitle">Análise de atendimentos e indicadores de qualidade</div>
       </div>
-      <div class="version-tag">v12.0 · 2026</div>
+      <div class="version-tag">v12.5 · 2026</div>
     </div>
 
     <div class="upload-bar">
       <div class="filter-group">
         <input type="text" id="buscaRA" class="search-input" placeholder="Pesquisar ticket, cliente ou categoria..." onkeyup="processarDados()">
         <div class="divider-v"></div>
-        <button class="btn-periodo" onclick="definirPeriodo('semana',event)">7 Dias</button>
-        <button class="btn-periodo" onclick="definirPeriodo('mes',event)">Último mês</button>
-        <button class="btn-periodo" onclick="definirPeriodo('ano',event)">Ano 2026</button>
-        <button class="btn-periodo" onclick="definirPeriodo('tudo',event)">Tudo</button>
+        <button class="btn-periodo btn-data" onclick="definirPeriodo('semana',event,'ra')">7 Dias</button>
+        <button class="btn-periodo btn-data" onclick="definirPeriodo('mes',event,'ra')">Último mês</button>
+        <button class="btn-periodo btn-data" onclick="definirPeriodo('ano',event,'ra')">Ano 2026</button>
+        <button class="btn-periodo btn-data" onclick="definirPeriodo('tudo',event,'ra')">Tudo</button>
         <input type="date" id="dataInicio" onchange="processarDados()">
         <input type="date" id="dataFim" onchange="processarDados()">
         <div class="divider-v"></div>
@@ -268,6 +270,10 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
         <div class="divider-v"></div>
         <input type="text" id="buscaDet" class="search-input" placeholder="Pesquisar ticket, líder, agente..." onkeyup="processarPainelDetratores()">
         <div class="divider-v"></div>
+        <button class="btn-periodo btn-data" onclick="definirPeriodo('semana',event,'det')">7 Dias</button>
+        <button class="btn-periodo btn-data" onclick="definirPeriodo('mes',event,'det')">Último mês</button>
+        <button class="btn-periodo btn-data" onclick="definirPeriodo('ano',event,'det')">Ano 2026</button>
+        <button class="btn-periodo btn-data" onclick="definirPeriodo('tudo',event,'det')">Tudo</button>
         <input type="date" id="dataInicioDet" onchange="processarPainelDetratores()">
         <input type="date" id="dataFimDet" onchange="processarPainelDetratores()">
         <div class="divider-v"></div>
@@ -501,6 +507,25 @@ function alternarVisaoDetratores(visao) {
   }
 }
 
+// ─── LÓGICA DE DATAS UNIFICADA ────────────────────────────────────────────────
+function definirPeriodo(tipo, e, aba) {
+  if (e && e.target) {
+    e.target.parentElement.querySelectorAll('.btn-data').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+  }
+  const preI = aba === 'ra' ? 'dataInicio' : 'dataInicioDet';
+  const preF = aba === 'ra' ? 'dataFim' : 'dataFimDet';
+  const callback = aba === 'ra' ? processarDados : processarPainelDetratores;
+  
+  const hoje = new Date(); let inicio = new Date();
+  if (tipo === 'semana') inicio.setDate(hoje.getDate() - 7);
+  else if (tipo === 'mes') { inicio = new Date(hoje.getFullYear(), hoje.getMonth()-1, 1); const fim = new Date(hoje.getFullYear(), hoje.getMonth(), 0); document.getElementById(preI).value = inicio.toISOString().split('T')[0]; document.getElementById(preF).value = fim.toISOString().split('T')[0]; callback(); return; }
+  else if (tipo === 'ano') inicio = new Date(2026, 0, 1);
+  else { document.getElementById(preI).value=''; document.getElementById(preF).value=''; callback(); return; }
+  
+  document.getElementById(preI).value = inicio.toISOString().split('T')[0]; document.getElementById(preF).value = hoje.toISOString().split('T')[0]; callback();
+}
+
 // ─── MOTOR BI DETRATORES ──────────────────────────────────────────────────────
 async function carregarDadosDetratores() {
   setStatus('loading', 'A sincronizar Detratores...');
@@ -528,7 +553,7 @@ function processarPainelDetratores() {
     return true;
   });
 
-  // Health Score (Comparação)
+  // Health Score
   let diffDias = 30; 
   if (document.getElementById('dataInicioDet').value && document.getElementById('dataFimDet').value) {
     const d1 = new Date(document.getElementById('dataInicioDet').value); const d2 = new Date(document.getElementById('dataFimDet').value);
@@ -589,15 +614,20 @@ function linhaDetTabela(d) {
   const linkTicket = d.ticket_detracao.includes('http') ? d.ticket_detracao : `https://nelogica.zendesk.com/agent/tickets/${d.ticket_detracao}`;
   const tkDisplay = d.ticket_detracao.match(/\d+/) ? `#${d.ticket_detracao.match(/\d+/)[0]}` : 'Ver Ticket';
   const recStatus = d.status_recuperacao === 'Recuperado' ? '🟩' : d.status_recuperacao === 'Perdido' ? '🟥' : '🟨';
-  const caseEstrela = d.is_case === true ? '⭐ ' : ''; const idUnico = d._id || d.ticket_detracao; 
+  const idUnico = d._id || d.ticket_detracao; 
+  const caseEstrela = d.is_case === true ? '<span style="font-size:13px;margin-right:6px;" title="Case de Destaque">⭐</span>' : ''; 
+  
   return `<tr>
-    <td><a href="${linkTicket}" target="_blank" class="zendesk-link">${caseEstrela}${tkDisplay}</a></td>
+    <td><div style="display:flex; align-items:center;">${caseEstrela}<a href="${linkTicket}" target="_blank" class="zendesk-link">${tkDisplay}</a></div></td>
     <td>${d.data_detracao || '—'}</td>
     <td style="font-weight:600">${d.agente_responsavel ? d.agente_responsavel.split('@')[0] : '—'}</td>
     <td>${isNotNA(d.lider_responsavel) ? `<span class="chip">${d.lider_responsavel.split('@')[0]}</span>` : '—'}</td>
     <td style="font-size:11px; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${d.motivo_detracao || ''}">${d.motivo_detracao || '—'}</td>
     <td style="text-align:center" title="Status: ${d.status_recuperacao || 'Pendente'}">${recStatus}</td>
-    <td><button class="btn-edit-row" onclick="abrirModalEditarDetrator('${idUnico}')">✏ Atuar</button></td>
+    <td style="white-space:nowrap;">
+      <button class="btn-edit-row" onclick="abrirModalEditarDetrator('${idUnico}')">✏ Atuar</button>
+      <button class="btn-del-row" onclick="excluirCasoDetrator('${idUnico}')" title="Excluir Caso">🗑</button>
+    </td>
   </tr>`;
 }
 
@@ -642,6 +672,13 @@ async function salvarEdicaoDetrator() {
   try { showToast('⏳ Guardando...', 'ok'); const metaR = await fetch(URL_DETRATORES, { headers: API_HEADS }); const meta = await metaR.json(); const body = { message: 'Atualização Dashboard', content: btoa(unescape(encodeURIComponent(JSON.stringify(dadosDetratores, null, 2)))), sha: meta.sha }; const r = await fetch(URL_DETRATORES, { method: 'PUT', headers: API_HEADS, body: JSON.stringify(body) }); if (!r.ok) throw new Error(); fecharModalEditarDetrator(); showToast('✅ Salvo!', 'ok'); processarPainelDetratores(); } catch(e) { showToast('❌ Erro', 'err'); }
 }
 
+async function excluirCasoDetrator(idUnico) {
+  if (!confirm('⚠️ Tem certeza que deseja excluir este detrator definitivamente?')) return;
+  const idx = dadosDetratores.findIndex(x => x._id === idUnico || x.ticket_detracao === idUnico); if (idx === -1) return;
+  dadosDetratores.splice(idx, 1);
+  try { showToast('⏳ A excluir...', 'ok'); const metaR = await fetch(URL_DETRATORES, { headers: API_HEADS }); const meta = await metaR.json(); const body = { message: 'Exclusão Dashboard', content: btoa(unescape(encodeURIComponent(JSON.stringify(dadosDetratores, null, 2)))), sha: meta.sha }; const r = await fetch(URL_DETRATORES, { method: 'PUT', headers: API_HEADS, body: JSON.stringify(body) }); if (!r.ok) throw new Error(); showToast('✅ Detrator excluído!', 'ok'); processarPainelDetratores(); } catch(e) { showToast('❌ Erro ao excluir', 'err'); }
+}
+
 // ─── LÓGICA RECLAME AQUI ───────────────────────────────────────────
 async function carregarDados() {
   setStatus('loading', 'Carregando RA...');
@@ -665,16 +702,6 @@ async function salvarJSON() {
 }
 
 function autoCalcularTempo(prefixo) { const dA = document.getElementById(prefixo+'DataAbertura').value; const dR = document.getElementById(prefixo+'DataResolucao').value; if (dA && dR) { const dias = Math.round((new Date(dR+'T12:00:00')-new Date(dA+'T12:00:00'))/(1000*60*60*24)); document.getElementById(prefixo+'Tempo').value = dias>=0?dias:0; } }
-
-function definirPeriodo(tipo, e) {
-  document.querySelectorAll('.btn-periodo').forEach(b => b.classList.remove('active')); if (e && e.target) e.target.classList.add('active');
-  const hoje = new Date(); let inicio = new Date();
-  if (tipo === 'semana') inicio.setDate(hoje.getDate() - 7);
-  else if (tipo === 'mes') { inicio = new Date(hoje.getFullYear(), hoje.getMonth()-1, 1); const fim = new Date(hoje.getFullYear(), hoje.getMonth(), 0); document.getElementById('dataInicio').value = inicio.toISOString().split('T')[0]; document.getElementById('dataFim').value = fim.toISOString().split('T')[0]; processarDados(); return; }
-  else if (tipo === 'ano') inicio = new Date(2026, 0, 1);
-  else { document.getElementById('dataInicio').value=''; document.getElementById('dataFim').value=''; processarDados(); return; }
-  document.getElementById('dataInicio').value = inicio.toISOString().split('T')[0]; document.getElementById('dataFim').value = hoje.toISOString().split('T')[0]; processarDados();
-}
 
 function isResolvido(val) { if(val===null||val===undefined||val==='')return false; if(typeof val==='boolean')return val; return String(val).toUpperCase().includes('TRUE')||String(val).toUpperCase()==='SIM'; }
 function chipProduto(prod) { if(!prod)return'<span style="color:var(--muted)">—</span>'; const p=String(prod).trim().toLowerCase(); let cls=p.includes('profit')?'profit':p.includes('black')||p.includes('arrow')?'blackarrow':p.includes('akeloo')?'akeloo':''; return `<span class="chip ${cls}">${prod}</span>`; }
@@ -709,9 +736,23 @@ function atualizarGraficos(res, tot) {
 }
 
 function linhaTabela(r) {
-  const t = parseFloat(r.tempo)||0; const caseEstrela = r.is_case ? '⭐ ' : '';
-  return `<tr><td><a href="https://nelogica.zendesk.com/agent/tickets/${r.ticket}" target="_blank" class="zendesk-link">${caseEstrela}#${r.ticket}</a></td><td style="color:var(--muted);font-size:11px">${r.ra||'—'}</td><td>${r.cliente||'—'}</td><td>${chipProduto(r.produto)}</td><td style="font-size:12px">${r.categoria||'—'}</td><td class="${t>META_SLA?'sla-bad':'sla-ok'}">${t}d</td><td>${isResolvido(r.resolvido)?'✅':'⏳'}</td><td style="font-family:var(--mono);font-size:12px">${r.nota||'—'}</td><td><button class="btn-edit-row" onclick="abrirModalEditar('${r._id}')">✏</button></td></tr>`;
+  const t = parseFloat(r.tempo)||0; const caseEstrela = r.is_case ? '<span style="font-size:13px;margin-right:6px;" title="Case de Destaque">⭐</span>' : '';
+  return `<tr>
+    <td><div style="display:flex; align-items:center;">${caseEstrela}<a href="https://nelogica.zendesk.com/agent/tickets/${r.ticket}" target="_blank" class="zendesk-link">#${r.ticket}</a></div></td>
+    <td style="color:var(--muted);font-size:11px">${r.ra||'—'}</td>
+    <td>${r.cliente||'—'}</td>
+    <td>${chipProduto(r.produto)}</td>
+    <td style="font-size:12px">${r.categoria||'—'}</td>
+    <td class="${t>META_SLA?'sla-bad':'sla-ok'}">${t}d</td>
+    <td>${isResolvido(r.resolvido)?'✅':'⏳'}</td>
+    <td style="font-family:var(--mono);font-size:12px">${r.nota||'—'}</td>
+    <td style="white-space:nowrap;">
+      <button class="btn-edit-row" onclick="abrirModalEditar('${r._id}')">✏</button>
+      <button class="btn-del-row" onclick="excluirCasoRA('${r._id}')" title="Excluir Caso">🗑</button>
+    </td>
+  </tr>`;
 }
+
 function renderTabelaSemNota() {
   const lista = dadosFiltrados.filter(r => !r.nota || String(r.nota).trim() === '').sort((a,b) => (parseFloat(b.tempo)||0)-(parseFloat(a.tempo)||0));
   document.getElementById('badge-semNota').innerText = lista.length + ' casos'; document.getElementById('tabela-sem-nota').innerHTML = lista.length ? `<table class="mini-table"><thead><tr><th>Zendesk</th><th>ID RA</th><th>Cliente</th><th>Produto</th><th>Categoria</th><th>Tempo</th><th>Status</th><th>Nota</th><th></th></tr></thead><tbody>${lista.map(linhaTabela).join('')}</tbody></table>` : '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-text">Todos os casos possuem nota RA</div></div>';
@@ -749,79 +790,44 @@ async function salvarNovoCaso() {
   dadosGerais.push(novo); try{ showToast('⏳ Adicionando...', 'ok'); await salvarJSON(); fecharModalAdicionar(); showToast('✅ Adicionado!', 'ok'); processarDados(); }catch(e){ dadosGerais.pop(); showToast('❌ Erro', 'err'); }
 }
 
-// ─── EXPORTAÇÕES (COMPLETO) ──────────────────────────────────────────────────
+async function excluirCasoRA(recordId) {
+  if (!confirm('⚠️ Tem certeza que deseja excluir este ticket definitivamente?')) return;
+  const idx = dadosGerais.findIndex(r => r._id === recordId); if (idx === -1) return;
+  dadosGerais.splice(idx, 1);
+  try { showToast('⏳ A excluir...', 'ok'); await salvarJSON(); showToast('✅ Caso excluído com sucesso!', 'ok'); processarDados(); } catch(e) { showToast('❌ Erro ao excluir', 'err'); }
+}
+
+// ─── EXPORTAÇÕES ───────────────────────────────────────────────────────────
 function exportarGeral(formato, origem) {
   let dados, headers, rows, filename;
-
   if (origem === 'ra') {
-    if (!dadosFiltrados.length) return showToast('⚠️ Sem dados para exportar', 'err');
-    dados = dadosFiltrados;
-    headers = ['Ticket Zendesk','ID ReclameAqui','Cliente','Produto','Categoria','Data abertura','Data resolução','Tempo resolução','Contato feito CC','Resolvido CC','Nota RA','Voltaria a Fazer Negócio', 'Comentários Internos', 'É Case?'];
-    rows = dados.map(r => [ r.ticket, r.ra, r.cliente, r.produto, r.categoria, r.data, r.dataRes, r.tempo, r.contato, isResolvido(r.resolvido)?'Sim':'Não', r.nota, isResolvido(r.voltaria)?'Sim':'Não', r.comentario, r.is_case?'Sim':'Não' ]);
-    filename = 'ReclameAqui_Export';
+    if (!dadosFiltrados.length) return showToast('⚠️ Sem dados', 'err');
+    dados = dadosFiltrados; headers = ['Ticket Zendesk','ID ReclameAqui','Cliente','Produto','Categoria','Data abertura','Data resolução','Tempo resolução','Contato feito CC','Resolvido CC','Nota RA','Voltaria a Fazer Negócio', 'Comentários Internos', 'É Case?']; rows = dados.map(r => [ r.ticket, r.ra, r.cliente, r.produto, r.categoria, r.data, r.dataRes, r.tempo, r.contato, isResolvido(r.resolvido)?'Sim':'Não', r.nota, isResolvido(r.voltaria)?'Sim':'Não', r.comentario, r.is_case?'Sim':'Não' ]); filename = 'ReclameAqui_Export';
   } else {
-    if (!listaDetFiltrada.length) return showToast('⚠️ Sem dados para exportar', 'err');
-    dados = listaDetFiltrada;
-    headers = ['Zendesk', 'Data Detração', 'Cliente', 'Agente Responsável', 'Líder Responsável', 'Canal', 'Motivo', 'Impacto', 'Status Recuperação', 'Satisfação Pós-Contato', 'Comentários QA', 'É Case?'];
-    rows = dados.map(d => [ d.ticket_detracao, d.data_detracao, d.cliente, d.agente_responsavel, d.lider_responsavel, d.canal, d.motivo_detracao, d.impacto, d.status_recuperacao, d.satisfacao_pos_contato, d.comentarios_qa, d.is_case?'Sim':'Não' ]);
-    filename = 'Detratores_Export';
+    if (!listaDetFiltrada.length) return showToast('⚠️ Sem dados', 'err');
+    dados = listaDetFiltrada; headers = ['Zendesk', 'Data Detração', 'Cliente', 'Agente Responsável', 'Líder Responsável', 'Canal', 'Motivo', 'Impacto', 'Status Recuperação', 'Satisfação Pós-Contato', 'Comentários QA', 'É Case?']; rows = dados.map(d => [ d.ticket_detracao, d.data_detracao, d.cliente, d.agente_responsavel, d.lider_responsavel, d.canal, d.motivo_detracao, d.impacto, d.status_recuperacao, d.satisfacao_pos_contato, d.comentarios_qa, d.is_case?'Sim':'Não' ]); filename = 'Detratores_Export';
   }
-
   if (formato === 'csv') {
-    const sep = ';';
-    const csvContent = [headers, ...rows].map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(sep)).join('\n');
-    downloadBlob(new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' }), `${filename}.csv`);
-    showToast('✅ CSV exportado!', 'ok');
-  } 
-  else if (formato === 'xlsx') {
+    const sep = ';'; const csvContent = [headers, ...rows].map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(sep)).join('\n');
+    downloadBlob(new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' }), `${filename}.csv`); showToast('✅ CSV exportado!', 'ok');
+  } else if (formato === 'xlsx') {
     let xml = `<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Export"><Table>`;
-    [headers, ...rows].forEach(row => {
-      xml += '<Row>';
-      row.forEach(cell => {
-        const v = String(cell ?? '');
-        const type = !isNaN(v) && v !== '' ? 'Number' : 'String';
-        xml += `<Cell><Data ss:Type="${type}">${v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</Data></Cell>`;
-      });
-      xml += '</Row>';
-    });
-    xml += '</Table></Worksheet></Workbook>';
-    downloadBlob(new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8;' }), `${filename}.xls`);
-    showToast('✅ Excel exportado!', 'ok');
+    [headers, ...rows].forEach(row => { xml += '<Row>'; row.forEach(cell => { const v = String(cell ?? ''); const type = !isNaN(v) && v !== '' ? 'Number' : 'String'; xml += `<Cell><Data ss:Type="${type}">${v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</Data></Cell>`; }); xml += '</Row>'; });
+    xml += '</Table></Worksheet></Workbook>'; downloadBlob(new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8;' }), `${filename}.xls`); showToast('✅ Excel exportado!', 'ok');
   }
 }
 
 async function exportarPDF(origem) {
-  const elId = origem === 'ra' ? 'dashboard-capture' : 'detratores-capture';
-  const dataF = origem === 'ra' ? dadosFiltrados : listaDetFiltrada;
-  
+  const elId = origem === 'ra' ? 'dashboard-capture' : 'detratores-capture'; const dataF = origem === 'ra' ? dadosFiltrados : listaDetFiltrada;
   if (!dataF.length) return showToast('⚠️ Sem dados', 'err');
-  
-  const spinner = document.createElement('div'); spinner.className = 'pdf-spinner'; 
-  spinner.innerHTML = '<div class="spinner-ring"></div><p>Gerando snapshot do dashboard...</p>'; 
-  document.body.appendChild(spinner);
-  
+  const spinner = document.createElement('div'); spinner.className = 'pdf-spinner'; spinner.innerHTML = '<div class="spinner-ring"></div><p>Gerando snapshot do dashboard...</p>'; document.body.appendChild(spinner);
   try {
-    await new Promise(r => setTimeout(r, 100)); 
-    const el = document.getElementById(elId); 
-    const canvas = await html2canvas(el, { backgroundColor: '#0b0f1a', scale: 2, useCORS: true, logging: false }); 
-    const imgData = canvas.toDataURL('image/png'); 
-    const win = window.open('', '_blank'); 
-    
-    let dIni, dFim;
-    if(origem === 'ra') { dIni = document.getElementById('dataInicio').value; dFim = document.getElementById('dataFim').value; }
-    else { dIni = document.getElementById('dataInicioDet').value; dFim = document.getElementById('dataFimDet').value; }
-    
-    const periodo = dIni && dFim ? `${dIni} → ${dFim}` : 'Todos os dados';
-    const titulo = origem === 'ra' ? 'Controle Reclame Aqui' : 'Controle Detratores';
-    
-    win.document.write(`<!DOCTYPE html><html><head><title>${titulo} — Snapshot</title><style>@page { margin: 10mm; } body { margin:0; background:#0b0f1a; font-family: Arial, sans-serif; } .header { padding: 16px 20px 12px; border-bottom: 1px solid #1a2236; display:flex; justify-content:space-between; align-items:center; } .header h1 { font-size:14px; color:#3d7fff; margin:0; letter-spacing:.05em; } .header span { font-size:11px; color:#6b7a99; } img { width:100%; display:block; } .footer { padding:12px 20px; font-size:10px; color:#3a4560; text-align:right; }</style></head><body><div class="header"><h1>NELOGICA · ${titulo}</h1><span>Período: ${periodo} · ${dataF.length} registros · Exportado em ${new Date().toLocaleString('pt-BR')}</span></div><img src="${imgData}" /><div class="footer">Nelogica Customer Care · v12.0</div><script>window.onload = () => { window.print(); }<\/script></body></html>`);
-    win.document.close(); 
-    showToast('✅ PDF visual gerado!', 'ok');
-  } catch(e) { 
-    showToast('❌ Erro ao gerar PDF', 'err'); 
-  } finally { 
-    document.body.removeChild(spinner); 
-  }
+    await new Promise(r => setTimeout(r, 100)); const el = document.getElementById(elId); const canvas = await html2canvas(el, { backgroundColor: '#0b0f1a', scale: 2, useCORS: true, logging: false }); const imgData = canvas.toDataURL('image/png'); const win = window.open('', '_blank'); 
+    let dIni, dFim; if(origem === 'ra') { dIni = document.getElementById('dataInicio').value; dFim = document.getElementById('dataFim').value; } else { dIni = document.getElementById('dataInicioDet').value; dFim = document.getElementById('dataFimDet').value; }
+    const periodo = dIni && dFim ? `${dIni} → ${dFim}` : 'Todos os dados'; const titulo = origem === 'ra' ? 'Controle Reclame Aqui' : 'Controle Detratores';
+    win.document.write(`<!DOCTYPE html><html><head><title>${titulo} — Snapshot</title><style>@page { margin: 10mm; } body { margin:0; background:#0b0f1a; font-family: Arial, sans-serif; } .header { padding: 16px 20px 12px; border-bottom: 1px solid #1a2236; display:flex; justify-content:space-between; align-items:center; } .header h1 { font-size:14px; color:#3d7fff; margin:0; letter-spacing:.05em; } .header span { font-size:11px; color:#6b7a99; } img { width:100%; display:block; } .footer { padding:12px 20px; font-size:10px; color:#3a4560; text-align:right; }</style></head><body><div class="header"><h1>NELOGICA · ${titulo}</h1><span>Período: ${periodo} · ${dataF.length} registros · Exportado em ${new Date().toLocaleString('pt-BR')}</span></div><img src="${imgData}" /><div class="footer">Nelogica Customer Care · v12.5</div><script>window.onload = () => { window.print(); }<\/script></body></html>`);
+    win.document.close(); showToast('✅ PDF visual gerado!', 'ok');
+  } catch(e) { showToast('❌ Erro ao gerar PDF', 'err'); } finally { document.body.removeChild(spinner); }
 }
 
 function downloadBlob(blob, filename) { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url); }
@@ -829,8 +835,8 @@ function downloadBlob(blob, filename) { const url = URL.createObjectURL(blob); c
 // ─── LOGIN ──────────────────────────────────────────────────────────
 const USUARIOS = [{ user: 'antony', senha: 'nelogica2026' }, { user: 'suporte', senha: 'ra@2026' }, { user: 'lider', senha: 'gestao@2026' }];
 const SESSION_KEY = 'ra_dash_auth'; const SESSION_TTL = 8 * 60 * 60 * 1000;
-function verificarSessao() { try { const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null'); if (s && Date.now() - s.ts < SESSION_TTL) { usuarioLogado = s.user; document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('statusUser').innerText = `👤 ${s.user} · v12.0`; return true; } } catch(e) {} return false; }
-function tentarLogin() { const user = document.getElementById('loginUser').value.trim().toLowerCase(); const senha = document.getElementById('loginPass').value; const err = document.getElementById('loginErr'); const match = USUARIOS.find(u => u.user === user && u.senha === senha); if (match) { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user, ts: Date.now() })); usuarioLogado = user; document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('statusUser').innerText = `👤 ${user} · v12.0`; err.textContent = ''; if (document.getElementById('page-ra').classList.contains('active')) carregarDados(); if (document.getElementById('page-detratores').classList.contains('active')) carregarDadosDetratores(); } else { err.textContent = 'Credenciais inválidas.'; document.getElementById('loginPass').value = ''; document.getElementById('loginPass').focus(); } }
+function verificarSessao() { try { const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null'); if (s && Date.now() - s.ts < SESSION_TTL) { usuarioLogado = s.user; document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('statusUser').innerText = `👤 ${s.user} · v12.5`; return true; } } catch(e) {} return false; }
+function tentarLogin() { const user = document.getElementById('loginUser').value.trim().toLowerCase(); const senha = document.getElementById('loginPass').value; const err = document.getElementById('loginErr'); const match = USUARIOS.find(u => u.user === user && u.senha === senha); if (match) { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user, ts: Date.now() })); usuarioLogado = user; document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('statusUser').innerText = `👤 ${user} · v12.5`; err.textContent = ''; if (document.getElementById('page-ra').classList.contains('active')) carregarDados(); if (document.getElementById('page-detratores').classList.contains('active')) carregarDadosDetratores(); } else { err.textContent = 'Credenciais inválidas.'; document.getElementById('loginPass').value = ''; document.getElementById('loginPass').focus(); } }
 function fazerLogout() { sessionStorage.removeItem(SESSION_KEY); window.location.reload(); }
 window.onload = () => { if (verificarSessao()) { if (document.getElementById('page-ra').classList.contains('active')) carregarDados(); if (document.getElementById('page-detratores').classList.contains('active')) carregarDadosDetratores(); } setInterval(() => { if (verificarSessao()) { if (document.getElementById('page-ra').classList.contains('active')) carregarDados(); if (document.getElementById('page-detratores').classList.contains('active')) carregarDadosDetratores(); } }, 120000); };
 </script>
@@ -844,7 +850,7 @@ window.onload = () => { if (verificarSessao()) { if (document.getElementById('pa
     <div class="login-field"><label>Senha</label><input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')tentarLogin()"></div>
     <button class="login-btn" onclick="tentarLogin()">Entrar →</button>
     <div class="login-err" id="loginErr"></div>
-    <div class="login-footer">Nelogica · Customer Care · v12.0 · 2026</div>
+    <div class="login-footer">Nelogica · Customer Care · v12.5 · 2026</div>
   </div>
 </div>
 </body>
