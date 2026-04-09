@@ -885,7 +885,7 @@ async function carregarDados() {
                 _id: String(i), 
                 ticket: f['Ticket Zendesk'] || '', 
                 ra: f['ID ReclameAqui'] || '', 
-                cliente: f['Cliente'] || '', 
+                cliente: formatarNome(f['Cliente'] || ''), 
                 produto: f['Produto'] || '', 
                 categoria: f['Categoria'] || '', 
                 data: dataAbertura, 
