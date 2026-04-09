@@ -437,7 +437,12 @@
     "necessario_atuacao": "Sim",
     "ticket_atuacao": "3210970",
     "lider_responsavel": "Ebenvegnu@nelogica.com.br",
-    "comentarios_qa": "Foi orientado ao cliente registrar uma sugestão. Cliente saiu insatisfeito com a afirmação que seria o comportamento esperando, informando que atualizações passadas era distinto. Não encontrado e nem citado nenhum conteúdo que informasse que o comportamento é o esperado."
+    "comentarios_qa": "Foi orientado ao cliente registrar uma sugestão. Cliente saiu insatisfeito com a afirmação que seria o comportamento esperando, informando que atualizações passadas era distinto. Não encontrado e nem citado nenhum conteúdo que informasse que o comportamento é o esperado.",
+    "data_atuacao": "N/A",
+    "status_recuperacao": "Perdido",
+    "satisfacao_pos_contato": "Neutro",
+    "is_case": false,
+    "ultimaAlteracao": "Atuado por antony em 09/04/2026, 13:02:25"
   },
   {
     "ticket_detracao": "3211114",
