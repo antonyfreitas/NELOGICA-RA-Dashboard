@@ -296,36 +296,55 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
       
       <div class="kpi-grid">
         <div class="kpi-card">
-          <div class="kpi-label">Total Analisado</div>
+          <div class="kpi-label">Total Detratores</div>
           <div class="kpi-value" id="det-kpi-total">—</div>
-          <div class="kpi-sub">formulários submetidos</div>
+          <div class="kpi-sub" id="det-kpi-tendencia-total" style="font-weight: 600;"></div>
         </div>
         <div class="kpi-card warning">
           <div class="kpi-label">Com Sinalização</div>
           <div class="kpi-value warning" id="det-kpi-sinalizados">—</div>
           <div class="kpi-sub" id="det-kpi-sinalizados-pct"></div>
         </div>
-        <div class="kpi-card danger">
-          <div class="kpi-label">Necessitou Atuação</div>
-          <div class="kpi-value danger" id="det-kpi-atuacao">—</div>
-          <div class="kpi-sub" id="det-kpi-atuacao-pct"></div>
-        </div>
         <div class="kpi-card success">
-          <div class="kpi-label">Sem Sinalização</div>
-          <div class="kpi-value success" id="det-kpi-ok">—</div>
-          <div class="kpi-sub">atendimento limpo</div>
+          <div class="kpi-label">Taxa de Recuperação</div>
+          <div class="kpi-value success" id="det-kpi-recuperacao">—</div>
+          <div class="kpi-sub">dos clientes contatados</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Satisfação Pós-Contato</div>
+          <div class="kpi-value" id="det-kpi-satisfacao">—</div>
+          <div class="kpi-sub">nota média (1 a 5)</div>
+        </div>
+      </div>
+
+      <div class="charts-grid" style="grid-template-columns: 1fr; margin-bottom: 20px;">
+        <div class="chart-card">
+          <div class="chart-title">Evolução Diária de Detrações (Volumetria)</div>
+          <div class="chart-wrap" style="height: 200px;"><canvas id="chartDetDiario"></canvas></div>
         </div>
       </div>
 
       <div class="charts-grid">
         <div class="chart-card">
-          <div class="chart-title">Status de Sinalização</div>
-          <div class="chart-wrap"><canvas id="chartSinalizacao"></canvas></div>
+          <div class="chart-title">Status de Recuperação</div>
+          <div class="chart-wrap"><canvas id="chartStatusRec"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Top Agressores (Por Líder)</div>
+          <div class="chart-wrap"><canvas id="chartAgressores"></canvas></div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">Canais de Origem da Detração</div>
+          <div class="chart-wrap"><canvas id="chartCanal"></canvas></div>
         </div>
         <div class="chart-card">
           <div class="chart-title">Top Motivos da Detração</div>
           <div class="chart-wrap"><canvas id="chartMotivos"></canvas></div>
         </div>
+      </div>
       </div>
 
       <div class="charts-grid">
