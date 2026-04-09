@@ -1,828 +1,1879 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<title>Nelogica | Customer Care Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root { --bg:#0b0f1a;--surface:#131929;--surface2:#1a2236;--border:rgba(255,255,255,0.07); --accent:#3d7fff;--accent2:#00e5c3;--danger:#ff4d6d;--warning:#ffb930;--success:#00e5c3; --text:#e8edf5;--muted:#6b7a99;--mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif; }
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex;min-height:100vh;overflow-x:hidden;}
-.sidebar{width:220px;min-height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:28px 20px;position:fixed;display:flex;flex-direction:column;z-index:100;}
-.logo{font-family:var(--mono);font-size:15px;color:var(--accent);letter-spacing:.05em;margin-bottom:4px;font-weight:700;} .logo span{color:var(--accent2);}
-.logo-sub{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:32px;}
-.nav-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.15em;margin-bottom:10px;margin-top:24px;}
-.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;font-size:13px;color:var(--muted);cursor:pointer;transition:all .2s;margin-bottom:2px;font-weight:500;}
-.nav-item:hover,.nav-item.active{background:rgba(61,127,255,.12);color:var(--text);} .nav-item.active{color:var(--accent);}
-.sidebar-status{margin-top:auto;padding-top:20px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);}
-.status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted);margin-right:6px;vertical-align:middle;}
-.status-dot.ok{background:var(--success);box-shadow:0 0 6px var(--success);} .status-dot.loading{background:var(--warning);animation:pulse 1s infinite;}
-.main{margin-left:220px;padding:36px 40px;width:calc(100% - 220px);} .page{display:none;} .page.active{display:block;}
-.page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:32px;}
-.page-title{font-family:var(--mono);font-size:24px;font-weight:700;} .page-title span{color:var(--accent2);}
-.page-subtitle{font-size:12px;color:var(--muted);margin-top:4px;}
-.version-tag{font-family:var(--mono);font-size:10px;color:var(--muted);background:var(--surface2);padding:4px 10px;border-radius:20px;border:1px solid var(--border);}
-.upload-bar{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 22px;display:flex;align-items:center;gap:20px;margin-bottom:24px;flex-wrap:wrap;}
-.filter-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.btn-periodo{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:11px;font-family:var(--sans);font-weight:600;transition:all .2s;}
-.btn-periodo:hover,.btn-periodo.active{border-color:var(--accent);color:var(--accent);} .btn-periodo.active{background:rgba(61,127,255,.15);}
-input[type="date"]{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:6px 10px;border-radius:6px;font-size:11px;font-family:var(--sans);color-scheme:dark;}
-.search-input{background:var(--surface2) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="%236b7a99" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>') no-repeat 10px center; padding:7px 12px 7px 30px; border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--sans); min-width:200px;} .search-input:focus{outline:none; border-color:var(--accent);}
-.btn-atualizar{background:var(--accent);color:white;border:none;padding:7px 18px;border-radius:6px;cursor:pointer;font-size:11px;font-family:var(--sans);font-weight:700;transition:.2s;letter-spacing:.05em;text-transform:uppercase;} .btn-atualizar:hover{background:#5a91ff;}
-.divider-v{width:1px;height:28px;background:var(--border);}
-.btn-export{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-family:var(--sans);font-weight:600;transition:all .2s;} .btn-export:hover{border-color:var(--accent2);color:var(--accent2);}
-.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
-.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px 22px 18px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;}
-.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);opacity:0;transition:opacity .2s;} .kpi-card:hover::before{opacity:1;}
-.kpi-card:hover{border-color:rgba(61,127,255,.3);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3);}
-.kpi-card.danger::before{background:var(--danger);} .kpi-card.success::before{background:var(--success);} .kpi-card.warning::before{background:var(--warning);}
-.kpi-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:12px;font-weight:600;}
-.kpi-value{font-family:var(--mono);font-size:32px;font-weight:700;line-height:1;} .kpi-value.danger{color:var(--danger);} .kpi-value.success{color:var(--success);} .kpi-value.warning{color:var(--warning);}
-.kpi-sub{font-size:11px;color:var(--muted);margin-top:8px;}
-.progress-bar-bg{background:var(--surface2);border-radius:4px;height:6px;margin-top:8px;overflow:hidden;} .progress-bar-fill{height:100%;border-radius:4px;transition:width .8s ease;}
-.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
-.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;}
-.chart-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:18px;}
-.chart-wrap{position:relative;height:260px;}
-.detractors-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;margin-bottom:20px;}
-.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-.section-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-weight:600;}
-.badge{font-family:var(--mono);font-size:10px;padding:3px 10px;border-radius:20px;font-weight:700;}
-.badge-danger{background:rgba(255,77,109,.15);color:var(--danger);border:1px solid rgba(255,77,109,.3);} .badge-warning{background:rgba(255,185,48,.15);color:var(--warning);border:1px solid rgba(255,185,48,.3);}
-.mini-table{width:100%;border-collapse:collapse;} .mini-table th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);}
-.mini-table td{font-size:12px;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle;} .mini-table tr:last-child td{border-bottom:none;} .mini-table tr:hover td{background:rgba(255,255,255,.02);}
-.zendesk-link{font-family:var(--mono);background:rgba(61,127,255,.15);color:var(--accent)!important;padding:4px 8px;border-radius:4px;text-decoration:none;font-size:10px;font-weight:700;border:1px solid rgba(61,127,255,.3);transition:.2s;} .zendesk-link:hover{background:rgba(61,127,255,.3);}
-.sla-ok{color:var(--success);font-family:var(--mono);font-size:11px;font-weight:700;} .sla-bad{color:var(--danger);font-family:var(--mono);font-size:11px;font-weight:700;}
-.chip{display:inline-block;font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600;background:rgba(61,127,255,.12);color:#7aabff;border:1px solid rgba(61,127,255,.2);}
-.chip.profit{background:rgba(0,229,195,.1);color:var(--accent2);border-color:rgba(0,229,195,.2);} .chip.blackarrow{background:rgba(255,185,48,.1);color:var(--warning);border-color:rgba(255,185,48,.2);} .chip.akeloo{background:rgba(255,77,109,.1);color:var(--danger);border-color:rgba(255,77,109,.2);}
-.empty-state{text-align:center;padding:60px 20px;color:var(--muted);} .empty-icon{font-size:40px;margin-bottom:16px;opacity:.4;} .empty-text{font-size:13px;}
+    <meta charset="UTF-8">
+    <title>Nelogica | Customer Care Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ==========================================================================
+           VARIÁVEIS GERAIS E RESET
+           ========================================================================== */
+        :root { 
+            --bg: #0b0f1a;
+            --surface: #131929;
+            --surface2: #1a2236;
+            --border: rgba(255,255,255,0.07); 
+            --accent: #3d7fff;
+            --accent2: #00e5c3;
+            --danger: #ff4d6d;
+            --warning: #ffb930;
+            --success: #00e5c3; 
+            --text: #e8edf5;
+            --muted: #6b7a99;
+            --mono: 'Space Mono', monospace;
+            --sans: 'DM Sans', sans-serif; 
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: var(--sans); 
+            background: var(--bg); 
+            color: var(--text); 
+            display: flex; 
+            min-height: 100vh; 
+            overflow-x: hidden; 
+        }
 
-/* MODALS */
-.modal{display:none;position:fixed;z-index:9999;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);}
-.modal-content{background:var(--surface);border:1px solid var(--border);border-radius:16px;margin:3% auto;padding:32px;width:88%;max-width:960px;max-height:85vh;overflow-y:auto;}
-.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;} .modal-title{font-family:var(--mono);font-size:16px;color:var(--accent);}
-.close{font-size:22px;cursor:pointer;color:var(--muted);line-height:1;background:none;border:none;transition:color .2s;} .close:hover{color:var(--text);}
-.edit-modal{visibility:hidden;opacity:0;position:fixed;z-index:10000;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;pointer-events:none;transition:opacity .15s;} .edit-modal.open{visibility:visible;opacity:1;pointer-events:all;}
-.edit-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;width:90%;max-width:650px;max-height:85vh;overflow-y:auto;}
-.edit-box h3{font-family:var(--mono);font-size:15px;color:var(--accent);margin-bottom:24px;}
-.edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.ef{display:flex;flex-direction:column;gap:5px;} .ef label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-weight:600;}
-.ef input,.ef select, .ef textarea{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:7px;font-size:13px;font-family:var(--sans);transition:.2s;} .ef input:focus,.ef select:focus, .ef textarea:focus{outline:none;border-color:var(--accent);}
-.edit-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid var(--border);}
-.btn-cancel-edit{background:none;border:1px solid var(--border);color:var(--muted);padding:8px 20px;border-radius:7px;cursor:pointer;font-size:12px;font-family:var(--sans);font-weight:600;transition:.2s;} .btn-cancel-edit:hover{color:var(--text);border-color:var(--muted);}
-.btn-save-edit{background:var(--accent);color:white;border:none;padding:8px 24px;border-radius:7px;cursor:pointer;font-size:12px;font-family:var(--sans);font-weight:700;transition:.2s;} .btn-save-edit:hover{background:#5a91ff;transform:translateY(-1px);} .btn-save-edit.green{background:var(--success);color:#0b0f1a;} .btn-save-edit.green:hover{background:#00ffdb;}
-.btn-edit-row{background:rgba(61,127,255,.08);border:1px solid rgba(61,127,255,.2);color:var(--accent);padding:4px 10px;border-radius:5px;cursor:pointer;font-size:11px;font-family:var(--sans);font-weight:600;transition:.2s;} .btn-edit-row:hover{background:rgba(61,127,255,.15);border-color:var(--accent);}
-.btn-del-row{background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.25);color:var(--danger);padding:4px 10px;border-radius:5px;cursor:pointer;font-size:11px;font-family:var(--sans);font-weight:600;transition:.2s;margin-left:4px;} .btn-del-row:hover{background:rgba(255,77,109,.2);border-color:var(--danger);}
+        /* ==========================================================================
+           SIDEBAR E NAVEGAÇÃO
+           ========================================================================== */
+        .sidebar { 
+            width: 220px; 
+            min-height: 100vh; 
+            background: var(--surface); 
+            border-right: 1px solid var(--border); 
+            padding: 28px 20px; 
+            position: fixed; 
+            display: flex; 
+            flex-direction: column; 
+            z-index: 100; 
+        }
+        
+        .logo { font-family: var(--mono); font-size: 15px; color: var(--accent); letter-spacing: .05em; margin-bottom: 4px; font-weight: 700; } 
+        .logo span { color: var(--accent2); }
+        .logo-sub { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .12em; margin-bottom: 32px; }
+        .nav-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .15em; margin-bottom: 10px; margin-top: 24px; }
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: 13px; color: var(--muted); cursor: pointer; transition: all .2s; margin-bottom: 2px; font-weight: 500; }
+        .nav-item:hover, .nav-item.active { background: rgba(61,127,255,.12); color: var(--text); } 
+        .nav-item.active { color: var(--accent); }
+        .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+        
+        .sidebar-status { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); font-size: 11px; color: var(--muted); }
+        .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); margin-right: 6px; vertical-align: middle; }
+        .status-dot.ok { background: var(--success); box-shadow: 0 0 6px var(--success); } 
+        .status-dot.loading { background: var(--warning); animation: pulse 1s infinite; }
+        
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
+        
+        .btn-logout { background: none; border: 1px solid var(--border); color: var(--muted); padding: 6px; border-radius: 6px; font-size: 10px; font-family: var(--sans); cursor: pointer; transition: .2s; margin-top: 10px; width: 100%; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; } 
+        .btn-logout:hover { color: var(--danger); border-color: rgba(255,77,109,.3); background: rgba(255,77,109,.05); }
 
-/* UTILS */
-.toast{position:fixed;bottom:24px;right:24px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:12px 20px;border-radius:10px;font-size:13px;transform:translateY(80px);opacity:0;transition:all .3s;z-index:99999;pointer-events:none;} .toast.show{transform:translateY(0);opacity:1;} .toast.ok{border-left:3px solid var(--success);} .toast.err{border-left:3px solid var(--danger);}
-::-webkit-scrollbar{width:6px;height:6px;} ::-webkit-scrollbar-track{background:var(--surface);} ::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:3px;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}} .kpi-card,.chart-card,.detractors-card{animation:fadeUp .4s ease both;}
+        /* ==========================================================================
+           ESTRUTURA PRINCIPAL E HEADERS
+           ========================================================================== */
+        .main { margin-left: 220px; padding: 36px 40px; width: calc(100% - 220px); } 
+        .page { display: none; } 
+        .page.active { display: block; }
+        
+        .page-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 32px; }
+        .page-title { font-family: var(--mono); font-size: 24px; font-weight: 700; } 
+        .page-title span { color: var(--accent2); }
+        .page-subtitle { font-size: 12px; color: var(--muted); margin-top: 4px; }
+        .version-tag { font-family: var(--mono); font-size: 10px; color: var(--muted); background: var(--surface2); padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border); }
+        
+        /* Barra de Filtros */
+        .upload-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 22px; display: flex; align-items: center; gap: 20px; margin-bottom: 24px; flex-wrap: wrap; }
+        .filter-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .btn-periodo { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 11px; font-family: var(--sans); font-weight: 600; transition: all .2s; }
+        .btn-periodo:hover, .btn-periodo.active { border-color: var(--accent); color: var(--accent); } 
+        .btn-periodo.active { background: rgba(61,127,255,.15); }
+        
+        input[type="date"] { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 6px 10px; border-radius: 6px; font-size: 11px; font-family: var(--sans); color-scheme: dark; }
+        .search-input { background: var(--surface2) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="%236b7a99" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>') no-repeat 10px center; padding: 7px 12px 7px 30px; border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 11px; font-family: var(--sans); min-width: 200px; } 
+        .search-input:focus { outline: none; border-color: var(--accent); }
+        
+        .btn-atualizar { background: var(--accent); color: white; border: none; padding: 7px 18px; border-radius: 6px; cursor: pointer; font-size: 11px; font-family: var(--sans); font-weight: 700; transition: .2s; letter-spacing: .05em; text-transform: uppercase; } 
+        .btn-atualizar:hover { background: #5a91ff; }
+        
+        .divider-v { width: 1px; height: 28px; background: var(--border); }
+        .btn-export { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-family: var(--sans); font-weight: 600; transition: all .2s; } 
+        .btn-export:hover { border-color: var(--accent2); color: var(--accent2); }
 
-/* SPINNER PDF */
-.pdf-spinner{position:fixed;inset:0;background:rgba(11,15,26,.9);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;} .pdf-spinner p{color:var(--muted);font-size:13px;} .spinner-ring{width:40px;height:40px;border:3px solid var(--surface2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;} @keyframes spin{to{transform:rotate(360deg);}}
+        /* ==========================================================================
+           CARDS DE KPI E GRÁFICOS
+           ========================================================================== */
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+        .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px 22px 18px; cursor: pointer; transition: all .25s; position: relative; overflow: hidden; }
+        .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--accent); opacity: 0; transition: opacity .2s; } 
+        .kpi-card:hover::before { opacity: 1; }
+        .kpi-card:hover { border-color: rgba(61,127,255,.3); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.3); }
+        
+        .kpi-card.danger::before { background: var(--danger); } 
+        .kpi-card.success::before { background: var(--success); } 
+        .kpi-card.warning::before { background: var(--warning); }
+        
+        .kpi-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .12em; margin-bottom: 12px; font-weight: 600; }
+        .kpi-value { font-family: var(--mono); font-size: 32px; font-weight: 700; line-height: 1; } 
+        .kpi-value.danger { color: var(--danger); } 
+        .kpi-value.success { color: var(--success); } 
+        .kpi-value.warning { color: var(--warning); }
+        .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 8px; }
+        
+        .progress-bar-bg { background: var(--surface2); border-radius: 4px; height: 6px; margin-top: 8px; overflow: hidden; } 
+        .progress-bar-fill { height: 100%; border-radius: 4px; transition: width .8s ease; }
+        
+        .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px; }
+        .chart-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; font-weight: 600; margin-bottom: 18px; }
+        .chart-wrap { position: relative; height: 260px; }
 
-/* LOGIN */
-#loginScreen{position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;align-items:center;justify-content:center;} #loginScreen.hidden{display:none;} .login-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:48px 40px;width:380px;box-shadow:0 24px 60px rgba(0,0,0,0.6);display:flex;flex-direction:column;align-items:center;} .login-logo{font-family:var(--mono);font-size:18px;color:var(--accent);margin-bottom:4px;} .login-logo span{color:var(--accent2);} .login-sub{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:36px;} .login-title{font-size:13px;color:var(--muted);margin-bottom:20px;} .login-field{width:100%;display:flex;flex-direction:column;gap:6px;margin-bottom:14px;} .login-field label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-weight:600;} .login-field input{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:14px;font-family:var(--sans);transition:.2s;outline:none;width:100%;} .login-field input:focus{border-color:var(--accent);} .login-btn{width:100%;background:var(--accent);color:white;border:none;padding:12px;border-radius:8px;font-size:13px;font-family:var(--sans);font-weight:700;cursor:pointer;transition:.2s;margin-top:8px;} .login-btn:hover{background:#5a91ff;transform:translateY(-1px);} .login-err{font-size:12px;color:var(--danger);margin-top:8px;min-height:18px;text-align:center;} .login-footer{font-size:10px;color:#3a4560;margin-top:28px;}
-</style>
+        /* ==========================================================================
+           TABELAS E ELEMENTOS VISUAIS
+           ========================================================================== */
+        .detractors-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px; margin-bottom: 20px; }
+        .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        .section-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; font-weight: 600; }
+        
+        .badge { font-family: var(--mono); font-size: 10px; padding: 3px 10px; border-radius: 20px; font-weight: 700; }
+        .badge-danger { background: rgba(255,77,109,.15); color: var(--danger); border: 1px solid rgba(255,77,109,.3); } 
+        .badge-warning { background: rgba(255,185,48,.15); color: var(--warning); border: 1px solid rgba(255,185,48,.3); }
+        
+        .mini-table { width: 100%; border-collapse: collapse; } 
+        .mini-table th { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+        .mini-table td { font-size: 12px; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,.03); vertical-align: middle; } 
+        .mini-table tr:last-child td { border-bottom: none; } 
+        .mini-table tr:hover td { background: rgba(255,255,255,.02); }
+        
+        .zendesk-link { font-family: var(--mono); background: rgba(61,127,255,.15); color: var(--accent)!important; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 10px; font-weight: 700; border: 1px solid rgba(61,127,255,.3); transition: .2s; } 
+        .zendesk-link:hover { background: rgba(61,127,255,.3); }
+        
+        .sla-ok { color: var(--success); font-family: var(--mono); font-size: 11px; font-weight: 700; } 
+        .sla-bad { color: var(--danger); font-family: var(--mono); font-size: 11px; font-weight: 700; }
+        
+        .chip { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 600; background: rgba(61,127,255,.12); color: #7aabff; border: 1px solid rgba(61,127,255,.2); }
+        .chip.profit { background: rgba(0,229,195,.1); color: var(--accent2); border-color: rgba(0,229,195,.2); } 
+        .chip.blackarrow { background: rgba(255,185,48,.1); color: var(--warning); border-color: rgba(255,185,48,.2); } 
+        .chip.akeloo { background: rgba(255,77,109,.1); color: var(--danger); border-color: rgba(255,77,109,.2); }
+        
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); } 
+        .empty-icon { font-size: 40px; margin-bottom: 16px; opacity: .4; } 
+        .empty-text { font-size: 13px; }
+
+        /* ==========================================================================
+           MODAIS DE EDIÇÃO E VISUALIZAÇÃO
+           ========================================================================== */
+        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,.75); backdrop-filter: blur(4px); }
+        .modal-content { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; margin: 3% auto; padding: 32px; width: 88%; max-width: 960px; max-height: 85vh; overflow-y: auto; }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; } 
+        .modal-title { font-family: var(--mono); font-size: 16px; color: var(--accent); }
+        .close { font-size: 22px; cursor: pointer; color: var(--muted); line-height: 1; background: none; border: none; transition: color .2s; } 
+        .close:hover { color: var(--text); }
+        
+        .edit-modal { visibility: hidden; opacity: 0; position: fixed; z-index: 10000; inset: 0; background: rgba(0,0,0,.82); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; pointer-events: none; transition: opacity .15s; } 
+        .edit-modal.open { visibility: visible; opacity: 1; pointer-events: all; }
+        .edit-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px; width: 90%; max-width: 650px; max-height: 85vh; overflow-y: auto; }
+        .edit-box h3 { font-family: var(--mono); font-size: 15px; color: var(--accent); margin-bottom: 24px; }
+        
+        .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .ef { display: flex; flex-direction: column; gap: 5px; } 
+        .ef label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; font-weight: 600; }
+        .ef input, .ef select, .ef textarea { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 7px; font-size: 13px; font-family: var(--sans); transition: .2s; } 
+        .ef input:focus, .ef select:focus, .ef textarea:focus { outline: none; border-color: var(--accent); }
+        
+        .edit-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+        .btn-cancel-edit { background: none; border: 1px solid var(--border); color: var(--muted); padding: 8px 20px; border-radius: 7px; cursor: pointer; font-size: 12px; font-family: var(--sans); font-weight: 600; transition: .2s; } 
+        .btn-cancel-edit:hover { color: var(--text); border-color: var(--muted); }
+        .btn-save-edit { background: var(--accent); color: white; border: none; padding: 8px 24px; border-radius: 7px; cursor: pointer; font-size: 12px; font-family: var(--sans); font-weight: 700; transition: .2s; } 
+        .btn-save-edit:hover { background: #5a91ff; transform: translateY(-1px); } 
+        .btn-save-edit.green { background: var(--success); color: #0b0f1a; } 
+        .btn-save-edit.green:hover { background: #00ffdb; }
+        
+        .btn-edit-row { background: rgba(61,127,255,.08); border: 1px solid rgba(61,127,255,.2); color: var(--accent); padding: 4px 10px; border-radius: 5px; cursor: pointer; font-size: 11px; font-family: var(--sans); font-weight: 600; transition: .2s; } 
+        .btn-edit-row:hover { background: rgba(61,127,255,.15); border-color: var(--accent); }
+        .btn-del-row { background: rgba(255,77,109,.08); border: 1px solid rgba(255,77,109,.25); color: var(--danger); padding: 4px 10px; border-radius: 5px; cursor: pointer; font-size: 11px; font-family: var(--sans); font-weight: 600; transition: .2s; margin-left: 4px; } 
+        .btn-del-row:hover { background: rgba(255,77,109,.2); border-color: var(--danger); }
+
+        /* ==========================================================================
+           TOASTS E ANIMAÇÕES
+           ========================================================================== */
+        .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 12px 20px; border-radius: 10px; font-size: 13px; transform: translateY(80px); opacity: 0; transition: all .3s; z-index: 99999; pointer-events: none; } 
+        .toast.show { transform: translateY(0); opacity: 1; } 
+        .toast.ok { border-left: 3px solid var(--success); } 
+        .toast.err { border-left: 3px solid var(--danger); }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; } 
+        ::-webkit-scrollbar-track { background: var(--surface); } 
+        ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
+        
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } } 
+        .kpi-card, .chart-card, .detractors-card { animation: fadeUp .4s ease both; }
+
+        /* SPINNER PDF */
+        .pdf-spinner { position: fixed; inset: 0; background: rgba(11,15,26,.9); z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; } 
+        .pdf-spinner p { color: var(--muted); font-size: 13px; } 
+        .spinner-ring { width: 40px; height: 40px; border: 3px solid var(--surface2); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; } 
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* LOGIN */
+        #loginScreen { position: fixed; inset: 0; z-index: 99999; background: var(--bg); display: flex; align-items: center; justify-content: center; } 
+        #loginScreen.hidden { display: none; } 
+        .login-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 48px 40px; width: 380px; box-shadow: 0 24px 60px rgba(0,0,0,0.6); display: flex; flex-direction: column; align-items: center; } 
+        .login-logo { font-family: var(--mono); font-size: 18px; color: var(--accent); margin-bottom: 4px; } 
+        .login-logo span { color: var(--accent2); } 
+        .login-sub { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .12em; margin-bottom: 36px; } 
+        .login-title { font-size: 13px; color: var(--muted); margin-bottom: 20px; } 
+        .login-field { width: 100%; display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; } 
+        .login-field label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; font-weight: 600; } 
+        .login-field input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 14px; font-family: var(--sans); transition: .2s; outline: none; width: 100%; } 
+        .login-field input:focus { border-color: var(--accent); } 
+        .login-btn { width: 100%; background: var(--accent); color: white; border: none; padding: 12px; border-radius: 8px; font-size: 13px; font-family: var(--sans); font-weight: 700; cursor: pointer; transition: .2s; margin-top: 8px; } 
+        .login-btn:hover { background: #5a91ff; transform: translateY(-1px); } 
+        .login-err { font-size: 12px; color: var(--danger); margin-top: 8px; min-height: 18px; text-align: center; } 
+        .login-footer { font-size: 10px; color: #3a4560; margin-top: 28px; }
+    </style>
 </head>
 <body>
 
 <div class="sidebar">
-  <div class="logo">NELO<span>GICA</span></div>
-  <div class="logo-sub">Customer Care</div>
-  <div class="nav-label">Projetos</div>
-  <div class="nav-item active" onclick="navegarPara('ra')" id="nav-ra"><span class="nav-icon">📊</span> Reclame Aqui</div>
-  <div class="nav-item" onclick="navegarPara('detratores')" id="nav-detratores"><span class="nav-icon">⚠️</span> Detratores</div>
-  <div class="sidebar-status">
-    <div><span class="status-dot" id="statusDot"></span><span id="statusText">Carregando...</span></div>
-    <div style="margin-top:6px;font-family:var(--mono);font-size:9px;color:#3a4560;" id="statusUser"></div>
-    <button class="btn-logout" onclick="fazerLogout()">↩ Sair da conta</button>
-  </div>
+    <div class="logo">NELO<span>GICA</span></div>
+    <div class="logo-sub">Customer Care</div>
+    
+    <div class="nav-label">Projetos</div>
+    <div class="nav-item active" onclick="navegarPara('ra')" id="nav-ra">
+        <span class="nav-icon">📊</span> Reclame Aqui
+    </div>
+    <div class="nav-item" onclick="navegarPara('detratores')" id="nav-detratores">
+        <span class="nav-icon">⚠️</span> Detratores
+    </div>
+    
+    <div class="sidebar-status">
+        <div><span class="status-dot" id="statusDot"></span><span id="statusText">Carregando...</span></div>
+        <div style="margin-top:6px;font-family:var(--mono);font-size:9px;color:#3a4560;" id="statusUser"></div>
+        <button class="btn-logout" onclick="fazerLogout()">↩ Sair da conta</button>
+    </div>
 </div>
 
 <div class="main">
-  <div id="page-ra" class="page active">
-    <div class="page-header">
-      <div>
-        <div class="page-title">Reclame <span>Aqui</span></div>
-        <div class="page-subtitle">Análise de atendimentos e indicadores de qualidade</div>
-      </div>
-      <div class="version-tag">v13.5 · 2026</div>
+
+    <div id="page-ra" class="page active">
+        <div class="page-header">
+            <div>
+                <div class="page-title">Reclame <span>Aqui</span></div>
+                <div class="page-subtitle">Análise de atendimentos e indicadores de qualidade</div>
+            </div>
+            <div class="version-tag">v14.0 · Master</div>
+        </div>
+
+        <div class="upload-bar">
+            <div class="filter-group">
+                <input type="text" id="buscaRA" class="search-input" placeholder="Pesquisar ticket, cliente ou categoria..." onkeyup="processarDados()">
+                <div class="divider-v"></div>
+                <button class="btn-periodo btn-data" onclick="definirPeriodo('hoje',event,'ra')">Hoje</button>
+                <button class="btn-periodo btn-data" onclick="definirPeriodo('semana',event,'ra')">7 Dias</button>
+                <button class="btn-periodo btn-data" onclick="definirPeriodo('mes',event,'ra')">Último mês</button>
+                <button class="btn-periodo btn-data" onclick="definirPeriodo('ano',event,'ra')">Ano 2026</button>
+                <button class="btn-periodo btn-data" onclick="definirPeriodo('tudo',event,'ra')">Tudo</button>
+                <input type="date" id="dataInicio" onchange="processarDados()">
+                <input type="date" id="dataFim" onchange="processarDados()">
+                <div class="divider-v"></div>
+                <button class="btn-atualizar" onclick="carregarDados()">⟳ Sincronizar</button>
+                <button class="btn-atualizar" onclick="abrirModalAdicionar()" style="background:var(--success);color:#0b0f1a;">＋ Novo Caso</button>
+                <div class="divider-v"></div>
+                <button class="btn-export" onclick="exportarGeral('csv', 'ra')">⬇ CSV</button>
+                <button class="btn-export" onclick="exportarGeral('xlsx', 'ra')">⬇ XLSX</button>
+                <button class="btn-export" onclick="exportarPDF('ra')">⬇ PDF</button>
+            </div>
+        </div>
+
+        <div id="dashboard-capture">
+            <div class="kpi-grid">
+                <div class="kpi-card" onclick="abrirModal('total')">
+                    <div class="kpi-label">Total de Casos</div>
+                    <div class="kpi-value" id="kpi-total">—</div>
+                    <div class="kpi-sub">no período selecionado</div>
+                </div>
+                <div class="kpi-card success" onclick="abrirModal('resolvidos')">
+                    <div class="kpi-label">Resolvidos CC</div>
+                    <div class="kpi-value success" id="kpi-resolvidos">—</div>
+                    <div class="kpi-sub" id="kpi-res-pct"></div>
+                </div>
+                <div class="kpi-card" onclick="abrirModal('fora_sla')">
+                    <div class="kpi-label">Dentro SLA (5d)</div>
+                    <div class="kpi-value" id="kpi-sla">—</div>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="sla-bar" style="background:var(--success);width:0%"></div></div>
+                </div>
+                <div class="kpi-card warning" onclick="abrirModal('total')">
+                    <div class="kpi-label">Média de Dias</div>
+                    <div class="kpi-value warning" id="kpi-tempo">—</div>
+                    <div class="kpi-sub">tempo médio em aberto/resolução</div>
+                </div>
+            </div>
+
+            <div class="charts-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 20px;">
+                <div class="chart-card">
+                    <div class="chart-title">Aberturas Diárias (Curto Prazo)</div>
+                    <div class="chart-wrap" style="height: 200px;"><canvas id="chartEvolucaoRA"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">Aberturas por Mês (Longo Prazo)</div>
+                    <div class="chart-wrap" style="height: 200px;"><canvas id="chartMensalRA"></canvas></div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-title">% Voltaria a Fazer Negócio</div>
+                    <div class="chart-wrap"><canvas id="chartVoltaria"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">Avaliação de Satisfação (Notas RA)</div>
+                    <div class="chart-wrap"><canvas id="chartNotas"></canvas></div>
+                </div>
+            </div>
+            
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-title">Casos por Produto</div>
+                    <div class="chart-wrap"><canvas id="chartProduto"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">Casos por Categoria</div>
+                    <div class="chart-wrap"><canvas id="chartCategorias"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="detractors-card">
+            <div class="section-header">
+                <div class="section-title">⚠️ Casos pendentes / sem nota RA</div>
+                <span class="badge badge-warning" id="badge-semNota">0 casos</span>
+            </div>
+            <div id="tabela-sem-nota">
+                <div class="empty-state"><div class="empty-icon">📂</div><div class="empty-text">Carregando dados...</div></div>
+            </div>
+        </div>
     </div>
 
-    <div class="upload-bar">
-      <div class="filter-group">
-        <input type="text" id="buscaRA" class="search-input" placeholder="Pesquisar ticket, cliente ou categoria..." onkeyup="processarDados()">
-        <div class="divider-v"></div>
-        <button class="btn-periodo btn-data" onclick="definirPeriodo('hoje',event,'ra')">Hoje</button>
-        <button class="btn-periodo btn-data" onclick="definirPeriodo('semana',event,'ra')">7 Dias</button>
-        <button class="btn-periodo btn-data" onclick="definirPeriodo('mes',event,'ra')">Último mês</button>
-        <button class="btn-periodo btn-data" onclick="definirPeriodo('ano',event,'ra')">Ano 2026</button>
-        <button class="btn-periodo btn-data" onclick="definirPeriodo('tudo',event,'ra')">Tudo</button>
-        <input type="date" id="dataInicio" onchange="processarDados()">
-        <input type="date" id="dataFim" onchange="processarDados()">
-        <div class="divider-v"></div>
-        <button class="btn-atualizar" onclick="carregarDados()">⟳ Sincronizar</button>
-        <button class="btn-atualizar" onclick="abrirModalAdicionar()" style="background:var(--success);color:#0b0f1a;">＋ Novo Caso</button>
-        <div class="divider-v"></div>
-        <button class="btn-export" onclick="exportarGeral('csv', 'ra')">⬇ CSV</button>
-        <button class="btn-export" onclick="exportarGeral('xlsx', 'ra')">⬇ XLSX</button>
-        <button class="btn-export" onclick="exportarPDF('ra')">⬇ PDF</button>
-      </div>
+
+    <div id="page-detratores" class="page">
+        <div class="page-header" style="margin-bottom: 24px;">
+            <div>
+                <div class="page-title">Projeto <span>Detratores</span></div>
+                <div class="page-subtitle">Análise de BI e atuação em detratores dos tickets (Pré-NPS)</div>
+            </div>
+            <div class="version-tag">Customer Care · 2026</div>
+        </div>
+
+        <div class="upload-bar">
+            <div class="filter-group">
+                <button class="btn-periodo active" id="btn-sub-dash" onclick="alternarVisaoDetratores('dash')">📊 Visão Geral</button>
+                <button class="btn-periodo" id="btn-sub-form" onclick="alternarVisaoDetratores('form')">📝 Inserir Dados</button>
+                <div class="divider-v"></div>
+                <input type="text" id="buscaDet" class="search-input" placeholder="Pesquisar ticket, líder, agente..." onkeyup="processarPainelDetratores()">
+                <div class="divider-v"></div>
+                <button class="btn-periodo btn-data" onclick="definirPeriodo('hoje',event,'det')">Hoje</button>
+                <button class="btn-periodo btn-data" onclick="definirPeriodo('semana',event,'det')">7 Dias</button>
+                <button class="btn-periodo btn-data" onclick="definirPeriodo('mes',event,'det')">Último mês</button>
+                <button class="btn-periodo btn-data" onclick="definirPeriodo('ano',event,'det')">Ano 2026</button>
+                <button class="btn-periodo btn-data" onclick="definirPeriodo('tudo',event,'det')">Tudo</button>
+                <input type="date" id="dataInicioDet" onchange="processarPainelDetratores()">
+                <input type="date" id="dataFimDet" onchange="processarPainelDetratores()">
+                <div class="divider-v"></div>
+                <button class="btn-atualizar" onclick="carregarDadosDetratores()">⟳ Sincronizar</button>
+                <div class="divider-v"></div>
+                <button class="btn-export" onclick="exportarGeral('csv', 'detratores')">⬇ CSV</button>
+                <button class="btn-export" onclick="exportarGeral('xlsx', 'detratores')">⬇ XLSX</button>
+                <button class="btn-export" onclick="exportarPDF('detratores')">⬇ PDF</button>
+            </div>
+        </div>
+
+        <div id="detratores-dash" style="display: block;">
+            <div id="detratores-capture">
+                <div class="kpi-grid">
+                    <div class="kpi-card" onclick="abrirModalDetratores('todos')">
+                        <div class="kpi-label">Total Detratores</div>
+                        <div class="kpi-value" id="det-kpi-total">—</div>
+                        <div class="kpi-sub" id="det-kpi-tendencia-total" style="font-weight: 600;"></div>
+                    </div>
+                    <div class="kpi-card warning" onclick="abrirModalDetratores('sinalizados')">
+                        <div class="kpi-label">Com Sinalização</div>
+                        <div class="kpi-value warning" id="det-kpi-sinalizados">—</div>
+                        <div class="kpi-sub" id="det-kpi-sinalizados-pct"></div>
+                    </div>
+                    <div class="kpi-card success" onclick="abrirModalDetratores('recuperados')">
+                        <div class="kpi-label">Taxa de Recuperação</div>
+                        <div class="kpi-value success" id="det-kpi-recuperacao">—</div>
+                        <div class="kpi-sub">dos clientes sinalizados</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">% de Satisfação Pós-Contato</div>
+                        <div class="kpi-value" id="det-kpi-satisfacao">—</div>
+                        <div class="kpi-sub">avaliaram positivamente (Like)</div>
+                    </div>
+                </div>
+
+                <div class="charts-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 20px;">
+                    <div class="chart-card">
+                        <div class="chart-title">Detrações Diárias (Curto Prazo)</div>
+                        <div class="chart-wrap" style="height: 200px;"><canvas id="chartDetDiario"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">Detrações por Mês (Longo Prazo)</div>
+                        <div class="chart-wrap" style="height: 200px;"><canvas id="chartDetMensal"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-card" style="cursor:pointer;" title="Clique nas fatias para filtrar">
+                        <div class="chart-title">Status de Recuperação 🖱️</div>
+                        <div class="chart-wrap"><canvas id="chartStatusRec"></canvas></div>
+                    </div>
+                    <div class="chart-card" style="cursor:pointer;" title="Clique nas barras para filtrar">
+                        <div class="chart-title">Top Agressores (Por Líder) 🖱️</div>
+                        <div class="chart-wrap"><canvas id="chartAgressores"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="charts-grid" style="margin-bottom: 20px;">
+                    <div class="chart-card" style="cursor:pointer;" title="Clique nas fatias para filtrar">
+                        <div class="chart-title">Canal / Origem da Detração 🖱️</div>
+                        <div class="chart-wrap"><canvas id="chartCanalOrigem"></canvas></div>
+                    </div>
+                    <div class="chart-card" style="cursor:pointer;" title="Clique nas barras para filtrar">
+                        <div class="chart-title">Top Motivos da Detração 🖱️</div>
+                        <div class="chart-wrap"><canvas id="chartMotivos"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detractors-card">
+                <div class="section-header">
+                    <div class="section-title">🔴 Fila de Ação Tática (Casos com Sinalização)</div>
+                    <span class="badge badge-danger" id="badge-detratores-acao">0 casos</span>
+                </div>
+                <div id="tabela-acao-detratores">
+                    <div class="empty-state"><div class="empty-icon">📂</div><div class="empty-text">A carregar dados...</div></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="detratores-form" style="display: none; height: calc(100vh - 220px);">
+            <iframe src="https://forms.office.com/Pages/ResponsePage.aspx?id=jchkxOlNv0aI6XiDm_4y12D-Yv6pu8tJvhm51FOsNkFUNkJET0I4Q1RGMlhKV1BaVjQ1Qk9RSVBTUC4u" width="100%" height="100%" frameborder="0" style="border: none; border-radius: 12px; background: white;"></iframe>
+        </div>
     </div>
-
-    <div id="dashboard-capture">
-      <div class="kpi-grid">
-        <div class="kpi-card" onclick="abrirModal('total')">
-          <div class="kpi-label">Total de Casos</div>
-          <div class="kpi-value" id="kpi-total">—</div>
-          <div class="kpi-sub">no período selecionado</div>
-        </div>
-        <div class="kpi-card success" onclick="abrirModal('resolvidos')">
-          <div class="kpi-label">Resolvidos CC</div>
-          <div class="kpi-value success" id="kpi-resolvidos">—</div>
-          <div class="kpi-sub" id="kpi-res-pct"></div>
-        </div>
-        <div class="kpi-card" onclick="abrirModal('fora_sla')">
-          <div class="kpi-label">Dentro SLA (5d)</div>
-          <div class="kpi-value" id="kpi-sla">—</div>
-          <div class="progress-bar-bg"><div class="progress-bar-fill" id="sla-bar" style="background:var(--success);width:0%"></div></div>
-        </div>
-        <div class="kpi-card warning" onclick="abrirModal('total')">
-          <div class="kpi-label">Média de Dias</div>
-          <div class="kpi-value warning" id="kpi-tempo">—</div>
-          <div class="kpi-sub">tempo médio de resolução</div>
-        </div>
-      </div>
-
-      <div class="charts-grid" style="grid-template-columns: 1fr; margin-bottom: 20px;">
-        <div class="chart-card"><div class="chart-title">Aberturas Diárias</div><div class="chart-wrap" style="height: 200px;"><canvas id="chartEvolucaoRA"></canvas></div></div>
-      </div>
-
-      <div class="charts-grid">
-        <div class="chart-card"><div class="chart-title">% Voltaria a Fazer Negócio</div><div class="chart-wrap"><canvas id="chartVoltaria"></canvas></div></div>
-        <div class="chart-card"><div class="chart-title">Avaliação de Satisfação (Notas RA)</div><div class="chart-wrap"><canvas id="chartNotas"></canvas></div></div>
-      </div>
-      <div class="charts-grid">
-        <div class="chart-card"><div class="chart-title">Casos por Produto</div><div class="chart-wrap"><canvas id="chartProduto"></canvas></div></div>
-        <div class="chart-card"><div class="chart-title">Casos por Categoria</div><div class="chart-wrap"><canvas id="chartCategorias"></canvas></div></div>
-      </div>
-    </div>
-
-    <div class="detractors-card">
-      <div class="section-header">
-        <div class="section-title">⚠️ Casos sem nota RA</div>
-        <span class="badge badge-warning" id="badge-semNota">0 casos</span>
-      </div>
-      <div id="tabela-sem-nota"><div class="empty-state"><div class="empty-icon">📂</div><div class="empty-text">Carregando dados...</div></div></div>
-    </div>
-  </div>
-
-  <div id="page-detratores" class="page">
-    <div class="page-header" style="margin-bottom: 24px;">
-      <div>
-        <div class="page-title">Projeto <span>Detratores</span></div>
-        <div class="page-subtitle">Análise de BI e atuação em detratores dos tickets (Pré-NPS)</div>
-      </div>
-      <div class="version-tag">Customer Care · 2026</div>
-    </div>
-
-    <div class="upload-bar">
-      <div class="filter-group">
-        <button class="btn-periodo active" id="btn-sub-dash" onclick="alternarVisaoDetratores('dash')">📊 Visão Geral</button>
-        <button class="btn-periodo" id="btn-sub-form" onclick="alternarVisaoDetratores('form')">📝 Inserir Dados</button>
-        <div class="divider-v"></div>
-        <input type="text" id="buscaDet" class="search-input" placeholder="Pesquisar ticket, líder, agente..." onkeyup="processarPainelDetratores()">
-        <div class="divider-v"></div>
-        <button class="btn-periodo btn-data" onclick="definirPeriodo('hoje',event,'det')">Hoje</button>
-        <button class="btn-periodo btn-data" onclick="definirPeriodo('semana',event,'det')">7 Dias</button>
-        <button class="btn-periodo btn-data" onclick="definirPeriodo('mes',event,'det')">Último mês</button>
-        <button class="btn-periodo btn-data" onclick="definirPeriodo('ano',event,'det')">Ano 2026</button>
-        <button class="btn-periodo btn-data" onclick="definirPeriodo('tudo',event,'det')">Tudo</button>
-        <input type="date" id="dataInicioDet" onchange="processarPainelDetratores()">
-        <input type="date" id="dataFimDet" onchange="processarPainelDetratores()">
-        <div class="divider-v"></div>
-        <button class="btn-atualizar" onclick="carregarDadosDetratores()">⟳ Sincronizar</button>
-        <div class="divider-v"></div>
-        <button class="btn-export" onclick="exportarGeral('csv', 'detratores')">⬇ CSV</button>
-        <button class="btn-export" onclick="exportarGeral('xlsx', 'detratores')">⬇ XLSX</button>
-        <button class="btn-export" onclick="exportarPDF('detratores')">⬇ PDF</button>
-      </div>
-    </div>
-
-    <div id="detratores-dash" style="display: block;">
-      <div id="detratores-capture">
-        <div class="kpi-grid">
-          <div class="kpi-card" onclick="abrirModalDetratores('todos')">
-            <div class="kpi-label">Total Detratores</div>
-            <div class="kpi-value" id="det-kpi-total">—</div>
-            <div class="kpi-sub" id="det-kpi-tendencia-total" style="font-weight: 600;"></div>
-          </div>
-          <div class="kpi-card warning" onclick="abrirModalDetratores('sinalizados')">
-            <div class="kpi-label">Com Sinalização</div>
-            <div class="kpi-value warning" id="det-kpi-sinalizados">—</div>
-            <div class="kpi-sub" id="det-kpi-sinalizados-pct"></div>
-          </div>
-          <div class="kpi-card success" onclick="abrirModalDetratores('recuperados')">
-            <div class="kpi-label">Taxa de Recuperação</div>
-            <div class="kpi-value success" id="det-kpi-recuperacao">—</div>
-            <div class="kpi-sub">dos clientes sinalizados</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">% Satisfação Pós-Contato</div>
-            <div class="kpi-value" id="det-kpi-satisfacao">—</div>
-            <div class="kpi-sub">avaliaram positivamente (Like)</div>
-          </div>
-        </div>
-
-        <div class="charts-grid" style="grid-template-columns: 1fr; margin-bottom: 20px;">
-          <div class="chart-card">
-            <div class="chart-title">Aberturas Diárias</div>
-            <div class="chart-wrap" style="height: 200px;"><canvas id="chartDetDiario"></canvas></div>
-          </div>
-        </div>
-
-        <div class="charts-grid">
-          <div class="chart-card" style="cursor:pointer;" title="Clique nas fatias para filtrar"><div class="chart-title">Status de Recuperação 🖱️</div><div class="chart-wrap"><canvas id="chartStatusRec"></canvas></div></div>
-          <div class="chart-card" style="cursor:pointer;" title="Clique nas barras para filtrar"><div class="chart-title">Top Agressores (Por Líder) 🖱️</div><div class="chart-wrap"><canvas id="chartAgressores"></canvas></div></div>
-        </div>
-
-        <div class="charts-grid" style="margin-bottom: 20px;">
-          <div class="chart-card" style="cursor:pointer;" title="Clique nas fatias para filtrar"><div class="chart-title">Canal / Origem da Detração 🖱️</div><div class="chart-wrap"><canvas id="chartCanalOrigem"></canvas></div></div>
-          <div class="chart-card" style="cursor:pointer;" title="Clique nas barras para filtrar"><div class="chart-title">Top Motivos da Detração 🖱️</div><div class="chart-wrap"><canvas id="chartMotivos"></canvas></div></div>
-        </div>
-      </div>
-
-      <div class="detractors-card">
-        <div class="section-header">
-          <div class="section-title">🔴 Fila de Ação Tática (Casos com Sinalização)</div>
-          <span class="badge badge-danger" id="badge-detratores-acao">0 casos</span>
-        </div>
-        <div id="tabela-acao-detratores">
-          <div class="empty-state"><div class="empty-icon">📂</div><div class="empty-text">A carregar dados...</div></div>
-        </div>
-      </div>
-    </div>
-
-    <div id="detratores-form" style="display: none; height: calc(100vh - 220px);">
-      <iframe src="https://forms.office.com/Pages/ResponsePage.aspx?id=jchkxOlNv0aI6XiDm_4y12D-Yv6pu8tJvhm51FOsNkFUNkJET0I4Q1RGMlhKV1BaVjQ1Qk9RSVBTUC4u" width="100%" height="100%" frameborder="0" style="border: none; border-radius: 12px; background: white;"></iframe>
-    </div>
-  </div>
 </div>
 
 <div id="modalTickets" class="modal" onclick="fecharModalOutside(event)">
-  <div class="modal-content">
-    <div class="modal-header">
-      <div class="modal-title" id="modalTitle">Detalhes RA</div>
-      <button class="close" onclick="fecharModal()">&times;</button>
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title" id="modalTitle">Detalhes RA</div>
+            <button class="close" onclick="fecharModal()">&times;</button>
+        </div>
+        <table class="mini-table">
+            <thead>
+                <tr>
+                    <th>Zendesk</th>
+                    <th>ID RA</th>
+                    <th>Cliente</th>
+                    <th>Produto</th>
+                    <th>Categoria</th>
+                    <th>Tempo</th>
+                    <th>Status</th>
+                    <th>Nota RA</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="modalBody"></tbody>
+        </table>
     </div>
-    <table class="mini-table">
-      <thead><tr><th>Zendesk</th><th>ID RA</th><th>Cliente</th><th>Produto</th><th>Categoria</th><th>Tempo</th><th>Status</th><th>Nota RA</th><th></th></tr></thead>
-      <tbody id="modalBody"></tbody>
-    </table>
-  </div>
 </div>
 
 <div id="modalEditar" class="edit-modal" onclick="if(event.target===this)fecharModalEditar()">
-  <div class="edit-box">
-    <h3>✏️ Editando Ticket RA <span id="editTicketLabel"></span></h3>
-    <input type="hidden" id="editRecordId">
-    <div class="edit-grid">
-      <div class="ef"><label>ID ReclameAqui</label><input id="eRA" type="text"></div>
-      <div class="ef"><label>Cliente</label><input id="eCliente" type="text"></div>
-      <div class="ef"><label>Produto</label><select id="eProduto"><option value="">—</option><option>Profit</option><option>BlackArrow</option><option>Akeloo</option><option>Automação</option><option>Vector</option></select></div>
-      <div class="ef"><label>Categoria</label><input id="eCategoria" type="text"></div>
-      <div class="ef"><label>Data Abertura</label><input id="eDataAbertura" type="date"></div>
-      <div class="ef"><label>Data Resolução <small style="color:var(--accent2)">(auto)</small></label><input id="eDataResolucao" type="date" onchange="autoCalcularTempo('e')"></div>
-      <div class="ef"><label>Tempo (dias)</label><input id="eTempo" type="number" readonly style="opacity:.7;cursor:not-allowed;"></div>
-      <div class="ef"><label>Contato CC</label><select id="eContato"><option value="">—</option><option>Sim</option><option>Não</option></select></div>
-      <div class="ef"><label>Resolvido CC</label><select id="eResolvido"><option value="false">Não</option><option value="true">Sim</option></select></div>
-      <div class="ef"><label>Nota RA</label><input id="eNota" type="number" min="0" max="10"></div>
-      <div class="ef"><label>Voltaria a Fazer Negócio?</label><select id="eVoltaria"><option value="false">Não</option><option value="true">Sim</option></select></div>
-      <div class="ef" style="grid-column: span 2;">
-        <label>Comentários do Caso (Interno)</label>
-        <textarea id="eComentario" rows="2" placeholder="Adicione observações sobre a resolução deste caso..."></textarea>
-      </div>
-      <div class="ef" style="grid-column: span 2; flex-direction: row; align-items: center; gap: 10px;">
-        <input type="checkbox" id="eIsCase" style="width: 16px; height: 16px; accent-color: var(--accent);">
-        <label for="eIsCase" style="font-size: 11px; color: var(--warning);">⭐ Marcar como Case de Destaque RA</label>
-      </div>
-      <div id="eUltimaAlteracao" style="grid-column: span 2; font-size: 10px; color: var(--muted); margin-top: 5px; text-align: right;"></div>
+    <div class="edit-box">
+        <h3>✏️ Editando Ticket RA <span id="editTicketLabel"></span></h3>
+        <input type="hidden" id="editRecordId">
+        <div class="edit-grid">
+            <div class="ef"><label>ID ReclameAqui</label><input id="eRA" type="text"></div>
+            <div class="ef"><label>Cliente</label><input id="eCliente" type="text"></div>
+            <div class="ef">
+                <label>Produto</label>
+                <select id="eProduto">
+                    <option value="">—</option>
+                    <option>Profit</option>
+                    <option>BlackArrow</option>
+                    <option>Akeloo</option>
+                    <option>Automação</option>
+                    <option>Vector</option>
+                </select>
+            </div>
+            <div class="ef"><label>Categoria</label><input id="eCategoria" type="text"></div>
+            <div class="ef"><label>Data Abertura</label><input id="eDataAbertura" type="date" onchange="autoCalcularTempo('e')"></div>
+            <div class="ef"><label>Data Resolução</label><input id="eDataResolucao" type="date" onchange="autoCalcularTempo('e')"></div>
+            <div class="ef"><label>Tempo em Aberto / Resolução (dias)</label><input id="eTempo" type="number" readonly style="opacity:.7;cursor:not-allowed;"></div>
+            <div class="ef">
+                <label>Contato CC</label>
+                <select id="eContato">
+                    <option value="">—</option>
+                    <option>Sim</option>
+                    <option>Não</option>
+                </select>
+            </div>
+            <div class="ef">
+                <label>Resolvido CC</label>
+                <select id="eResolvido">
+                    <option value="false">Não</option>
+                    <option value="true">Sim</option>
+                </select>
+            </div>
+            <div class="ef"><label>Nota RA</label><input id="eNota" type="number" min="0" max="10"></div>
+            <div class="ef">
+                <label>Voltaria a Fazer Negócio?</label>
+                <select id="eVoltaria">
+                    <option value="false">Não</option>
+                    <option value="true">Sim</option>
+                </select>
+            </div>
+            
+            <div class="ef" style="grid-column: span 2;">
+                <label>Comentários do Caso (Interno)</label>
+                <textarea id="eComentario" rows="3" placeholder="Adicione observações sobre a resolução deste caso..."></textarea>
+            </div>
+            
+            <div class="ef" style="grid-column: span 2; flex-direction: row; align-items: center; gap: 10px;">
+                <input type="checkbox" id="eIsCase" style="width: 16px; height: 16px; accent-color: var(--accent);">
+                <label for="eIsCase" style="font-size: 11px; color: var(--warning);">⭐ Marcar como Case de Destaque RA</label>
+            </div>
+            
+            <div id="eUltimaAlteracao" style="grid-column: span 2; font-size: 10px; color: var(--muted); margin-top: 5px; text-align: right; font-style: italic;"></div>
+        </div>
+        <div class="edit-actions">
+            <button class="btn-cancel-edit" onclick="fecharModalEditar()">Cancelar</button>
+            <button class="btn-save-edit" onclick="salvarEdicao()">💾 Salvar</button>
+        </div>
     </div>
-    <div class="edit-actions">
-      <button class="btn-cancel-edit" onclick="fecharModalEditar()">Cancelar</button>
-      <button class="btn-save-edit" onclick="salvarEdicao()">💾 Salvar</button>
-    </div>
-  </div>
 </div>
 
 <div id="modalAdicionar" class="edit-modal" onclick="if(event.target===this)fecharModalAdicionar()">
-  <div class="edit-box">
-    <h3>＋ Novo Caso RA</h3>
-    <div class="edit-grid">
-      <div class="ef"><label>Ticket Zendesk *</label><input id="nTicket" type="number"></div>
-      <div class="ef"><label>ID ReclameAqui</label><input id="nRA" type="text"></div>
-      <div class="ef"><label>Cliente</label><input id="nCliente" type="text"></div>
-      <div class="ef"><label>Produto</label><select id="nProduto"><option value="">—</option><option>Profit</option><option>BlackArrow</option><option>Akeloo</option><option>Automação</option></select></div>
-      <div class="ef"><label>Categoria</label><input id="nCategoria" type="text"></div>
-      <div class="ef"><label>Data Abertura</label><input id="nDataAbertura" type="date"></div>
-      <div class="ef"><label>Data Resolução</label><input id="nDataResolucao" type="date" onchange="autoCalcularTempo('n')"></div>
-      <div class="ef"><label>Tempo (dias)</label><input id="nTempo" type="number" readonly style="opacity:.7;cursor:not-allowed;"></div>
-      <div class="ef"><label>Contato CC</label><select id="nContato"><option value="">—</option><option>Sim</option><option>Não</option></select></div>
-      <div class="ef"><label>Resolvido CC</label><select id="nResolvido"><option value="false">Não</option><option value="true">Sim</option></select></div>
-      <div class="ef"><label>Nota RA</label><input id="nNota" type="number" min="0" max="10"></div>
-      <div class="ef"><label>Voltaria a Fazer Negócio?</label><select id="nVoltaria"><option value="false">Não</option><option value="true">Sim</option></select></div>
-      <div class="ef" style="grid-column: span 2;">
-        <label>Comentários do Caso (Interno)</label>
-        <textarea id="nComentario" rows="2"></textarea>
-      </div>
-      <div class="ef" style="grid-column: span 2; flex-direction: row; align-items: center; gap: 10px;">
-        <input type="checkbox" id="nIsCase" style="width: 16px; height: 16px; accent-color: var(--accent);">
-        <label for="nIsCase" style="font-size: 11px; color: var(--warning);">⭐ Marcar como Case de Destaque RA</label>
-      </div>
+    <div class="edit-box">
+        <h3>＋ Novo Caso RA</h3>
+        <div class="edit-grid">
+            <div class="ef"><label>Ticket Zendesk *</label><input id="nTicket" type="number"></div>
+            <div class="ef"><label>ID ReclameAqui</label><input id="nRA" type="text"></div>
+            <div class="ef"><label>Cliente</label><input id="nCliente" type="text"></div>
+            <div class="ef">
+                <label>Produto</label>
+                <select id="nProduto">
+                    <option value="">—</option>
+                    <option>Profit</option>
+                    <option>BlackArrow</option>
+                    <option>Akeloo</option>
+                    <option>Automação</option>
+                    <option>Vector</option>
+                </select>
+            </div>
+            <div class="ef"><label>Categoria</label><input id="nCategoria" type="text"></div>
+            <div class="ef"><label>Data Abertura</label><input id="nDataAbertura" type="date" onchange="autoCalcularTempo('n')"></div>
+            <div class="ef"><label>Data Resolução</label><input id="nDataResolucao" type="date" onchange="autoCalcularTempo('n')"></div>
+            <div class="ef"><label>Tempo em Aberto / Resolução</label><input id="nTempo" type="number" readonly style="opacity:.7;cursor:not-allowed;"></div>
+            <div class="ef">
+                <label>Contato CC</label>
+                <select id="nContato">
+                    <option value="">—</option>
+                    <option>Sim</option>
+                    <option>Não</option>
+                </select>
+            </div>
+            <div class="ef">
+                <label>Resolvido CC</label>
+                <select id="nResolvido">
+                    <option value="false">Não</option>
+                    <option value="true">Sim</option>
+                </select>
+            </div>
+            <div class="ef"><label>Nota RA</label><input id="nNota" type="number" min="0" max="10"></div>
+            <div class="ef">
+                <label>Voltaria a Fazer Negócio?</label>
+                <select id="nVoltaria">
+                    <option value="false">Não</option>
+                    <option value="true">Sim</option>
+                </select>
+            </div>
+            <div class="ef" style="grid-column: span 2;">
+                <label>Comentários do Caso (Interno)</label>
+                <textarea id="nComentario" rows="3"></textarea>
+            </div>
+            <div class="ef" style="grid-column: span 2; flex-direction: row; align-items: center; gap: 10px;">
+                <input type="checkbox" id="nIsCase" style="width: 16px; height: 16px; accent-color: var(--accent);">
+                <label for="nIsCase" style="font-size: 11px; color: var(--warning);">⭐ Marcar como Case de Destaque RA</label>
+            </div>
+        </div>
+        <div class="edit-actions">
+            <button class="btn-cancel-edit" onclick="fecharModalAdicionar()">Cancelar</button>
+            <button class="btn-save-edit green" onclick="salvarNovoCaso()">＋ Adicionar</button>
+        </div>
     </div>
-    <div class="edit-actions">
-      <button class="btn-cancel-edit" onclick="fecharModalAdicionar()">Cancelar</button>
-      <button class="btn-save-edit green" onclick="salvarNovoCaso()">＋ Adicionar</button>
-    </div>
-  </div>
 </div>
 
 <div id="modalTicketsDet" class="modal" onclick="fecharModalOutside(event)">
-  <div class="modal-content">
-    <div class="modal-header">
-      <div class="modal-title" id="modalTitleDet">Filtro Detratores</div>
-      <button class="close" onclick="fecharModalDetratores()">&times;</button>
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title" id="modalTitleDet">Filtro Detratores</div>
+            <button class="close" onclick="fecharModalDetratores()">&times;</button>
+        </div>
+        <table class="mini-table">
+            <thead>
+                <tr>
+                    <th>Zendesk</th>
+                    <th>Data</th>
+                    <th>Agente</th>
+                    <th>Líder Resp.</th>
+                    <th>Motivo</th>
+                    <th style="text-align:center">Status</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody id="modalBodyDet"></tbody>
+        </table>
     </div>
-    <table class="mini-table">
-      <thead><tr><th>Zendesk</th><th>Data</th><th>Agente</th><th>Líder Resp.</th><th>Motivo</th><th style="text-align:center">Status</th><th>Ação</th></tr></thead>
-      <tbody id="modalBodyDet"></tbody>
-    </table>
-  </div>
 </div>
 
 <div id="modalEditarDetrator" class="edit-modal" onclick="if(event.target===this)fecharModalEditarDetrator()">
-  <div class="edit-box">
-    <h3>✏️ Atuação no Detrator <span id="edDetTicket"></span></h3>
-    <input type="hidden" id="edDetRecordId">
-    <div class="edit-grid">
-      <div class="ef"><label>Líder Responsável</label><input id="edDetLider" type="text"></div>
-      <div class="ef"><label>Data de Atuação</label><input id="edDetDataAtuacao" type="date"></div>
-      <div class="ef"><label>Status da Recuperação</label>
-        <select id="edDetStatusRec"><option value="Pendente">Pendente</option><option value="Recuperado">Recuperado (Sucesso)</option><option value="Perdido">Perdido (Não revertido)</option><option value="Neutro">Neutro / Apenas Contato</option></select>
-      </div>
-      <div class="ef"><label>Satisfação Pós-Contato</label>
-        <select id="edDetSatisfacao">
-          <option value="">Pendente</option>
-          <option value="Like">👍 Like (Positivo)</option>
-          <option value="Dislike">👎 Dislike (Negativo)</option>
-          <option value="Neutro">➖ Neutro</option>
-        </select>
-      </div>
-      <div class="ef" style="grid-column: span 2;">
-        <label>Comentários da Atuação (QA / Líder)</label>
-        <textarea id="edDetComentarios" rows="3"></textarea>
-      </div>
-      <div class="ef" style="flex-direction: row; align-items: center; gap: 10px; grid-column: span 2; margin-top: 10px;">
-        <input type="checkbox" id="edDetIsCase" style="width: 18px; height: 18px; accent-color: var(--accent);">
-        <label for="edDetIsCase" style="font-size: 12px; color: var(--accent2);">⭐ Marcar como Case de Destaque</label>
-      </div>
+    <div class="edit-box">
+        <h3>✏️ Atuação no Detrator <span id="edDetTicket"></span></h3>
+        <input type="hidden" id="edDetRecordId">
+        <div class="edit-grid">
+            <div class="ef"><label>Líder Responsável</label><input id="edDetLider" type="text"></div>
+            <div class="ef"><label>Data de Atuação</label><input id="edDetDataAtuacao" type="date"></div>
+            
+            <div class="ef">
+                <label>Status da Recuperação</label>
+                <select id="edDetStatusRec">
+                    <option value="Pendente">Pendente</option>
+                    <option value="Recuperado">Recuperado (Sucesso)</option>
+                    <option value="Perdido">Perdido (Não revertido)</option>
+                    <option value="Neutro">Neutro / Apenas Contato</option>
+                </select>
+            </div>
+            
+            <div class="ef">
+                <label>Satisfação Pós-Contato</label>
+                <select id="edDetSatisfacao">
+                    <option value="">Pendente / Sem Contato</option>
+                    <option value="Like">👍 Like (Positivo)</option>
+                    <option value="Dislike">👎 Dislike (Negativo)</option>
+                    <option value="Neutro">➖ Neutro</option>
+                </select>
+            </div>
+            
+            <div class="ef" style="grid-column: span 2;">
+                <label>Comentários da Atuação (QA / Líder)</label>
+                <textarea id="edDetComentarios" rows="3"></textarea>
+            </div>
+            
+            <div class="ef" style="flex-direction: row; align-items: center; gap: 10px; grid-column: span 2; margin-top: 10px;">
+                <input type="checkbox" id="edDetIsCase" style="width: 18px; height: 18px; accent-color: var(--accent);">
+                <label for="edDetIsCase" style="font-size: 12px; color: var(--accent2);">⭐ Marcar como Case de Destaque</label>
+            </div>
+            
+            <div id="edDetUltimaAlteracao" style="grid-column: span 2; font-size: 10px; color: var(--muted); margin-top: 5px; text-align: right; font-style: italic;"></div>
+        </div>
+        <div class="edit-actions">
+            <button class="btn-cancel-edit" onclick="fecharModalEditarDetrator()">Cancelar</button>
+            <button class="btn-save-edit" onclick="salvarEdicaoDetrator()">💾 Salvar Atuação</button>
+        </div>
     </div>
-    <div class="edit-actions">
-      <button class="btn-cancel-edit" onclick="fecharModalEditarDetrator()">Cancelar</button>
-      <button class="btn-save-edit" onclick="salvarEdicaoDetrator()">💾 Salvar Atuação</button>
-    </div>
-  </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ─── CONFIGURAÇÃO GITHUB ─────────────────────────────────────────────────────
+// Configurações do Repositório GitHub
 const GITHUB_USER  = 'antonyfreitas';
 const GITHUB_REPO  = 'NELOGICA-RA-Dashboard';
-const GITHUB_TOKEN = '__GH_TOKEN__'; // COLE AQUI O TEU TOKEN!!!
-const JSON_URL     = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/dados_ra.json`;
+const GITHUB_TOKEN = '__GH_TOKEN__'; // <--- COLE O SEU TOKEN AQUI
 const API_URL      = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/dados_ra.json`;
 const URL_DETRATORES = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/dados_detratores.json`;
-const API_HEADS    = { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' };
+const API_HEADS    = { 
+    'Authorization': `Bearer ${GITHUB_TOKEN}`, 
+    'Content-Type': 'application/json' 
+};
 
+// Constantes de Negócio
 const META_SLA = 5;
-const CHART_COLORS = ['#3d7fff','#00e5c3','#ffb930','#ff4d6d','#a78bfa','#38bdf8','#fb923c','#4ade80','#f472b6','#facc15','#818cf8','#34d399'];
+const CHART_COLORS = ['#3d7fff', '#00e5c3', '#ffb930', '#ff4d6d', '#a78bfa', '#38bdf8', '#fb923c', '#4ade80', '#f472b6', '#facc15'];
 
+// Variáveis Globais
 let dadosGerais = [], dadosFiltrados = [];
-let chartStatus, chartCategorias, chartProduto, chartVoltaria, chartNotas, chartEvolucaoRA;
+let dadosDetratores = [], listaDetFiltrada = [];
 let usuarioLogado = '';
 
-let dadosDetratores = [], listaDetFiltrada = [];
-let chartDetDiario, chartStatusRec, chartAgressores, chartCanalOrigem, chartMotivos;
+// Instâncias de Gráficos (Para poder destruir antes de recriar)
+let chartStatus, chartCategorias, chartProduto, chartVoltaria, chartNotas, chartEvolucaoRA, chartMensalRA;
+let chartDetDiario, chartDetMensal, chartStatusRec, chartAgressores, chartCanalOrigem, chartMotivos;
 
-// ─── UTILS ────────────────────────────────────────────────────────────────────
+/* --------------------------------------------------------------------------
+   FUNÇÕES UTILITÁRIAS E GERAIS
+   -------------------------------------------------------------------------- */
 function showToast(msg, tipo='ok') {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'toast ' + tipo + ' show'; setTimeout(() => t.classList.remove('show'), 3500);
+    const t = document.getElementById('toast');
+    t.textContent = msg; 
+    t.className = `toast ${tipo} show`; 
+    setTimeout(() => t.classList.remove('show'), 3500);
 }
-function setStatus(tipo, msg) {
-  document.getElementById('statusText').innerText = msg;
-  const dot = document.getElementById('statusDot'); dot.className = 'status-dot' + (tipo === 'ok' ? ' ok' : tipo === 'loading' ? ' loading' : '');
-}
-function dataParaNum(val) { if (!val) return 0; return parseInt(String(val).replace(/-/g, '')); }
-function isNotNA(val) { if (!val) return false; const v = String(val).trim().toUpperCase(); return v !== 'N/A' && v !== 'N/A ' && v !== 'NA' && v !== ''; }
 
-// ─── NAVEGAÇÃO & DATAS ────────────────────────────────────────────────────────
+function setStatus(tipo, msg) {
+    document.getElementById('statusText').innerText = msg;
+    const dot = document.getElementById('statusDot'); 
+    dot.className = `status-dot ${tipo === 'ok' ? 'ok' : tipo === 'loading' ? 'loading' : ''}`;
+}
+
+// Converte YYYY-MM-DD para número (YYYYMMDD) para facilitar comparações matemáticas nos filtros
+function dataParaNum(val) { 
+    if (!val) return 0; 
+    return parseInt(String(val).replace(/-/g, '')); 
+}
+
+function isNotNA(val) { 
+    if (!val) return false; 
+    const v = String(val).trim().toUpperCase(); 
+    return v !== 'N/A' && v !== 'N/A ' && v !== 'NA' && v !== ''; 
+}
+
+function getMesAno(dataString) {
+    if (!dataString) return 'Desconhecido';
+    const partes = dataString.split('-');
+    if (partes.length < 2) return 'Desconhecido';
+    const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    const idx = parseInt(partes[1], 10) - 1;
+    return `${meses[idx]}/${partes[0].substring(2)}`;
+}
+
+// Lógica de SLA Automática (Regra de Negócio JS)
+function calcularDiasSLA(abertura, resolucao) {
+    if (!abertura) return 0;
+    
+    // Tratamento para garantir que a data não sofra shift de fuso horário
+    const dA = new Date(abertura + 'T12:00:00');
+    let dR;
+    
+    if (resolucao && isNotNA(resolucao)) {
+        dR = new Date(resolucao + 'T12:00:00');
+    } else {
+        dR = new Date(); // Se não tem resolução, calcula até o dia de hoje
+    }
+    
+    const diff = Math.round((dR - dA) / (1000 * 60 * 60 * 24));
+    return diff >= 0 ? diff : 0;
+}
+
+function autoCalcularTempo(prefixo) {
+    const abertura = document.getElementById(prefixo + 'DataAbertura').value;
+    const resolucao = document.getElementById(prefixo + 'DataResolucao').value;
+    const tempoCalculado = calcularDiasSLA(abertura, resolucao);
+    document.getElementById(prefixo + 'Tempo').value = tempoCalculado;
+}
+
+/* --------------------------------------------------------------------------
+   NAVEGAÇÃO E FILTROS DE DATA UNIFICADOS
+   -------------------------------------------------------------------------- */
 function navegarPara(pagina) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-' + pagina).classList.add('active');
-  document.getElementById('nav-' + pagina).classList.add('active');
-  if (verificarSessao()) { if (pagina === 'ra') carregarDados(); if (pagina === 'detratores') carregarDadosDetratores(); }
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    
+    document.getElementById(`page-${pagina}`).classList.add('active');
+    document.getElementById(`nav-${pagina}`).classList.add('active');
+    
+    if (verificarSessao()) { 
+        if (pagina === 'ra') carregarDados(); 
+        if (pagina === 'detratores') carregarDadosDetratores(); 
+    }
 }
 
 function alternarVisaoDetratores(visao) {
-  const dashBtn = document.getElementById('btn-sub-dash'); const formBtn = document.getElementById('btn-sub-form');
-  const dashDiv = document.getElementById('detratores-dash'); const formDiv = document.getElementById('detratores-form');
-  if (visao === 'dash') {
-    dashBtn.classList.add('active'); formBtn.classList.remove('active'); dashDiv.style.display = 'block'; formDiv.style.display = 'none'; carregarDadosDetratores();
-  } else {
-    formBtn.classList.add('active'); dashBtn.classList.remove('active'); formDiv.style.display = 'block'; dashDiv.style.display = 'none';
-  }
+    const dashBtn = document.getElementById('btn-sub-dash'); 
+    const formBtn = document.getElementById('btn-sub-form');
+    const dashDiv = document.getElementById('detratores-dash'); 
+    const formDiv = document.getElementById('detratores-form');
+    
+    if (visao === 'dash') {
+        dashBtn.classList.add('active'); 
+        formBtn.classList.remove('active'); 
+        dashDiv.style.display = 'block'; 
+        formDiv.style.display = 'none'; 
+        carregarDadosDetratores();
+    } else {
+        formBtn.classList.add('active'); 
+        dashBtn.classList.remove('active'); 
+        formDiv.style.display = 'block'; 
+        dashDiv.style.display = 'none';
+    }
 }
 
 function definirPeriodo(tipo, e, aba) {
-  if (e && e.target) {
-    e.target.parentElement.querySelectorAll('.btn-data').forEach(b => b.classList.remove('active'));
-    e.target.classList.add('active');
-  }
-  const preI = aba === 'ra' ? 'dataInicio' : 'dataInicioDet';
-  const preF = aba === 'ra' ? 'dataFim' : 'dataFimDet';
-  const callback = aba === 'ra' ? processarDados : processarPainelDetratores;
-  
-  const hoje = new Date(); let inicio = new Date();
-  if (tipo === 'hoje') { inicio = hoje; }
-  else if (tipo === 'semana') { inicio.setDate(hoje.getDate() - 7); }
-  else if (tipo === 'mes') { inicio = new Date(hoje.getFullYear(), hoje.getMonth()-1, 1); const fim = new Date(hoje.getFullYear(), hoje.getMonth(), 0); document.getElementById(preI).value = inicio.toISOString().split('T')[0]; document.getElementById(preF).value = fim.toISOString().split('T')[0]; callback(); return; }
-  else if (tipo === 'ano') { inicio = new Date(2026, 0, 1); }
-  else { document.getElementById(preI).value=''; document.getElementById(preF).value=''; callback(); return; }
-  
-  document.getElementById(preI).value = inicio.toISOString().split('T')[0]; document.getElementById(preF).value = hoje.toISOString().split('T')[0]; callback();
-}
-
-// ─── MOTOR BI DETRATORES ──────────────────────────────────────────────────────
-async function carregarDadosDetratores() {
-  setStatus('loading', 'A sincronizar Detratores...');
-  try {
-    const r = await fetch(URL_DETRATORES, { headers: API_HEADS, cache: 'no-store' });
-    if (!r.ok) throw new Error(`Erro ${r.status}`);
-    const meta = await r.json(); const jsonString = decodeURIComponent(escape(atob(meta.content)));
-    dadosDetratores = JSON.parse(jsonString); setStatus('ok', `${dadosDetratores.length} formulários`); processarPainelDetratores();
-  } catch(e) { setStatus('err', 'Falha na sincronização'); showToast('❌ Erro ao carregar Detratores', 'err'); }
-}
-
-function processarPainelDetratores() {
-  if (!dadosDetratores.length) return;
-  const nIni = dataParaNum(document.getElementById('dataInicioDet').value); const nFim = dataParaNum(document.getElementById('dataFimDet').value);
-  const termoDet = document.getElementById('buscaDet').value.toLowerCase();
-
-  listaDetFiltrada = dadosDetratores.filter(d => {
-    const dt = dataParaNum(d.data_detracao);
-    if (nIni && dt && dt < nIni) return false;
-    if (nFim && dt && dt > nFim) return false;
-    if (termoDet) {
-      const match = `${d.ticket_detracao} ${d.cliente} ${d.agente_responsavel} ${d.lider_responsavel} ${d.motivo_detracao}`.toLowerCase();
-      if (!match.includes(termoDet)) return false;
+    if (e && e.target) {
+        e.target.parentElement.querySelectorAll('.btn-data').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
     }
-    return true;
-  });
-
-  // Health Score
-  let diffDias = 30; 
-  if (document.getElementById('dataInicioDet').value && document.getElementById('dataFimDet').value) {
-    const d1 = new Date(document.getElementById('dataInicioDet').value); const d2 = new Date(document.getElementById('dataFimDet').value);
-    diffDias = Math.round((d2 - d1) / (1000 * 60 * 60 * 24)) || 1;
-  }
-  const dAntFim = new Date(document.getElementById('dataInicioDet').value || new Date()); dAntFim.setDate(dAntFim.getDate() - 1);
-  const dAntIni = new Date(dAntFim); dAntIni.setDate(dAntIni.getDate() - diffDias);
-  const nAntIni = dataParaNum(dAntIni.toISOString().split('T')[0]); const nAntFim = dataParaNum(dAntFim.toISOString().split('T')[0]);
-  const listaAnterior = dadosDetratores.filter(d => { const dt = dataParaNum(d.data_detracao); return dt && dt >= nAntIni && dt <= nAntFim; });
-
-  const total = listaDetFiltrada.length; const totalAnterior = listaAnterior.length;
-  const sinalizados = listaDetFiltrada.filter(d => String(d.status_sinalizacao).includes('COM')).length;
-  const recuperados = listaDetFiltrada.filter(d => d.status_recuperacao === 'Recuperado').length;
-  const taxaRecuperacao = sinalizados > 0 ? ((recuperados / sinalizados) * 100).toFixed(1) : 0;
-  
-  // % Like
-  const satisFiles = listaDetFiltrada.filter(d => d.satisfacao_pos_contato && d.satisfacao_pos_contato !== 'N/A' && d.satisfacao_pos_contato !== 'Pendente');
-  const likes = satisFiles.filter(d => d.satisfacao_pos_contato === 'Like').length;
-  const pctLike = satisFiles.length > 0 ? ((likes / satisFiles.length) * 100).toFixed(0) + '%' : '—';
-
-  document.getElementById('det-kpi-total').innerText = total;
-  const tendEl = document.getElementById('det-kpi-tendencia-total');
-  if (total > totalAnterior) { tendEl.innerHTML = `<span style="color:var(--danger)">🔼 +${total - totalAnterior} vs ant.</span>`; } 
-  else if (total < totalAnterior) { tendEl.innerHTML = `<span style="color:var(--success)">🔽 ${total - totalAnterior} vs ant.</span>`; } 
-  else { tendEl.innerHTML = `<span style="color:var(--muted)">➖ Estável vs ant.</span>`; }
-
-  document.getElementById('det-kpi-sinalizados').innerText = sinalizados;
-  document.getElementById('det-kpi-sinalizados-pct').innerText = total > 0 ? `${((sinalizados/total)*100).toFixed(0)}% do total` : '';
-  document.getElementById('det-kpi-recuperacao').innerText = taxaRecuperacao + '%';
-  document.getElementById('det-kpi-satisfacao').innerText = pctLike;
-
-  atualizarGraficosDetratores(listaDetFiltrada);
-  renderTabelaAcaoDetratores(listaDetFiltrada);
-}
-
-function atualizarGraficosDetratores(lista) {
-  [chartDetDiario, chartStatusRec, chartAgressores, chartCanalOrigem, chartMotivos].forEach(c => c && c.destroy());
-  const font = { family: "'DM Sans', sans-serif", size: 11 }; const gridY = { color: 'rgba(255,255,255,.04)' };
-
-  // 1. Diário (Evolução Simples)
-  const diaMap = {}; lista.forEach(d => { if(d.data_detracao) diaMap[d.data_detracao] = (diaMap[d.data_detracao] || 0) + 1; });
-  const diasOrdenados = Object.keys(diaMap).sort();
-  chartDetDiario = new Chart(document.getElementById('chartDetDiario'), { type: 'line', data: { labels: diasOrdenados.map(d => d.split('-').reverse().slice(0,2).join('/')), datasets: [{ label: 'Detrações', data: diasOrdenados.map(d => diaMap[d]), borderColor: '#ff4d6d', backgroundColor: 'rgba(255,77,109,0.1)', fill: true, tension: 0.3, pointRadius: 4 }] }, options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { color: '#6b7a99', font } }, y: { grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } } } } });
-
-  // 2. Status Recuperação
-  const recMap = { 'Recuperado':0, 'Perdido':0, 'Neutro':0, 'Pendente':0 };
-  lista.filter(d => String(d.status_sinalizacao).includes('COM')).forEach(d => { const st = d.status_recuperacao || 'Pendente'; if(recMap[st] !== undefined) recMap[st]++; });
-  chartStatusRec = new Chart(document.getElementById('chartStatusRec'), { type: 'doughnut', data: { labels: Object.keys(recMap), datasets: [{ data: Object.values(recMap), backgroundColor: ['#00e5c3', '#ff4d6d', '#ffb930', '#6b7a99'], borderWidth: 0, hoverOffset: 6 }] }, options: { maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { color: '#6b7a99', font, padding: 12 } } }, onClick: (e, els) => { if(els.length) abrirModalDetratores('status', Object.keys(recMap)[els[0].index]); } } });
-
-  // 3. Agressores
-  const liderMap = {}; lista.forEach(d => { if(isNotNA(d.lider_responsavel)) { const lider = d.lider_responsavel.split('@')[0]; liderMap[lider] = (liderMap[lider] || 0) + 1; } });
-  const liderSorted = Object.entries(liderMap).sort((a,b) => b[1]-a[1]).slice(0, 5);
-  chartAgressores = new Chart(document.getElementById('chartAgressores'), { type: 'bar', data: { labels: liderSorted.map(e=>e[0]), datasets: [{ label: 'Casos Gerados', data: liderSorted.map(e=>e[1]), backgroundColor: '#ff4d6d', borderRadius: 5 }] }, options: { maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } }, y: { grid: { display: false }, ticks: { color: '#6b7a99', font } } }, onClick: (e, els) => { if(els.length) abrirModalDetratores('lider', liderSorted[els[0].index][0]); } } });
-
-  // 4. Canal Origem
-  const cMap = {}; lista.forEach(d => { if(isNotNA(d.canal)) cMap[d.canal.trim()] = (cMap[d.canal.trim()] || 0) + 1; });
-  chartCanalOrigem = new Chart(document.getElementById('chartCanalOrigem'), { type: 'doughnut', data: { labels: Object.keys(cMap), datasets: [{ data: Object.values(cMap), backgroundColor: CHART_COLORS, borderWidth:0, hoverOffset:6 }] }, options: { maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { color: '#6b7a99', font } } }, onClick: (e, els) => { if(els.length) abrirModalDetratores('canal', Object.keys(cMap)[els[0].index]); } } });
-
-  // 5. Motivos
-  const mMap = {}; lista.forEach(d => { if (isNotNA(d.motivo_detracao)) d.motivo_detracao.split(';').forEach(m => { const key = m.trim(); if(key) mMap[key] = (mMap[key] || 0) + 1; }); });
-  const mSorted = Object.entries(mMap).sort((a,b) => b[1]-a[1]).slice(0, 5);
-  chartMotivos = new Chart(document.getElementById('chartMotivos'), { type: 'bar', data: { labels: mSorted.map(e=>e[0]), datasets: [{ label: 'Ocorrências', data: mSorted.map(e=>e[1]), backgroundColor: '#ffb930', borderRadius: 5 }] }, options: { maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } }, y: { grid: { display: false }, ticks: { color: '#6b7a99', font } } }, onClick: (e, els) => { if(els.length) abrirModalDetratores('motivo', mSorted[els[0].index][0]); } } });
-}
-
-function linhaDetTabela(d) {
-  const linkTicket = d.ticket_detracao.includes('http') ? d.ticket_detracao : `https://nelogica.zendesk.com/agent/tickets/${d.ticket_detracao}`;
-  const tkDisplay = d.ticket_detracao.match(/\d+/) ? `#${d.ticket_detracao.match(/\d+/)[0]}` : 'Ver Ticket';
-  const recStatus = d.status_recuperacao === 'Recuperado' ? '🟩' : d.status_recuperacao === 'Perdido' ? '🟥' : '🟨';
-  const idUnico = d._id || d.ticket_detracao; 
-  const caseEstrela = d.is_case === true ? '<span style="font-size:13px;margin-right:6px;" title="Case de Destaque">⭐</span>' : ''; 
-  
-  // Sem Botão Excluir
-  return `<tr>
-    <td><div style="display:flex; align-items:center;">${caseEstrela}<a href="${linkTicket}" target="_blank" class="zendesk-link">${tkDisplay}</a></div></td>
-    <td>${d.data_detracao || '—'}</td>
-    <td style="font-weight:600">${d.agente_responsavel ? d.agente_responsavel.split('@')[0] : '—'}</td>
-    <td>${isNotNA(d.lider_responsavel) ? `<span class="chip">${d.lider_responsavel.split('@')[0]}</span>` : '—'}</td>
-    <td style="font-size:11px; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${d.motivo_detracao || ''}">${d.motivo_detracao || '—'}</td>
-    <td style="text-align:center" title="Status: ${d.status_recuperacao || 'Pendente'}">${recStatus}</td>
-    <td style="white-space:nowrap;">
-      <button class="btn-edit-row" onclick="abrirModalEditarDetrator('${idUnico}')">✏ Atuar</button>
-    </td>
-  </tr>`;
-}
-
-function renderTabelaAcaoDetratores(lista) {
-  const criticos = lista.filter(d => String(d.status_sinalizacao).includes('COM')).reverse();
-  document.getElementById('badge-detratores-acao').innerText = criticos.length + ' casos';
-  const cont = document.getElementById('tabela-acao-detratores');
-  if (!criticos.length) { cont.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-text">Sem casos críticos pendentes.</div></div>'; return; }
-  cont.innerHTML = `<table class="mini-table"><thead><tr><th>Zendesk</th><th>Data</th><th>Agente</th><th>Líder Resp.</th><th>Motivo Principal</th><th style="text-align:center">Status</th><th>Ação</th></tr></thead><tbody>${criticos.map(linhaDetTabela).join('')}</tbody></table>`;
-}
-
-function abrirModalDetratores(tipo, valor='') {
-  const titleMap = { todos: 'Todos os Detratores', sinalizados: 'Casos COM Sinalização', recuperados: 'Casos Recuperados', status: `Status: ${valor}`, lider: `Líder: ${valor}`, canal: `Origem: ${valor}`, motivo: `Motivo: ${valor}` };
-  document.getElementById('modalTitleDet').innerText = titleMap[tipo] || 'Filtro';
-  
-  let filtrado = [];
-  if (tipo === 'todos') filtrado = listaDetFiltrada;
-  else if (tipo === 'sinalizados') filtrado = listaDetFiltrada.filter(d => String(d.status_sinalizacao).includes('COM'));
-  else if (tipo === 'recuperados') filtrado = listaDetFiltrada.filter(d => d.status_recuperacao === 'Recuperado');
-  else if (tipo === 'status') filtrado = listaDetFiltrada.filter(d => String(d.status_sinalizacao).includes('COM') && (d.status_recuperacao || 'Pendente') === valor);
-  else if (tipo === 'lider') filtrado = listaDetFiltrada.filter(d => isNotNA(d.lider_responsavel) && d.lider_responsavel.includes(valor));
-  else if (tipo === 'canal') filtrado = listaDetFiltrada.filter(d => isNotNA(d.canal) && d.canal.trim() === valor);
-  else if (tipo === 'motivo') filtrado = listaDetFiltrada.filter(d => isNotNA(d.motivo_detracao) && d.motivo_detracao.includes(valor));
-
-  document.getElementById('modalBodyDet').innerHTML = filtrado.length ? filtrado.reverse().map(linhaDetTabela).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--muted)">Nenhum caso encontrado.</td></tr>';
-  document.getElementById('modalTicketsDet').style.display = 'block';
-}
-function fecharModalDetratores() { document.getElementById('modalTicketsDet').style.display = 'none'; }
-
-function abrirModalEditarDetrator(idUnico) {
-  const d = dadosDetratores.find(x => x._id === idUnico || x.ticket_detracao === idUnico);
-  if (!d) return showToast('Erro: Registo não encontrado', 'err');
-  fecharModalDetratores();
-  document.getElementById('edDetRecordId').value = idUnico; document.getElementById('edDetTicket').innerText = '#' + (d.ticket_detracao.match(/\d+/) ? d.ticket_detracao.match(/\d+/)[0] : 'Ticket'); document.getElementById('edDetLider').value = d.lider_responsavel && d.lider_responsavel !== 'N/A' ? d.lider_responsavel : ''; document.getElementById('edDetDataAtuacao').value = d.data_atuacao && d.data_atuacao !== 'N/A' ? d.data_atuacao : ''; document.getElementById('edDetStatusRec').value = d.status_recuperacao && d.status_recuperacao !== 'N/A' ? d.status_recuperacao : 'Pendente'; document.getElementById('edDetSatisfacao').value = d.satisfacao_pos_contato && d.satisfacao_pos_contato !== 'N/A' ? d.satisfacao_pos_contato : ''; document.getElementById('edDetComentarios').value = d.comentarios_qa && d.comentarios_qa !== 'N/A' ? d.comentarios_qa : ''; document.getElementById('edDetIsCase').checked = d.is_case === true;
-  document.getElementById('modalEditarDetrator').classList.add('open');
-}
-function fecharModalEditarDetrator() { document.getElementById('modalEditarDetrator').classList.remove('open'); }
-
-async function salvarEdicaoDetrator() {
-  const idUnico = document.getElementById('edDetRecordId').value; const idx = dadosDetratores.findIndex(x => x._id === idUnico || x.ticket_detracao === idUnico); if (idx === -1) return;
-  dadosDetratores[idx].lider_responsavel = document.getElementById('edDetLider').value || 'N/A'; dadosDetratores[idx].data_atuacao = document.getElementById('edDetDataAtuacao').value || 'N/A'; dadosDetratores[idx].status_recuperacao = document.getElementById('edDetStatusRec').value; dadosDetratores[idx].satisfacao_pos_contato = document.getElementById('edDetSatisfacao').value || 'N/A'; dadosDetratores[idx].comentarios_qa = document.getElementById('edDetComentarios').value || 'N/A'; dadosDetratores[idx].is_case = document.getElementById('edDetIsCase').checked;
-  try { showToast('⏳ Guardando...', 'ok'); const metaR = await fetch(URL_DETRATORES, { headers: API_HEADS }); const meta = await metaR.json(); const body = { message: 'Atualização Dashboard', content: btoa(unescape(encodeURIComponent(JSON.stringify(dadosDetratores, null, 2)))), sha: meta.sha }; const r = await fetch(URL_DETRATORES, { method: 'PUT', headers: API_HEADS, body: JSON.stringify(body) }); if (!r.ok) throw new Error(); fecharModalEditarDetrator(); showToast('✅ Salvo!', 'ok'); processarPainelDetratores(); } catch(e) { showToast('❌ Erro', 'err'); }
+    const preI = aba === 'ra' ? 'dataInicio' : 'dataInicioDet';
+    const preF = aba === 'ra' ? 'dataFim' : 'dataFimDet';
+    const callback = aba === 'ra' ? processarDados : processarPainelDetratores;
+    
+    const hoje = new Date(); 
+    let inicio = new Date();
+    
+    if (tipo === 'hoje') { 
+        inicio = hoje; 
+    } else if (tipo === 'semana') { 
+        inicio.setDate(hoje.getDate() - 7); 
+    } else if (tipo === 'mes') { 
+        inicio = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1); 
+        const fim = new Date(hoje.getFullYear(), hoje.getMonth(), 0); 
+        document.getElementById(preI).value = inicio.toISOString().split('T')[0]; 
+        document.getElementById(preF).value = fim.toISOString().split('T')[0]; 
+        callback(); 
+        return; 
+    } else if (tipo === 'ano') { 
+        inicio = new Date(2026, 0, 1); 
+    } else { 
+        document.getElementById(preI).value = ''; 
+        document.getElementById(preF).value = ''; 
+        callback(); 
+        return; 
+    }
+    
+    document.getElementById(preI).value = inicio.toISOString().split('T')[0]; 
+    document.getElementById(preF).value = hoje.toISOString().split('T')[0]; 
+    callback();
 }
 
 
-// ─── LÓGICA RECLAME AQUI ───────────────────────────────────────────
+/* --------------------------------------------------------------------------
+   LÓGICA: RECLAME AQUI
+   -------------------------------------------------------------------------- */
 async function carregarDados() {
-  setStatus('loading', 'Carregando RA...');
-  try {
-    const r = await fetch(API_URL, { headers: API_HEADS, cache: 'no-store' }); if (!r.ok) throw new Error();
-    const meta = await r.json(); const records = JSON.parse(decodeURIComponent(escape(atob(meta.content))));
-    const serial = (v) => { if(!v) return ''; if(typeof v==='number'){ const d=new Date((v-25569)*86400*1000); return d.toISOString().split('T')[0]; } return String(v).split('T')[0]; };
-    dadosGerais = records.map((f, i) => ({
-      _id: String(i), ticket: f['Ticket Zendesk'] || '', ra: f['ID ReclameAqui'] || '', cliente: f['Cliente'] || '', produto: f['Produto'] || '', categoria: f['Categoria'] || '', data: serial(f['Data abertura']), dataRes: serial(f['Data resolução']), tempo: f['Tempo resolução'] ?? '', contato: f['Contato feito CC'] || '', resolvido: (f['Resolvido CC']===true||String(f['Resolvido CC']).toUpperCase()==='TRUE')?'True':'False', nota: f['Nota RA'] ?? '', voltaria: (f['Voltaria a Fazer Negócio']===true||String(f['Voltaria a Fazer Negócio']).toUpperCase()==='TRUE')?'True':'False', comentario: f['Comentario']||'', is_case: f['is_case']===true, ultimaAlteracao: f['Ultima Alteracao']||''
-    }));
-    setStatus('ok', `${dadosGerais.length} registros RA`); processarDados();
-  } catch(e) { setStatus('err', 'Erro'); showToast('❌ Erro RA', 'err'); }
+    setStatus('loading', 'Carregando RA...');
+    try {
+        const r = await fetch(API_URL, { headers: API_HEADS, cache: 'no-store' }); 
+        if (!r.ok) throw new Error();
+        
+        const meta = await r.json(); 
+        const records = JSON.parse(decodeURIComponent(escape(atob(meta.content))));
+        
+        // Agora as datas vêm puras do JSON atualizado (YYYY-MM-DD). Sem conversões loucas.
+        dadosGerais = records.map((f, i) => {
+            const dataAbertura = f['Data abertura'] || '';
+            const dataResolucao = f['Data resolução'] || '';
+            const resolvidoCC = (f['Resolvido CC'] === true || String(f['Resolvido CC']).toUpperCase() === 'TRUE');
+            const voltariaNegocio = (f['Voltaria a Fazer Negócio'] === true || String(f['Voltaria a Fazer Negócio']).toUpperCase() === 'TRUE');
+            
+            // Recalcula o SLA ao carregar, garantindo precisão diária
+            const tempoCalculado = calcularDiasSLA(dataAbertura, dataResolucao);
+            
+            return {
+                _id: String(i), 
+                ticket: f['Ticket Zendesk'] || '', 
+                ra: f['ID ReclameAqui'] || '', 
+                cliente: f['Cliente'] || '', 
+                produto: f['Produto'] || '', 
+                categoria: f['Categoria'] || '', 
+                data: dataAbertura, 
+                dataRes: dataResolucao, 
+                tempo: tempoCalculado, 
+                contato: f['Contato feito CC'] || '', 
+                resolvido: resolvidoCC ? 'True' : 'False', 
+                nota: f['Nota RA'] ?? '', 
+                voltaria: voltariaNegocio ? 'True' : 'False', 
+                comentario: f['Comentario'] || '', 
+                is_case: f['is_case'] === true, 
+                ultimaAlteracao: f['Ultima Alteracao'] || ''
+            };
+        });
+        
+        setStatus('ok', `${dadosGerais.length} registros RA`); 
+        processarDados();
+    } catch(e) { 
+        setStatus('err', 'Erro'); 
+        showToast('❌ Erro ao ler base RA', 'err'); 
+    }
 }
 
 async function salvarJSON() {
-  const metaR = await fetch(API_URL, { headers: API_HEADS }); const meta = await metaR.json();
-  const dSer = (v) => { if(!v) return ''; if(v.includes('-')){ const d = new Date(v+'T12:00:00'); return Math.round((d.getTime()/86400000)+25569); } return v; };
-  const records = dadosGerais.map(r => ({ 'Ticket Zendesk': parseInt(r.ticket)||r.ticket, 'ID ReclameAqui': parseInt(r.ra)||r.ra, 'Cliente': r.cliente, 'Produto': r.produto, 'Categoria': r.categoria, 'Data abertura': dSer(r.data), 'Data resolução': dSer(r.dataRes), 'Tempo resolução': parseFloat(r.tempo)||0, 'Contato feito CC': r.contato, 'Resolvido CC': r.resolvido==='True', 'Nota RA': r.nota||'', 'Voltaria a Fazer Negócio': r.voltaria==='True', 'Comentario': r.comentario||'', 'is_case': r.is_case===true, 'Ultima Alteracao': r.ultimaAlteracao||'' }));
-  const body = { message: 'update dados_ra.json', content: btoa(unescape(encodeURIComponent(JSON.stringify(records, null, 2)))), sha: meta.sha };
-  const r = await fetch(API_URL, { method: 'PUT', headers: API_HEADS, body: JSON.stringify(body) }); if (!r.ok) throw new Error(); return r.json();
+    const metaR = await fetch(API_URL, { headers: API_HEADS }); 
+    const meta = await metaR.json();
+    
+    // Gravação limpa em JSON. Sem voltar para formato Serial de Excel.
+    const records = dadosGerais.map(r => ({ 
+        'Ticket Zendesk': parseInt(r.ticket) || r.ticket, 
+        'ID ReclameAqui': parseInt(r.ra) || r.ra, 
+        'Cliente': r.cliente, 
+        'Produto': r.produto, 
+        'Categoria': r.categoria, 
+        'Data abertura': r.data, 
+        'Data resolução': r.dataRes, 
+        'Tempo resolução': r.tempo, 
+        'Contato feito CC': r.contato, 
+        'Resolvido CC': r.resolvido === 'True', 
+        'Nota RA': r.nota || '', 
+        'Voltaria a Fazer Negócio': r.voltaria === 'True', 
+        'Comentario': r.comentario || '', 
+        'is_case': r.is_case === true, 
+        'Ultima Alteracao': r.ultimaAlteracao || '' 
+    }));
+    
+    const body = { 
+        message: 'Atualização Base RA', 
+        content: btoa(unescape(encodeURIComponent(JSON.stringify(records, null, 2)))), 
+        sha: meta.sha 
+    };
+    
+    const r = await fetch(API_URL, { method: 'PUT', headers: API_HEADS, body: JSON.stringify(body) }); 
+    if (!r.ok) throw new Error(); 
+    return r.json();
 }
 
-function autoCalcularTempo(prefixo) { const dA = document.getElementById(prefixo+'DataAbertura').value; const dR = document.getElementById(prefixo+'DataResolucao').value; if (dA && dR) { const dias = Math.round((new Date(dR+'T12:00:00')-new Date(dA+'T12:00:00'))/(1000*60*60*24)); document.getElementById(prefixo+'Tempo').value = dias>=0?dias:0; } }
+function isResolvido(val) { 
+    if (val === null || val === undefined || val === '') return false; 
+    if (typeof val === 'boolean') return val; 
+    return String(val).toUpperCase().includes('TRUE') || String(val).toUpperCase() === 'SIM'; 
+}
 
-function isResolvido(val) { if(val===null||val===undefined||val==='')return false; if(typeof val==='boolean')return val; return String(val).toUpperCase().includes('TRUE')||String(val).toUpperCase()==='SIM'; }
-function chipProduto(prod) { if(!prod)return'<span style="color:var(--muted)">—</span>'; const p=String(prod).trim().toLowerCase(); let cls=p.includes('profit')?'profit':p.includes('black')||p.includes('arrow')?'blackarrow':p.includes('akeloo')?'akeloo':''; return `<span class="chip ${cls}">${prod}</span>`; }
+function chipProduto(prod) { 
+    if (!prod) return '<span style="color:var(--muted)">—</span>'; 
+    const p = String(prod).trim().toLowerCase(); 
+    let cls = p.includes('profit') ? 'profit' : p.includes('black') || p.includes('arrow') ? 'blackarrow' : p.includes('akeloo') ? 'akeloo' : ''; 
+    return `<span class="chip ${cls}">${prod}</span>`; 
+}
 
 function processarDados() {
-  if (!dadosGerais.length) return;
-  const nIni = dataParaNum(document.getElementById('dataInicio').value); const nFim = dataParaNum(document.getElementById('dataFim').value);
-  const termoRA = document.getElementById('buscaRA').value.toLowerCase();
-  
-  dadosFiltrados = dadosGerais.filter(r => {
-    const d = dataParaNum(r.data);
-    if (nIni && d && d < nIni) return false;
-    if (nFim && d && d > nFim) return false;
-    if (termoRA) { const match = `${r.ticket} ${r.ra} ${r.cliente} ${r.produto} ${r.categoria}`.toLowerCase(); if(!match.includes(termoRA)) return false; }
-    return true;
-  });
+    if (!dadosGerais.length) return;
+    const nIni = dataParaNum(document.getElementById('dataInicio').value); 
+    const nFim = dataParaNum(document.getElementById('dataFim').value);
+    const termoRA = document.getElementById('buscaRA').value.toLowerCase();
+    
+    dadosFiltrados = dadosGerais.filter(r => {
+        const d = dataParaNum(r.data);
+        if (nIni && d && d < nIni) return false;
+        if (nFim && d && d > nFim) return false;
+        if (termoRA) { 
+            const match = `${r.ticket} ${r.ra} ${r.cliente} ${r.produto} ${r.categoria}`.toLowerCase(); 
+            if (!match.includes(termoRA)) return false; 
+        }
+        return true;
+    });
 
-  const tot = dadosFiltrados.length; const res = dadosFiltrados.filter(r => isResolvido(r.resolvido)).length; const dentro = dadosFiltrados.filter(r => (parseFloat(r.tempo)||0)<=META_SLA).length; const sla = tot>0?((dentro/tot)*100).toFixed(1):0; const tempos = dadosFiltrados.map(r => parseFloat(r.tempo)).filter(n => !isNaN(n)); const media = tempos.length>0?(tempos.reduce((a,b)=>a+b,0)/tempos.length).toFixed(1):0;
-  document.getElementById('kpi-total').innerText = tot; document.getElementById('kpi-resolvidos').innerText = res; document.getElementById('kpi-res-pct').innerText = tot>0?`${((res/tot)*100).toFixed(0)}% do total`:''; document.getElementById('kpi-sla').innerText = sla+'%'; document.getElementById('sla-bar').style.width = sla+'%'; document.getElementById('sla-bar').style.background = sla>=80?'var(--success)':sla>=50?'var(--warning)':'var(--danger)'; document.getElementById('kpi-tempo').innerText = media+' dias'; document.getElementById('kpi-sla').className = 'kpi-value '+(sla>=80?'success':sla>=50?'warning':'danger');
-  
-  atualizarGraficosRA(res, tot); renderTabelaSemNota();
+    const tot = dadosFiltrados.length; 
+    const res = dadosFiltrados.filter(r => isResolvido(r.resolvido)).length; 
+    const dentro = dadosFiltrados.filter(r => (parseFloat(r.tempo) || 0) <= META_SLA).length; 
+    const sla = tot > 0 ? ((dentro / tot) * 100).toFixed(1) : 0; 
+    
+    // Calcula Média de Tempo dos casos
+    const tempos = dadosFiltrados.map(r => parseFloat(r.tempo)).filter(n => !isNaN(n)); 
+    const media = tempos.length > 0 ? (tempos.reduce((a,b) => a + b, 0) / tempos.length).toFixed(1) : 0;
+    
+    // Atualiza DOM KPIs
+    document.getElementById('kpi-total').innerText = tot; 
+    document.getElementById('kpi-resolvidos').innerText = res; 
+    document.getElementById('kpi-res-pct').innerText = tot > 0 ? `${((res/tot)*100).toFixed(0)}% do total` : ''; 
+    document.getElementById('kpi-sla').innerText = sla + '%'; 
+    document.getElementById('sla-bar').style.width = sla + '%'; 
+    document.getElementById('sla-bar').style.background = sla >= 80 ? 'var(--success)' : sla >= 50 ? 'var(--warning)' : 'var(--danger)'; 
+    document.getElementById('kpi-tempo').innerText = media + ' dias'; 
+    document.getElementById('kpi-sla').className = `kpi-value ${sla >= 80 ? 'success' : sla >= 50 ? 'warning' : 'danger'}`;
+    
+    atualizarGraficosRA(res, tot); 
+    renderTabelaSemNota();
 }
 
 function atualizarGraficosRA(res, tot) {
-  [chartEvolucaoRA, chartVoltaria, chartNotas, chartCategorias, chartProduto].forEach(c => c && c.destroy()); 
-  const font = { family: "'DM Sans', sans-serif", size: 11 }; const gridY = { color: 'rgba(255,255,255,.04)' };
+    [chartEvolucaoRA, chartMensalRA, chartVoltaria, chartNotas, chartCategorias, chartProduto].forEach(c => c && c.destroy()); 
+    const font = { family: "'DM Sans', sans-serif", size: 11 }; 
+    const gridY = { color: 'rgba(255,255,255,.04)' };
 
-  // 1. Evolução Simples
-  const mapC = {}; dadosFiltrados.forEach(r => { if(r.data && r.data !== 'N/A') { mapC[r.data] = (mapC[r.data]||0)+1; } });
-  const sortedC = Object.keys(mapC).sort();
-  chartEvolucaoRA = new Chart(document.getElementById('chartEvolucaoRA'), { type: 'line', data: { labels: sortedC.map(d => d.split('-').reverse().slice(0,2).join('/')), datasets: [{ label: 'Aberturas', data: sortedC.map(x => mapC[x]||0), borderColor: '#3d7fff', backgroundColor: 'rgba(61,127,255,0.1)', fill: true, tension: 0.3, pointRadius: 4 }] }, options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { color: '#6b7a99', font } }, y: { grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } } } } });
+    // 1. Gráfico Evolução Diária (Linha)
+    const mapC = {}; 
+    dadosFiltrados.forEach(r => { 
+        if (r.data && r.data !== 'N/A') { 
+            mapC[r.data] = (mapC[r.data] || 0) + 1; 
+        } 
+    });
+    const sortedC = Object.keys(mapC).sort();
+    
+    chartEvolucaoRA = new Chart(document.getElementById('chartEvolucaoRA'), { 
+        type: 'line', 
+        data: { 
+            labels: sortedC.map(d => d.split('-').reverse().slice(0,2).join('/')), 
+            datasets: [{ 
+                label: 'Aberturas', 
+                data: sortedC.map(x => mapC[x]), 
+                borderColor: '#3d7fff', 
+                backgroundColor: 'rgba(61,127,255,0.1)', 
+                fill: true, 
+                tension: 0.3, 
+                pointRadius: 4 
+            }] 
+        }, 
+        options: { 
+            maintainAspectRatio: false, 
+            plugins: { legend: { display: false } }, 
+            scales: { 
+                x: { grid: { display: false }, ticks: { color: '#6b7a99', font } }, 
+                y: { grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } } 
+            } 
+        } 
+    });
 
-  // 2. Voltaria a Fazer Negócio
-  let vSim = 0, vNao = 0;
-  const avaliadosVoltaria = dadosFiltrados.filter(r => r.nota !== '' && r.nota !== undefined);
-  avaliadosVoltaria.forEach(r => { if(isResolvido(r.voltaria)) vSim++; else vNao++; });
-  chartVoltaria = new Chart(document.getElementById('chartVoltaria'), { type: 'doughnut', data: { labels: ['Voltaria (Sim)', 'Não Voltaria'], datasets: [{ data: [vSim, vNao], backgroundColor: ['#00e5c3','#ff4d6d'], borderWidth: 0, hoverOffset: 6 }] }, options: { maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { color: '#6b7a99', font, padding: 12 } } } } });
+    // NOVO: 1.1 Gráfico Mensal (Barras)
+    const mapMensalRA = {};
+    dadosFiltrados.forEach(r => {
+        if (r.data && r.data !== 'N/A') {
+            const mesAno = getMesAno(r.data);
+            mapMensalRA[mesAno] = (mapMensalRA[mesAno] || 0) + 1;
+        }
+    });
+    const sortedMensalRA = Object.keys(mapMensalRA); // Baseado na ordem de aparição (cronológica via data)
+    
+    chartMensalRA = new Chart(document.getElementById('chartMensalRA'), {
+        type: 'bar',
+        data: {
+            labels: sortedMensalRA,
+            datasets: [{
+                label: 'Aberturas Mensais',
+                data: sortedMensalRA.map(x => mapMensalRA[x]),
+                backgroundColor: '#00e5c3',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: '#6b7a99', font } },
+                y: { grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } }
+            }
+        }
+    });
 
-  // 3. Avaliação de Notas
-  const notasMap = {'0 a 4 (Detrator)':0, '5 a 7 (Neutro)':0, '8 a 10 (Promotor)':0};
-  dadosFiltrados.forEach(r => {
-      if(r.nota !== '') { const n = parseFloat(r.nota); if(n <= 4) notasMap['0 a 4 (Detrator)']++; else if(n <= 7) notasMap['5 a 7 (Neutro)']++; else notasMap['8 a 10 (Promotor)']++; }
-  });
-  chartNotas = new Chart(document.getElementById('chartNotas'), { type: 'bar', data: { labels: Object.keys(notasMap), datasets: [{ label: 'Avaliações', data: Object.values(notasMap), backgroundColor: ['#ff4d6d', '#ffb930', '#00e5c3'], borderRadius: 5 }] }, options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { color: '#6b7a99', font } }, y: { grid: {color:'rgba(255,255,255,.04)'}, ticks: { color: '#6b7a99', font, stepSize: 1 } } } } });
+    // 2. Voltaria a Fazer Negócio
+    let vSim = 0, vNao = 0;
+    const avaliadosVoltaria = dadosFiltrados.filter(r => r.nota !== '' && r.nota !== undefined);
+    avaliadosVoltaria.forEach(r => { if(isResolvido(r.voltaria)) vSim++; else vNao++; });
+    
+    chartVoltaria = new Chart(document.getElementById('chartVoltaria'), { 
+        type: 'doughnut', 
+        data: { 
+            labels: ['Voltaria (Sim)', 'Não Voltaria'], 
+            datasets: [{ data: [vSim, vNao], backgroundColor: ['#00e5c3','#ff4d6d'], borderWidth: 0, hoverOffset: 6 }] 
+        }, 
+        options: { 
+            maintainAspectRatio: false, 
+            cutout: '65%', 
+            plugins: { legend: { position: 'right', labels: { color: '#6b7a99', font, padding: 12 } } } 
+        } 
+    });
 
-  // 4. Categorias
-  const cMap = {}; dadosFiltrados.forEach(r => { const c = r.categoria?.trim()||'Sem Categoria'; cMap[c]=(cMap[c]||0)+1; }); const catSorted = Object.entries(cMap).sort((a,b) => b[1]-a[1]);
-  chartCategorias = new Chart(document.getElementById('chartCategorias'), { type: 'bar', data: { labels: catSorted.map(e=>e[0]), datasets: [{ data: catSorted.map(e=>e[1]), backgroundColor: CHART_COLORS, borderRadius: 5 }] }, options: { maintainAspectRatio: false, indexAxis:'y', plugins:{ legend:{display:false} }, scales:{ x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#6b7a99'}}, y:{grid:{display:false},ticks:{color:'#6b7a99'}} }, onClick:(e,els)=>{ if(els.length) abrirModal('categoria', catSorted[els[0].index][0]); } } });
-  
-  // 5. Produto
-  const pMap = {}; dadosFiltrados.forEach(r => { const p = r.produto?.trim()||'Outro'; pMap[p]=(pMap[p]||0)+1; });
-  chartProduto = new Chart(document.getElementById('chartProduto'), { type: 'doughnut', data: { labels: Object.keys(pMap), datasets: [{ data: Object.values(pMap), backgroundColor: CHART_COLORS, borderWidth:0 }] }, options: { maintainAspectRatio: false, cutout:'60%', plugins:{ legend:{ position:'right', labels:{color:'#6b7a99',font} } } } });
+    // 3. Avaliação de Notas
+    const notasMap = {'0 a 4 (Detrator)':0, '5 a 7 (Neutro)':0, '8 a 10 (Promotor)':0};
+    dadosFiltrados.forEach(r => {
+        if(r.nota !== '') { 
+            const n = parseFloat(r.nota); 
+            if(n <= 4) notasMap['0 a 4 (Detrator)']++; 
+            else if(n <= 7) notasMap['5 a 7 (Neutro)']++; 
+            else notasMap['8 a 10 (Promotor)']++; 
+        }
+    });
+    
+    chartNotas = new Chart(document.getElementById('chartNotas'), { 
+        type: 'bar', 
+        data: { 
+            labels: Object.keys(notasMap), 
+            datasets: [{ 
+                label: 'Avaliações', 
+                data: Object.values(notasMap), 
+                backgroundColor: ['#ff4d6d', '#ffb930', '#00e5c3'], 
+                borderRadius: 5 
+            }] 
+        }, 
+        options: { 
+            maintainAspectRatio: false, 
+            plugins: { legend: { display: false } }, 
+            scales: { 
+                x: { grid: { display: false }, ticks: { color: '#6b7a99', font } }, 
+                y: { grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } } 
+            } 
+        } 
+    });
+
+    // 4. Categorias
+    const cMap = {}; 
+    dadosFiltrados.forEach(r => { const c = r.categoria?.trim() || 'Sem Categoria'; cMap[c] = (cMap[c] || 0) + 1; }); 
+    const catSorted = Object.entries(cMap).sort((a,b) => b[1] - a[1]);
+    
+    chartCategorias = new Chart(document.getElementById('chartCategorias'), { 
+        type: 'bar', 
+        data: { 
+            labels: catSorted.map(e => e[0]), 
+            datasets: [{ data: catSorted.map(e => e[1]), backgroundColor: CHART_COLORS, borderRadius: 5 }] 
+        }, 
+        options: { 
+            maintainAspectRatio: false, 
+            indexAxis: 'y', 
+            plugins: { legend: { display: false } }, 
+            scales: { 
+                x: { grid: gridY, ticks: { color: '#6b7a99' } }, 
+                y: { grid: { display: false }, ticks: { color: '#6b7a99' } } 
+            }, 
+            onClick: (e, els) => { if(els.length) abrirModal('categoria', catSorted[els[0].index][0]); } 
+        } 
+    });
+    
+    // 5. Produto
+    const pMap = {}; 
+    dadosFiltrados.forEach(r => { const p = r.produto?.trim() || 'Outro'; pMap[p] = (pMap[p] || 0) + 1; });
+    chartProduto = new Chart(document.getElementById('chartProduto'), { 
+        type: 'doughnut', 
+        data: { labels: Object.keys(pMap), datasets: [{ data: Object.values(pMap), backgroundColor: CHART_COLORS, borderWidth: 0 }] }, 
+        options: { maintainAspectRatio: false, cutout: '60%', plugins: { legend: { position: 'right', labels: { color: '#6b7a99', font } } } } 
+    });
 }
 
 function linhaTabela(r) {
-  const t = parseFloat(r.tempo)||0; 
-  // Estrela fora do link
-  const caseEstrela = r.is_case ? '<span style="font-size:13px;margin-right:6px;" title="Case de Destaque">⭐</span>' : '';
-  return `<tr>
-    <td><div style="display:flex; align-items:center;">${caseEstrela}<a href="https://nelogica.zendesk.com/agent/tickets/${r.ticket}" target="_blank" class="zendesk-link">#${r.ticket}</a></div></td>
-    <td style="color:var(--muted);font-size:11px">${r.ra||'—'}</td>
-    <td>${r.cliente||'—'}</td>
-    <td>${chipProduto(r.produto)}</td>
-    <td style="font-size:12px">${r.categoria||'—'}</td>
-    <td class="${t>META_SLA?'sla-bad':'sla-ok'}">${t}d</td>
-    <td>${isResolvido(r.resolvido)?'✅':'⏳'}</td>
-    <td style="font-family:var(--mono);font-size:12px">${r.nota||'—'}</td>
-    <td style="white-space:nowrap;">
-      <button class="btn-edit-row" onclick="abrirModalEditar('${r._id}')">✏</button>
-      <button class="btn-del-row" onclick="excluirCasoRA('${r._id}')" title="Excluir Caso">🗑</button>
-    </td>
-  </tr>`;
+    const t = parseFloat(r.tempo) || 0; 
+    
+    // Ícone Elegante de Destaque
+    const caseEstrela = r.is_case ? '<span style="font-size:14px; margin-right:8px; color:var(--warning);" title="Case de Destaque">⭐</span>' : '';
+    
+    return `<tr>
+        <td>
+            <div style="display:flex; align-items:center;">
+                ${caseEstrela}
+                <a href="https://nelogica.zendesk.com/agent/tickets/${r.ticket}" target="_blank" class="zendesk-link">#${r.ticket}</a>
+            </div>
+        </td>
+        <td style="color:var(--muted); font-size:11px">${r.ra || '—'}</td>
+        <td style="font-weight: 500;">${r.cliente || '—'}</td>
+        <td>${chipProduto(r.produto)}</td>
+        <td style="font-size:12px">${r.categoria || '—'}</td>
+        <td class="${t > META_SLA ? 'sla-bad' : 'sla-ok'}">${t}d</td>
+        <td>${isResolvido(r.resolvido) ? '✅ Resolvido' : '⏳ Em Aberto'}</td>
+        <td style="font-family:var(--mono); font-size:12px; font-weight:700;">${r.nota || '—'}</td>
+        <td style="white-space:nowrap;">
+            <button class="btn-edit-row" onclick="abrirModalEditar('${r._id}')">✏ Edit</button>
+            <button class="btn-del-row" onclick="excluirCasoRA('${r._id}')" title="Excluir Caso">🗑</button>
+        </td>
+    </tr>`;
 }
 
 function renderTabelaSemNota() {
-  const lista = dadosFiltrados.filter(r => !r.nota || String(r.nota).trim() === '').sort((a,b) => (parseFloat(b.tempo)||0)-(parseFloat(a.tempo)||0));
-  document.getElementById('badge-semNota').innerText = lista.length + ' casos'; document.getElementById('tabela-sem-nota').innerHTML = lista.length ? `<table class="mini-table"><thead><tr><th>Zendesk</th><th>ID RA</th><th>Cliente</th><th>Produto</th><th>Categoria</th><th>Tempo</th><th>Status</th><th>Nota</th><th></th></tr></thead><tbody>${lista.map(linhaTabela).join('')}</tbody></table>` : '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-text">Todos os casos possuem nota RA</div></div>';
+    const lista = dadosFiltrados.filter(r => !r.nota || String(r.nota).trim() === '').sort((a,b) => (parseFloat(b.tempo) || 0) - (parseFloat(a.tempo) || 0));
+    document.getElementById('badge-semNota').innerText = lista.length + ' casos'; 
+    document.getElementById('tabela-sem-nota').innerHTML = lista.length 
+        ? `<table class="mini-table"><thead><tr><th>Zendesk</th><th>ID RA</th><th>Cliente</th><th>Produto</th><th>Categoria</th><th>SLA</th><th>Status</th><th>Nota</th><th>Ação</th></tr></thead><tbody>${lista.map(linhaTabela).join('')}</tbody></table>` 
+        : '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-text">Todos os casos do período possuem nota RA!</div></div>';
 }
 
 function abrirModal(tipo, extra='') {
-  const titleMap = {total:'Todos os Casos',resolvidos:'Casos Resolvidos',abertos:'Casos em Aberto',fora_sla:'Fora do SLA',categoria:`Categoria: ${extra}`};
-  document.getElementById('modalTitle').innerText = titleMap[tipo]||'Detalhes';
-  let lista = tipo==='resolvidos'?dadosFiltrados.filter(r=>isResolvido(r.resolvido)) : tipo==='abertos'?dadosFiltrados.filter(r=>!isResolvido(r.resolvido)) : tipo==='fora_sla'?dadosFiltrados.filter(r=>(parseFloat(r.tempo)||0)>META_SLA) : tipo==='categoria'?dadosFiltrados.filter(r=>r.categoria?.trim()===extra) : dadosFiltrados;
-  document.getElementById('modalBody').innerHTML = lista.sort((a,b)=>(parseFloat(b.tempo)||0)-(parseFloat(a.tempo)||0)).map(linhaTabela).join(''); document.getElementById('modalTickets').style.display = 'block';
+    const titleMap = { total: 'Todos os Casos', resolvidos: 'Casos Resolvidos', abertos: 'Casos em Aberto', fora_sla: 'Fora do SLA', categoria: `Categoria: ${extra}` };
+    document.getElementById('modalTitle').innerText = titleMap[tipo] || 'Detalhes';
+    
+    let lista = tipo === 'resolvidos' ? dadosFiltrados.filter(r => isResolvido(r.resolvido)) 
+              : tipo === 'abertos' ? dadosFiltrados.filter(r => !isResolvido(r.resolvido)) 
+              : tipo === 'fora_sla' ? dadosFiltrados.filter(r => (parseFloat(r.tempo) || 0) > META_SLA) 
+              : tipo === 'categoria' ? dadosFiltrados.filter(r => r.categoria?.trim() === extra) 
+              : dadosFiltrados;
+              
+    document.getElementById('modalBody').innerHTML = lista.sort((a,b) => (parseFloat(b.tempo) || 0) - (parseFloat(a.tempo) || 0)).map(linhaTabela).join(''); 
+    document.getElementById('modalTickets').style.display = 'block';
 }
+
 function fecharModal() { document.getElementById('modalTickets').style.display = 'none'; }
-function fecharModalOutside(e) { if(e.target===document.getElementById('modalTickets')) fecharModal(); if(e.target===document.getElementById('modalTicketsDet')) fecharModalDetratores(); }
+function fecharModalOutside(e) { 
+    if (e.target === document.getElementById('modalTickets')) fecharModal(); 
+    if (e.target === document.getElementById('modalTicketsDet')) fecharModalDetratores(); 
+}
 
 function abrirModalEditar(recordId) {
-  const r = dadosGerais.find(x => x._id === recordId); if(!r) return showToast('Registro não encontrado', 'err');
-  document.getElementById('editRecordId').value = recordId; document.getElementById('editTicketLabel').textContent = '#' + r.ticket; document.getElementById('eRA').value = r.ra||''; document.getElementById('eCliente').value = r.cliente||''; document.getElementById('eProduto').value = r.produto||''; document.getElementById('eCategoria').value = r.categoria||''; document.getElementById('eDataAbertura').value = r.data||''; document.getElementById('eDataResolucao').value = r.dataRes||''; document.getElementById('eTempo').value = r.tempo||''; document.getElementById('eContato').value = r.contato||''; document.getElementById('eResolvido').value = isResolvido(r.resolvido)?'true':'false'; document.getElementById('eNota').value = r.nota||''; document.getElementById('eVoltaria').value = isResolvido(r.voltaria)?'true':'false'; document.getElementById('eComentario').value = r.comentario||''; document.getElementById('eIsCase').checked = r.is_case===true; 
-  document.getElementById('eUltimaAlteracao').innerText = r.ultimaAlteracao ? 'Última edição: ' + r.ultimaAlteracao : '';
-  document.getElementById('modalEditar').classList.add('open');
+    const r = dadosGerais.find(x => x._id === recordId); 
+    if (!r) return showToast('Registro não encontrado', 'err');
+    
+    document.getElementById('editRecordId').value = recordId; 
+    document.getElementById('editTicketLabel').textContent = '#' + r.ticket; 
+    document.getElementById('eRA').value = r.ra || ''; 
+    document.getElementById('eCliente').value = r.cliente || ''; 
+    document.getElementById('eProduto').value = r.produto || ''; 
+    document.getElementById('eCategoria').value = r.categoria || ''; 
+    document.getElementById('eDataAbertura').value = r.data || ''; 
+    document.getElementById('eDataResolucao').value = r.dataRes || ''; 
+    document.getElementById('eTempo').value = r.tempo || ''; 
+    document.getElementById('eContato').value = r.contato || ''; 
+    document.getElementById('eResolvido').value = isResolvido(r.resolvido) ? 'true' : 'false'; 
+    document.getElementById('eNota').value = r.nota || ''; 
+    document.getElementById('eVoltaria').value = isResolvido(r.voltaria) ? 'true' : 'false'; 
+    document.getElementById('eComentario').value = r.comentario || ''; 
+    document.getElementById('eIsCase').checked = r.is_case === true; 
+    
+    // Log de Rastreabilidade
+    document.getElementById('eUltimaAlteracao').innerText = r.ultimaAlteracao ? 'Histórico: ' + r.ultimaAlteracao : 'Nenhuma alteração manual.';
+    
+    document.getElementById('modalEditar').classList.add('open');
 }
+
 function fecharModalEditar() { document.getElementById('modalEditar').classList.remove('open'); }
 
 async function salvarEdicao() {
-  const id = document.getElementById('editRecordId').value; const idx = dadosGerais.findIndex(r => r._id === id); if(idx===-1) return;
-  let tempo = document.getElementById('eTempo').value; const dA = document.getElementById('eDataAbertura').value; const dR = document.getElementById('eDataResolucao').value; if(dA&&dR){ const diff = Math.round((new Date(dR+'T12:00:00')-new Date(dA+'T12:00:00'))/(1000*60*60*24)); tempo = diff>=0?diff:0; }
-  dadosGerais[idx] = { ...dadosGerais[idx], ra: document.getElementById('eRA').value.trim(), cliente: document.getElementById('eCliente').value.trim(), produto: document.getElementById('eProduto').value, categoria: document.getElementById('eCategoria').value.trim(), data: dA, dataRes: dR, tempo, contato: document.getElementById('eContato').value, resolvido: document.getElementById('eResolvido').value==='true'?'True':'False', nota: document.getElementById('eNota').value, voltaria: document.getElementById('eVoltaria').value==='true'?'True':'False', comentario: document.getElementById('eComentario').value, is_case: document.getElementById('eIsCase').checked, ultimaAlteracao: `${usuarioLogado} · ${new Date().toLocaleString('pt-BR')}` };
-  try{ showToast('⏳ Salvando...', 'ok'); await salvarJSON(); fecharModalEditar(); showToast('✅ Salvo!', 'ok'); processarDados(); }catch(e){ showToast('❌ Erro', 'err'); }
+    const id = document.getElementById('editRecordId').value; 
+    const idx = dadosGerais.findIndex(r => r._id === id); 
+    if (idx === -1) return;
+    
+    const dA = document.getElementById('eDataAbertura').value; 
+    const dR = document.getElementById('eDataResolucao').value; 
+    const tempo = calcularDiasSLA(dA, dR); // Regra limpa recalculada no salvamento
+    
+    dadosGerais[idx] = { 
+        ...dadosGerais[idx], 
+        ra: document.getElementById('eRA').value.trim(), 
+        cliente: document.getElementById('eCliente').value.trim(), 
+        produto: document.getElementById('eProduto').value, 
+        categoria: document.getElementById('eCategoria').value.trim(), 
+        data: dA, 
+        dataRes: dR, 
+        tempo: tempo, 
+        contato: document.getElementById('eContato').value, 
+        resolvido: document.getElementById('eResolvido').value === 'true' ? 'True' : 'False', 
+        nota: document.getElementById('eNota').value, 
+        voltaria: document.getElementById('eVoltaria').value === 'true' ? 'True' : 'False', 
+        comentario: document.getElementById('eComentario').value, 
+        is_case: document.getElementById('eIsCase').checked, 
+        ultimaAlteracao: `Última edição por ${usuarioLogado} em ${new Date().toLocaleString('pt-BR')}` 
+    };
+    
+    try { 
+        showToast('⏳ Salvando alterações na nuvem...', 'ok'); 
+        await salvarJSON(); 
+        fecharModalEditar(); 
+        showToast('✅ Ticket atualizado e salvo!', 'ok'); 
+        processarDados(); 
+    } catch(e) { 
+        showToast('❌ Erro de conexão com GitHub', 'err'); 
+    }
 }
 
-function abrirModalAdicionar() { ['nTicket','nRA','nCliente','nCategoria','nTempo','nNota','nComentario'].forEach(id=>document.getElementById(id).value=''); ['nProduto','nContato'].forEach(id=>document.getElementById(id).value=''); document.getElementById('nResolvido').value='false'; document.getElementById('nVoltaria').value='false'; document.getElementById('nIsCase').checked=false; document.getElementById('nDataAbertura').value=new Date().toISOString().split('T')[0]; document.getElementById('nDataResolucao').value=''; document.getElementById('modalAdicionar').classList.add('open'); }
+function abrirModalAdicionar() { 
+    ['nTicket','nRA','nCliente','nCategoria','nTempo','nNota','nComentario'].forEach(id => document.getElementById(id).value = ''); 
+    ['nProduto','nContato'].forEach(id => document.getElementById(id).value = ''); 
+    document.getElementById('nResolvido').value = 'false'; 
+    document.getElementById('nVoltaria').value = 'false'; 
+    document.getElementById('nIsCase').checked = false; 
+    document.getElementById('nDataAbertura').value = new Date().toISOString().split('T')[0]; 
+    document.getElementById('nDataResolucao').value = ''; 
+    document.getElementById('modalAdicionar').classList.add('open'); 
+}
+
 function fecharModalAdicionar() { document.getElementById('modalAdicionar').classList.remove('open'); }
 
 async function salvarNovoCaso() {
-  const ticket = document.getElementById('nTicket').value.trim(); if(!ticket) return showToast('⚠️ Ticket obrigatório', 'err');
-  let tempo = document.getElementById('nTempo').value; const dA = document.getElementById('nDataAbertura').value; const dR = document.getElementById('nDataResolucao').value; if(dA&&dR){ const diff = Math.round((new Date(dR+'T12:00:00')-new Date(dA+'T12:00:00'))/(1000*60*60*24)); tempo = diff>=0?diff:0; }
-  const novo = { _id: String(Date.now()), ticket, ra: document.getElementById('nRA').value.trim(), cliente: document.getElementById('nCliente').value.trim(), produto: document.getElementById('nProduto').value, categoria: document.getElementById('nCategoria').value.trim(), data: dA, dataRes: dR, tempo, contato: document.getElementById('nContato').value, resolvido: document.getElementById('nResolvido').value==='true'?'True':'False', nota: document.getElementById('nNota').value, voltaria: document.getElementById('nVoltaria').value==='true'?'True':'False', comentario: document.getElementById('nComentario').value, is_case: document.getElementById('nIsCase').checked, ultimaAlteracao: `${usuarioLogado} · ${new Date().toLocaleString('pt-BR')}` };
-  dadosGerais.push(novo); try{ showToast('⏳ Adicionando...', 'ok'); await salvarJSON(); fecharModalAdicionar(); showToast('✅ Adicionado!', 'ok'); processarDados(); }catch(e){ dadosGerais.pop(); showToast('❌ Erro', 'err'); }
+    const ticket = document.getElementById('nTicket').value.trim(); 
+    if (!ticket) return showToast('⚠️ O Número do Ticket é obrigatório!', 'err');
+    
+    const dA = document.getElementById('nDataAbertura').value; 
+    const dR = document.getElementById('nDataResolucao').value; 
+    const tempo = calcularDiasSLA(dA, dR);
+    
+    const novo = { 
+        _id: String(Date.now()), 
+        ticket: ticket, 
+        ra: document.getElementById('nRA').value.trim(), 
+        cliente: document.getElementById('nCliente').value.trim(), 
+        produto: document.getElementById('nProduto').value, 
+        categoria: document.getElementById('nCategoria').value.trim(), 
+        data: dA, 
+        dataRes: dR, 
+        tempo: tempo, 
+        contato: document.getElementById('nContato').value, 
+        resolvido: document.getElementById('nResolvido').value === 'true' ? 'True' : 'False', 
+        nota: document.getElementById('nNota').value, 
+        voltaria: document.getElementById('nVoltaria').value === 'true' ? 'True' : 'False', 
+        comentario: document.getElementById('nComentario').value, 
+        is_case: document.getElementById('nIsCase').checked, 
+        ultimaAlteracao: `Criado por ${usuarioLogado} em ${new Date().toLocaleString('pt-BR')}` 
+    };
+    
+    dadosGerais.push(novo); 
+    try { 
+        showToast('⏳ Criando registro na nuvem...', 'ok'); 
+        await salvarJSON(); 
+        fecharModalAdicionar(); 
+        showToast('✅ Novo Caso adicionado com sucesso!', 'ok'); 
+        processarDados(); 
+    } catch(e) { 
+        dadosGerais.pop(); 
+        showToast('❌ Erro ao salvar novo caso', 'err'); 
+    }
 }
 
 async function excluirCasoRA(recordId) {
-  if (!confirm('⚠️ Tem certeza que deseja excluir este ticket definitivamente?')) return;
-  const idx = dadosGerais.findIndex(r => r._id === recordId); if (idx === -1) return;
-  dadosGerais.splice(idx, 1);
-  try { showToast('⏳ A excluir...', 'ok'); await salvarJSON(); showToast('✅ Caso excluído com sucesso!', 'ok'); processarDados(); } catch(e) { showToast('❌ Erro ao excluir', 'err'); }
+    if (!confirm('⚠️ AÇÃO PERMANENTE: Tem certeza que deseja excluir este ticket do banco de dados?')) return;
+    const idx = dadosGerais.findIndex(r => r._id === recordId); 
+    if (idx === -1) return;
+    
+    dadosGerais.splice(idx, 1);
+    try { 
+        showToast('⏳ Removendo caso...', 'ok'); 
+        await salvarJSON(); 
+        showToast('✅ Caso excluído definitivamente!', 'ok'); 
+        processarDados(); 
+    } catch(e) { 
+        showToast('❌ Falha na exclusão', 'err'); 
+    }
 }
 
-// ─── EXPORTAÇÕES ───────────────────────────────────────────────────────────
+/* --------------------------------------------------------------------------
+   LÓGICA: DETRATORES
+   -------------------------------------------------------------------------- */
+async function carregarDadosDetratores() {
+    setStatus('loading', 'A sincronizar Detratores...');
+    try {
+        const r = await fetch(URL_DETRATORES, { headers: API_HEADS, cache: 'no-store' });
+        if (!r.ok) throw new Error();
+        
+        const meta = await r.json(); 
+        const jsonString = decodeURIComponent(escape(atob(meta.content)));
+        dadosDetratores = JSON.parse(jsonString); 
+        
+        setStatus('ok', `${dadosDetratores.length} formulários`); 
+        processarPainelDetratores();
+    } catch(e) { 
+        setStatus('err', 'Falha na rede'); 
+        showToast('❌ Erro ao carregar arquivo de Detratores', 'err'); 
+    }
+}
+
+function processarPainelDetratores() {
+    if (!dadosDetratores.length) return;
+    const nIni = dataParaNum(document.getElementById('dataInicioDet').value); 
+    const nFim = dataParaNum(document.getElementById('dataFimDet').value);
+    const termoDet = document.getElementById('buscaDet').value.toLowerCase();
+
+    listaDetFiltrada = dadosDetratores.filter(d => {
+        const dt = dataParaNum(d.data_detracao);
+        if (nIni && dt && dt < nIni) return false;
+        if (nFim && dt && dt > nFim) return false;
+        if (termoDet) {
+            const match = `${d.ticket_detracao} ${d.cliente} ${d.agente_responsavel} ${d.lider_responsavel} ${d.motivo_detracao}`.toLowerCase();
+            if (!match.includes(termoDet)) return false;
+        }
+        return true;
+    });
+
+    // Heath Score (Comparação Período Anterior)
+    let diffDias = 30; 
+    if (document.getElementById('dataInicioDet').value && document.getElementById('dataFimDet').value) {
+        const d1 = new Date(document.getElementById('dataInicioDet').value); 
+        const d2 = new Date(document.getElementById('dataFimDet').value);
+        diffDias = Math.round((d2 - d1) / (1000 * 60 * 60 * 24)) || 1;
+    }
+    const dAntFim = new Date(document.getElementById('dataInicioDet').value || new Date()); 
+    dAntFim.setDate(dAntFim.getDate() - 1);
+    const dAntIni = new Date(dAntFim); 
+    dAntIni.setDate(dAntIni.getDate() - diffDias);
+    const nAntIni = dataParaNum(dAntIni.toISOString().split('T')[0]); 
+    const nAntFim = dataParaNum(dAntFim.toISOString().split('T')[0]);
+    
+    const listaAnterior = dadosDetratores.filter(d => { 
+        const dt = dataParaNum(d.data_detracao); 
+        return dt && dt >= nAntIni && dt <= nAntFim; 
+    });
+
+    const total = listaDetFiltrada.length; 
+    const totalAnterior = listaAnterior.length;
+    const sinalizados = listaDetFiltrada.filter(d => String(d.status_sinalizacao).includes('COM')).length;
+    const recuperados = listaDetFiltrada.filter(d => d.status_recuperacao === 'Recuperado').length;
+    const taxaRecuperacao = sinalizados > 0 ? ((recuperados / sinalizados) * 100).toFixed(1) : 0;
+    
+    // Satisfação Binária (% Likes)
+    const satisFiles = listaDetFiltrada.filter(d => d.satisfacao_pos_contato && d.satisfacao_pos_contato !== 'N/A' && d.satisfacao_pos_contato !== 'Pendente' && d.satisfacao_pos_contato !== '');
+    const likes = satisFiles.filter(d => d.satisfacao_pos_contato === 'Like').length;
+    const pctLike = satisFiles.length > 0 ? ((likes / satisFiles.length) * 100).toFixed(0) + '%' : '—';
+
+    document.getElementById('det-kpi-total').innerText = total;
+    const tendEl = document.getElementById('det-kpi-tendencia-total');
+    if (total > totalAnterior) { 
+        tendEl.innerHTML = `<span style="color:var(--danger)">🔼 +${total - totalAnterior} vs ant.</span>`; 
+    } else if (total < totalAnterior) { 
+        tendEl.innerHTML = `<span style="color:var(--success)">🔽 ${total - totalAnterior} vs ant.</span>`; 
+    } else { 
+        tendEl.innerHTML = `<span style="color:var(--muted)">➖ Estável vs ant.</span>`; 
+    }
+
+    document.getElementById('det-kpi-sinalizados').innerText = sinalizados;
+    document.getElementById('det-kpi-sinalizados-pct').innerText = total > 0 ? `${((sinalizados/total)*100).toFixed(0)}% do total` : '';
+    document.getElementById('det-kpi-recuperacao').innerText = taxaRecuperacao + '%';
+    document.getElementById('det-kpi-satisfacao').innerText = pctLike;
+
+    atualizarGraficosDetratores(listaDetFiltrada);
+    renderTabelaAcaoDetratores(listaDetFiltrada);
+}
+
+function atualizarGraficosDetratores(lista) {
+    [chartDetDiario, chartDetMensal, chartStatusRec, chartAgressores, chartCanalOrigem, chartMotivos].forEach(c => c && c.destroy());
+    const font = { family: "'DM Sans', sans-serif", size: 11 }; 
+    const gridY = { color: 'rgba(255,255,255,.04)' };
+
+    // 1. Detrações Diárias
+    const diaMap = {}; 
+    lista.forEach(d => { if(d.data_detracao) diaMap[d.data_detracao] = (diaMap[d.data_detracao] || 0) + 1; });
+    const diasOrdenados = Object.keys(diaMap).sort();
+    
+    chartDetDiario = new Chart(document.getElementById('chartDetDiario'), { 
+        type: 'line', 
+        data: { 
+            labels: diasOrdenados.map(d => d.split('-').reverse().slice(0,2).join('/')), 
+            datasets: [{ 
+                label: 'Detrações', 
+                data: diasOrdenados.map(d => diaMap[d]), 
+                borderColor: '#ff4d6d', 
+                backgroundColor: 'rgba(255,77,109,0.1)', 
+                fill: true, 
+                tension: 0.3, 
+                pointRadius: 4 
+            }] 
+        }, 
+        options: { 
+            maintainAspectRatio: false, 
+            plugins: { legend: { display: false } }, 
+            scales: { 
+                x: { grid: { display: false }, ticks: { color: '#6b7a99', font } }, 
+                y: { grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } } 
+            } 
+        } 
+    });
+
+    // NOVO: 1.1 Detrações Mensais
+    const mapMensalDet = {};
+    lista.forEach(d => {
+        if (d.data_detracao && d.data_detracao !== 'N/A') {
+            const mesAno = getMesAno(d.data_detracao);
+            mapMensalDet[mesAno] = (mapMensalDet[mesAno] || 0) + 1;
+        }
+    });
+    const sortedMensalDet = Object.keys(mapMensalDet);
+    
+    chartDetMensal = new Chart(document.getElementById('chartDetMensal'), {
+        type: 'bar',
+        data: {
+            labels: sortedMensalDet,
+            datasets: [{
+                label: 'Detrações Mensais',
+                data: sortedMensalDet.map(x => mapMensalDet[x]),
+                backgroundColor: '#ff4d6d',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: '#6b7a99', font } },
+                y: { grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } }
+            }
+        }
+    });
+
+    // 2. Status Recuperação
+    const recMap = { 'Recuperado':0, 'Perdido':0, 'Neutro':0, 'Pendente':0 };
+    lista.filter(d => String(d.status_sinalizacao).includes('COM')).forEach(d => { 
+        const st = d.status_recuperacao || 'Pendente'; 
+        if(recMap[st] !== undefined) recMap[st]++; 
+    });
+    
+    chartStatusRec = new Chart(document.getElementById('chartStatusRec'), { 
+        type: 'doughnut', 
+        data: { 
+            labels: Object.keys(recMap), 
+            datasets: [{ data: Object.values(recMap), backgroundColor: ['#00e5c3', '#ff4d6d', '#ffb930', '#6b7a99'], borderWidth: 0, hoverOffset: 6 }] 
+        }, 
+        options: { 
+            maintainAspectRatio: false, 
+            cutout: '65%', 
+            plugins: { legend: { position: 'right', labels: { color: '#6b7a99', font, padding: 12 } } }, 
+            onClick: (e, els) => { if(els.length) abrirModalDetratores('status', Object.keys(recMap)[els[0].index]); } 
+        } 
+    });
+
+    // 3. Agressores
+    const liderMap = {}; 
+    lista.forEach(d => { 
+        if(isNotNA(d.lider_responsavel)) { 
+            const lider = d.lider_responsavel.split('@')[0]; 
+            liderMap[lider] = (liderMap[lider] || 0) + 1; 
+        } 
+    });
+    const liderSorted = Object.entries(liderMap).sort((a,b) => b[1] - a[1]).slice(0, 5);
+    
+    chartAgressores = new Chart(document.getElementById('chartAgressores'), { 
+        type: 'bar', 
+        data: { 
+            labels: liderSorted.map(e => e[0]), 
+            datasets: [{ label: 'Casos Gerados', data: liderSorted.map(e => e[1]), backgroundColor: '#ff4d6d', borderRadius: 5 }] 
+        }, 
+        options: { 
+            maintainAspectRatio: false, 
+            indexAxis: 'y', 
+            plugins: { legend: { display: false } }, 
+            scales: { 
+                x: { grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } }, 
+                y: { grid: { display: false }, ticks: { color: '#6b7a99', font } } 
+            }, 
+            onClick: (e, els) => { if(els.length) abrirModalDetratores('lider', liderSorted[els[0].index][0]); } 
+        } 
+    });
+
+    // 4. Canal Origem
+    const cMap = {}; 
+    lista.forEach(d => { 
+        if(isNotNA(d.canal)) { cMap[d.canal.trim()] = (cMap[d.canal.trim()] || 0) + 1; } 
+    });
+    
+    chartCanalOrigem = new Chart(document.getElementById('chartCanalOrigem'), { 
+        type: 'doughnut', 
+        data: { 
+            labels: Object.keys(cMap), 
+            datasets: [{ data: Object.values(cMap), backgroundColor: CHART_COLORS, borderWidth:0, hoverOffset:6 }] 
+        }, 
+        options: { 
+            maintainAspectRatio: false, 
+            cutout: '65%', 
+            plugins: { legend: { position: 'right', labels: { color: '#6b7a99', font } } }, 
+            onClick: (e, els) => { if(els.length) abrirModalDetratores('canal', Object.keys(cMap)[els[0].index]); } 
+        } 
+    });
+
+    // 5. Motivos
+    const mMap = {}; 
+    lista.forEach(d => { 
+        if (isNotNA(d.motivo_detracao)) d.motivo_detracao.split(';').forEach(m => { 
+            const key = m.trim(); 
+            if(key) mMap[key] = (mMap[key] || 0) + 1; 
+        }); 
+    });
+    const mSorted = Object.entries(mMap).sort((a,b) => b[1] - a[1]).slice(0, 5);
+    
+    chartMotivos = new Chart(document.getElementById('chartMotivos'), { 
+        type: 'bar', 
+        data: { 
+            labels: mSorted.map(e => e[0]), 
+            datasets: [{ label: 'Ocorrências', data: mSorted.map(e => e[1]), backgroundColor: '#ffb930', borderRadius: 5 }] 
+        }, 
+        options: { 
+            maintainAspectRatio: false, 
+            indexAxis: 'y', 
+            plugins: { legend: { display: false } }, 
+            scales: { 
+                x: { grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } }, 
+                y: { grid: { display: false }, ticks: { color: '#6b7a99', font } } 
+            }, 
+            onClick: (e, els) => { if(els.length) abrirModalDetratores('motivo', mSorted[els[0].index][0]); } 
+        } 
+    });
+}
+
+function linhaDetTabela(d) {
+    const linkTicket = d.ticket_detracao.includes('http') ? d.ticket_detracao : `https://nelogica.zendesk.com/agent/tickets/${d.ticket_detracao}`;
+    const tkDisplay = d.ticket_detracao.match(/\d+/) ? `#${d.ticket_detracao.match(/\d+/)[0]}` : 'Ver Ticket';
+    const recStatus = d.status_recuperacao === 'Recuperado' ? '🟩' : d.status_recuperacao === 'Perdido' ? '🟥' : '🟨';
+    const idUnico = d._id || d.ticket_detracao; 
+    
+    // Ícone Case Detratores
+    const caseEstrela = d.is_case === true ? '<span style="font-size:14px; margin-right:8px; color:var(--warning);" title="Case de Destaque">⭐</span>' : ''; 
+    
+    // REMOVIDO: Botão de exclusão (Trava de Segurança)
+    return `<tr>
+        <td>
+            <div style="display:flex; align-items:center;">
+                ${caseEstrela}
+                <a href="${linkTicket}" target="_blank" class="zendesk-link">${tkDisplay}</a>
+            </div>
+        </td>
+        <td>${d.data_detracao || '—'}</td>
+        <td style="font-weight:600">${d.agente_responsavel ? d.agente_responsavel.split('@')[0] : '—'}</td>
+        <td>${isNotNA(d.lider_responsavel) ? `<span class="chip">${d.lider_responsavel.split('@')[0]}</span>` : '—'}</td>
+        <td style="font-size:11px; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${d.motivo_detracao || ''}">${d.motivo_detracao || '—'}</td>
+        <td style="text-align:center" title="Status: ${d.status_recuperacao || 'Pendente'}">${recStatus}</td>
+        <td style="white-space:nowrap;">
+            <button class="btn-edit-row" onclick="abrirModalEditarDetrator('${idUnico}')">✏ Atuar</button>
+        </td>
+    </tr>`;
+}
+
+function renderTabelaAcaoDetratores(lista) {
+    const criticos = lista.filter(d => String(d.status_sinalizacao).includes('COM')).reverse();
+    document.getElementById('badge-detratores-acao').innerText = criticos.length + ' casos';
+    const cont = document.getElementById('tabela-acao-detratores');
+    
+    if (!criticos.length) { 
+        cont.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-text">Sem casos críticos pendentes. A operação está lisa!</div></div>'; 
+        return; 
+    }
+    
+    cont.innerHTML = `<table class="mini-table"><thead><tr><th>Zendesk</th><th>Data</th><th>Agente</th><th>Líder Resp.</th><th>Motivo Principal</th><th style="text-align:center">Status</th><th>Ação</th></tr></thead><tbody>${criticos.map(linhaDetTabela).join('')}</tbody></table>`;
+}
+
+function abrirModalDetratores(tipo, valor='') {
+    const titleMap = { todos: 'Todos os Detratores', sinalizados: 'Casos COM Sinalização', recuperados: 'Casos Recuperados', status: `Status: ${valor}`, lider: `Líder: ${valor}`, canal: `Origem: ${valor}`, motivo: `Motivo: ${valor}` };
+    document.getElementById('modalTitleDet').innerText = titleMap[tipo] || 'Filtro';
+    
+    let filtrado = [];
+    if (tipo === 'todos') filtrado = listaDetFiltrada;
+    else if (tipo === 'sinalizados') filtrado = listaDetFiltrada.filter(d => String(d.status_sinalizacao).includes('COM'));
+    else if (tipo === 'recuperados') filtrado = listaDetFiltrada.filter(d => d.status_recuperacao === 'Recuperado');
+    else if (tipo === 'status') filtrado = listaDetFiltrada.filter(d => String(d.status_sinalizacao).includes('COM') && (d.status_recuperacao || 'Pendente') === valor);
+    else if (tipo === 'lider') filtrado = listaDetFiltrada.filter(d => isNotNA(d.lider_responsavel) && d.lider_responsavel.includes(valor));
+    else if (tipo === 'canal') filtrado = listaDetFiltrada.filter(d => isNotNA(d.canal) && d.canal.trim() === valor);
+    else if (tipo === 'motivo') filtrado = listaDetFiltrada.filter(d => isNotNA(d.motivo_detracao) && d.motivo_detracao.includes(valor));
+
+    document.getElementById('modalBodyDet').innerHTML = filtrado.length 
+        ? filtrado.reverse().map(linhaDetTabela).join('') 
+        : '<tr><td colspan="7" style="text-align:center;color:var(--muted)">Nenhum caso encontrado para o filtro.</td></tr>';
+        
+    document.getElementById('modalTicketsDet').style.display = 'block';
+}
+
+function fecharModalDetratores() { document.getElementById('modalTicketsDet').style.display = 'none'; }
+
+function abrirModalEditarDetrator(idUnico) {
+    const d = dadosDetratores.find(x => x._id === idUnico || x.ticket_detracao === idUnico);
+    if (!d) return showToast('Erro crítico: Registo não encontrado na base', 'err');
+    
+    fecharModalDetratores();
+    document.getElementById('edDetRecordId').value = idUnico; 
+    document.getElementById('edDetTicket').innerText = '#' + (d.ticket_detracao.match(/\d+/) ? d.ticket_detracao.match(/\d+/)[0] : 'Ticket'); 
+    document.getElementById('edDetLider').value = d.lider_responsavel && d.lider_responsavel !== 'N/A' ? d.lider_responsavel : ''; 
+    document.getElementById('edDetDataAtuacao').value = d.data_atuacao && d.data_atuacao !== 'N/A' ? d.data_atuacao : ''; 
+    document.getElementById('edDetStatusRec').value = d.status_recuperacao && d.status_recuperacao !== 'N/A' ? d.status_recuperacao : 'Pendente'; 
+    document.getElementById('edDetSatisfacao').value = d.satisfacao_pos_contato && d.satisfacao_pos_contato !== 'N/A' ? d.satisfacao_pos_contato : ''; 
+    document.getElementById('edDetComentarios').value = d.comentarios_qa && d.comentarios_qa !== 'N/A' ? d.comentarios_qa : ''; 
+    document.getElementById('edDetIsCase').checked = d.is_case === true;
+    
+    // Log de Rastreabilidade Detratores
+    document.getElementById('edDetUltimaAlteracao').innerText = d.ultimaAlteracao ? 'Histórico: ' + d.ultimaAlteracao : 'Nenhuma atuação manual prévia.';
+    
+    document.getElementById('modalEditarDetrator').classList.add('open');
+}
+
+function fecharModalEditarDetrator() { document.getElementById('modalEditarDetrator').classList.remove('open'); }
+
+async function salvarEdicaoDetrator() {
+    const idUnico = document.getElementById('edDetRecordId').value; 
+    const idx = dadosDetratores.findIndex(x => x._id === idUnico || x.ticket_detracao === idUnico); 
+    if (idx === -1) return;
+    
+    dadosDetratores[idx].lider_responsavel = document.getElementById('edDetLider').value || 'N/A'; 
+    dadosDetratores[idx].data_atuacao = document.getElementById('edDetDataAtuacao').value || 'N/A'; 
+    dadosDetratores[idx].status_recuperacao = document.getElementById('edDetStatusRec').value; 
+    dadosDetratores[idx].satisfacao_pos_contato = document.getElementById('edDetSatisfacao').value || 'N/A'; 
+    dadosDetratores[idx].comentarios_qa = document.getElementById('edDetComentarios').value || 'N/A'; 
+    dadosDetratores[idx].is_case = document.getElementById('edDetIsCase').checked;
+    
+    // Grava Rastreabilidade
+    dadosDetratores[idx].ultimaAlteracao = `Atuado por ${usuarioLogado} em ${new Date().toLocaleString('pt-BR')}`;
+    
+    try { 
+        showToast('⏳ Sincronizando atuação com a nuvem...', 'ok'); 
+        const metaR = await fetch(URL_DETRATORES, { headers: API_HEADS }); 
+        const meta = await metaR.json(); 
+        const body = { 
+            message: 'Atualização de Atuação (Dashboard)', 
+            content: btoa(unescape(encodeURIComponent(JSON.stringify(dadosDetratores, null, 2)))), 
+            sha: meta.sha 
+        }; 
+        const r = await fetch(URL_DETRATORES, { method: 'PUT', headers: API_HEADS, body: JSON.stringify(body) }); 
+        if (!r.ok) throw new Error(); 
+        fecharModalEditarDetrator(); 
+        showToast('✅ Atuação registrada e salva!', 'ok'); 
+        processarPainelDetratores(); 
+    } catch(e) { 
+        showToast('❌ Falha ao tentar salvar na rede', 'err'); 
+    }
+}
+
+/* --------------------------------------------------------------------------
+   FUNÇÕES DE EXPORTAÇÃO (MANTIDAS)
+   -------------------------------------------------------------------------- */
 function exportarGeral(formato, origem) {
-  let dados, headers, rows, filename;
-  if (origem === 'ra') {
-    if (!dadosFiltrados.length) return showToast('⚠️ Sem dados', 'err');
-    dados = dadosFiltrados; headers = ['Ticket Zendesk','ID ReclameAqui','Cliente','Produto','Categoria','Data abertura','Data resolução','Tempo resolução','Contato feito CC','Resolvido CC','Nota RA','Voltaria a Fazer Negócio', 'Comentários Internos', 'É Case?']; rows = dados.map(r => [ r.ticket, r.ra, r.cliente, r.produto, r.categoria, r.data, r.dataRes, r.tempo, r.contato, isResolvido(r.resolvido)?'Sim':'Não', r.nota, isResolvido(r.voltaria)?'Sim':'Não', r.comentario, r.is_case?'Sim':'Não' ]); filename = 'ReclameAqui_Export';
-  } else {
-    if (!listaDetFiltrada.length) return showToast('⚠️ Sem dados', 'err');
-    dados = listaDetFiltrada; headers = ['Zendesk', 'Data Detração', 'Cliente', 'Agente Responsável', 'Líder Responsável', 'Canal', 'Motivo', 'Impacto', 'Status Recuperação', 'Satisfação Pós-Contato', 'Comentários QA', 'É Case?']; rows = dados.map(d => [ d.ticket_detracao, d.data_detracao, d.cliente, d.agente_responsavel, d.lider_responsavel, d.canal, d.motivo_detracao, d.impacto, d.status_recuperacao, d.satisfacao_pos_contato, d.comentarios_qa, d.is_case?'Sim':'Não' ]); filename = 'Detratores_Export';
-  }
-  if (formato === 'csv') {
-    const sep = ';'; const csvContent = [headers, ...rows].map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(sep)).join('\n');
-    downloadBlob(new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' }), `${filename}.csv`); showToast('✅ CSV exportado!', 'ok');
-  } else if (formato === 'xlsx') {
-    let xml = `<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Export"><Table>`;
-    [headers, ...rows].forEach(row => { xml += '<Row>'; row.forEach(cell => { const v = String(cell ?? ''); const type = !isNaN(v) && v !== '' ? 'Number' : 'String'; xml += `<Cell><Data ss:Type="${type}">${v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</Data></Cell>`; }); xml += '</Row>'; });
-    xml += '</Table></Worksheet></Workbook>'; downloadBlob(new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8;' }), `${filename}.xls`); showToast('✅ Excel exportado!', 'ok');
-  }
+    let dados, headers, rows, filename;
+    
+    if (origem === 'ra') {
+        if (!dadosFiltrados.length) return showToast('⚠️ Sem dados para gerar relatório', 'err');
+        dados = dadosFiltrados; 
+        headers = ['Ticket Zendesk','ID ReclameAqui','Cliente','Produto','Categoria','Data abertura','Data resolução','Tempo SLA (Dias)','Contato feito CC','Resolvido CC','Nota RA','Voltaria a Fazer Negócio', 'Comentários Internos', 'É Case?']; 
+        rows = dados.map(r => [ r.ticket, r.ra, r.cliente, r.produto, r.categoria, r.data, r.dataRes, r.tempo, r.contato, isResolvido(r.resolvido)?'Sim':'Não', r.nota, isResolvido(r.voltaria)?'Sim':'Não', r.comentario, r.is_case?'Sim':'Não' ]); 
+        filename = 'ReclameAqui_Export';
+    } else {
+        if (!listaDetFiltrada.length) return showToast('⚠️ Sem dados para gerar relatório', 'err');
+        dados = listaDetFiltrada; 
+        headers = ['Zendesk', 'Data Detração', 'Cliente', 'Agente Responsável', 'Líder Responsável', 'Canal Origem', 'Motivo', 'Impacto', 'Status Recuperação', 'Satisfação Pós-Contato', 'Comentários QA', 'É Case?']; 
+        rows = dados.map(d => [ d.ticket_detracao, d.data_detracao, d.cliente, d.agente_responsavel, d.lider_responsavel, d.canal, d.motivo_detracao, d.impacto, d.status_recuperacao, d.satisfacao_pos_contato, d.comentarios_qa, d.is_case?'Sim':'Não' ]); 
+        filename = 'Detratores_Export';
+    }
+    
+    if (formato === 'csv') {
+        const sep = ';'; 
+        const csvContent = [headers, ...rows].map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(sep)).join('\n');
+        downloadBlob(new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' }), `${filename}.csv`); 
+        showToast('✅ Arquivo CSV baixado!', 'ok');
+    } else if (formato === 'xlsx') {
+        let xml = `<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Export"><Table>`;
+        [headers, ...rows].forEach(row => { 
+            xml += '<Row>'; 
+            row.forEach(cell => { 
+                const v = String(cell ?? ''); 
+                const type = !isNaN(v) && v !== '' ? 'Number' : 'String'; 
+                xml += `<Cell><Data ss:Type="${type}">${v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</Data></Cell>`; 
+            }); 
+            xml += '</Row>'; 
+        });
+        xml += '</Table></Worksheet></Workbook>'; 
+        downloadBlob(new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8;' }), `${filename}.xls`); 
+        showToast('✅ Arquivo Excel (XLSX) baixado!', 'ok');
+    }
 }
 
 async function exportarPDF(origem) {
-  const elId = origem === 'ra' ? 'dashboard-capture' : 'detratores-capture'; const dataF = origem === 'ra' ? dadosFiltrados : listaDetFiltrada;
-  if (!dataF.length) return showToast('⚠️ Sem dados', 'err');
-  const spinner = document.createElement('div'); spinner.className = 'pdf-spinner'; spinner.innerHTML = '<div class="spinner-ring"></div><p>Gerando snapshot do dashboard...</p>'; document.body.appendChild(spinner);
-  try {
-    await new Promise(r => setTimeout(r, 100)); const el = document.getElementById(elId); const canvas = await html2canvas(el, { backgroundColor: '#0b0f1a', scale: 2, useCORS: true, logging: false }); const imgData = canvas.toDataURL('image/png'); const win = window.open('', '_blank'); 
-    let dIni, dFim; if(origem === 'ra') { dIni = document.getElementById('dataInicio').value; dFim = document.getElementById('dataFim').value; } else { dIni = document.getElementById('dataInicioDet').value; dFim = document.getElementById('dataFimDet').value; }
-    const periodo = dIni && dFim ? `${dIni} → ${dFim}` : 'Todos os dados'; const titulo = origem === 'ra' ? 'Controle Reclame Aqui' : 'Controle Detratores';
-    win.document.write(`<!DOCTYPE html><html><head><title>${titulo} — Snapshot</title><style>@page { margin: 10mm; } body { margin:0; background:#0b0f1a; font-family: Arial, sans-serif; } .header { padding: 16px 20px 12px; border-bottom: 1px solid #1a2236; display:flex; justify-content:space-between; align-items:center; } .header h1 { font-size:14px; color:#3d7fff; margin:0; letter-spacing:.05em; } .header span { font-size:11px; color:#6b7a99; } img { width:100%; display:block; } .footer { padding:12px 20px; font-size:10px; color:#3a4560; text-align:right; }</style></head><body><div class="header"><h1>NELOGICA · ${titulo}</h1><span>Período: ${periodo} · ${dataF.length} registros · Exportado em ${new Date().toLocaleString('pt-BR')}</span></div><img src="${imgData}" /><div class="footer">Nelogica Customer Care · v13.5</div><script>window.onload = () => { window.print(); }<\/script></body></html>`);
-    win.document.close(); showToast('✅ PDF visual gerado!', 'ok');
-  } catch(e) { showToast('❌ Erro ao gerar PDF', 'err'); } finally { document.body.removeChild(spinner); }
+    const elId = origem === 'ra' ? 'dashboard-capture' : 'detratores-capture'; 
+    const dataF = origem === 'ra' ? dadosFiltrados : listaDetFiltrada;
+    
+    if (!dataF.length) return showToast('⚠️ O painel está vazio', 'err');
+    
+    const spinner = document.createElement('div'); 
+    spinner.className = 'pdf-spinner'; 
+    spinner.innerHTML = '<div class="spinner-ring"></div><p>Desenhando snapshot visual do painel...</p>'; 
+    document.body.appendChild(spinner);
+    
+    try {
+        await new Promise(r => setTimeout(r, 200)); // Delay para garantir re-render de animações
+        const el = document.getElementById(elId); 
+        const canvas = await html2canvas(el, { backgroundColor: '#0b0f1a', scale: 2, useCORS: true, logging: false }); 
+        const imgData = canvas.toDataURL('image/png'); 
+        const win = window.open('', '_blank'); 
+        
+        let dIni, dFim; 
+        if(origem === 'ra') { 
+            dIni = document.getElementById('dataInicio').value; 
+            dFim = document.getElementById('dataFim').value; 
+        } else { 
+            dIni = document.getElementById('dataInicioDet').value; 
+            dFim = document.getElementById('dataFimDet').value; 
+        }
+        
+        const periodo = dIni && dFim ? `${dIni} → ${dFim}` : 'Todos os dados históricos'; 
+        const titulo = origem === 'ra' ? 'Relatório Executivo: Reclame Aqui' : 'Relatório Executivo: Detratores';
+        
+        win.document.write(`<!DOCTYPE html><html><head><title>${titulo} — Snapshot</title><style>@page { margin: 10mm; } body { margin:0; background:#0b0f1a; font-family: Arial, sans-serif; } .header { padding: 16px 20px 12px; border-bottom: 1px solid #1a2236; display:flex; justify-content:space-between; align-items:center; } .header h1 { font-size:14px; color:#3d7fff; margin:0; letter-spacing:.05em; } .header span { font-size:11px; color:#6b7a99; } img { width:100%; display:block; } .footer { padding:12px 20px; font-size:10px; color:#3a4560; text-align:right; }</style></head><body><div class="header"><h1>NELOGICA · ${titulo}</h1><span>Período Ref: ${periodo} · Base: ${dataF.length} registros · Exportado: ${new Date().toLocaleString('pt-BR')}</span></div><img src="${imgData}" /><div class="footer">Gerado via Nelogica Customer Care Dashboard · v14.0</div><script>window.onload = () => { window.print(); }<\/script></body></html>`);
+        win.document.close(); 
+        showToast('✅ Documento PDF montado com sucesso!', 'ok');
+    } catch(e) { 
+        showToast('❌ Erro na renderização do PDF', 'err'); 
+    } finally { 
+        document.body.removeChild(spinner); 
+    }
 }
 
-function downloadBlob(blob, filename) { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url); }
+function downloadBlob(blob, filename) { 
+    const url = URL.createObjectURL(blob); 
+    const a = document.createElement('a'); 
+    a.href = url; 
+    a.download = filename; 
+    a.click(); 
+    URL.revokeObjectURL(url); 
+}
 
-// ─── LOGIN ──────────────────────────────────────────────────────────
-const USUARIOS = [{ user: 'antony', senha: 'nelogica2026' }, { user: 'suporte', senha: 'ra@2026' }, { user: 'lider', senha: 'gestao@2026' }];
-const SESSION_KEY = 'ra_dash_auth'; const SESSION_TTL = 8 * 60 * 60 * 1000;
-function verificarSessao() { try { const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null'); if (s && Date.now() - s.ts < SESSION_TTL) { usuarioLogado = s.user; document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('statusUser').innerText = `👤 ${s.user} · v13.5`; return true; } } catch(e) {} return false; }
-function tentarLogin() { const user = document.getElementById('loginUser').value.trim().toLowerCase(); const senha = document.getElementById('loginPass').value; const err = document.getElementById('loginErr'); const match = USUARIOS.find(u => u.user === user && u.senha === senha); if (match) { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user, ts: Date.now() })); usuarioLogado = user; document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('statusUser').innerText = `👤 ${user} · v13.5`; err.textContent = ''; if (document.getElementById('page-ra').classList.contains('active')) carregarDados(); if (document.getElementById('page-detratores').classList.contains('active')) carregarDadosDetratores(); } else { err.textContent = 'Credenciais inválidas.'; document.getElementById('loginPass').value = ''; document.getElementById('loginPass').focus(); } }
-function fazerLogout() { sessionStorage.removeItem(SESSION_KEY); window.location.reload(); }
-window.onload = () => { if (verificarSessao()) { if (document.getElementById('page-ra').classList.contains('active')) carregarDados(); if (document.getElementById('page-detratores').classList.contains('active')) carregarDadosDetratores(); } setInterval(() => { if (verificarSessao()) { if (document.getElementById('page-ra').classList.contains('active')) carregarDados(); if (document.getElementById('page-detratores').classList.contains('active')) carregarDadosDetratores(); } }, 120000); };
+/* --------------------------------------------------------------------------
+   SESSÃO E INICIALIZAÇÃO
+   -------------------------------------------------------------------------- */
+const USUARIOS = [
+    { user: 'antony', senha: 'nelogica2026' }, 
+    { user: 'suporte', senha: 'ra@2026' }, 
+    { user: 'lider', senha: 'gestao@2026' }
+];
+const SESSION_KEY = 'ra_dash_auth'; 
+const SESSION_TTL = 8 * 60 * 60 * 1000;
+
+function verificarSessao() { 
+    try { 
+        const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null'); 
+        if (s && Date.now() - s.ts < SESSION_TTL) { 
+            usuarioLogado = s.user; 
+            document.getElementById('loginScreen').classList.add('hidden'); 
+            document.getElementById('statusUser').innerText = `👤 ${s.user} · Admin (v14.0)`; 
+            return true; 
+        } 
+    } catch(e) {} 
+    return false; 
+}
+
+function tentarLogin() { 
+    const user = document.getElementById('loginUser').value.trim().toLowerCase(); 
+    const senha = document.getElementById('loginPass').value; 
+    const err = document.getElementById('loginErr'); 
+    
+    const match = USUARIOS.find(u => u.user === user && u.senha === senha); 
+    if (match) { 
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user, ts: Date.now() })); 
+        usuarioLogado = user; 
+        document.getElementById('loginScreen').classList.add('hidden'); 
+        document.getElementById('statusUser').innerText = `👤 ${user} · Admin (v14.0)`; 
+        err.textContent = ''; 
+        
+        if (document.getElementById('page-ra').classList.contains('active')) carregarDados(); 
+        if (document.getElementById('page-detratores').classList.contains('active')) carregarDadosDetratores(); 
+    } else { 
+        err.textContent = 'Acesso Negado: Credenciais inválidas.'; 
+        document.getElementById('loginPass').value = ''; 
+        document.getElementById('loginPass').focus(); 
+    } 
+}
+
+function fazerLogout() { 
+    sessionStorage.removeItem(SESSION_KEY); 
+    window.location.reload(); 
+}
+
+window.onload = () => { 
+    if (verificarSessao()) { 
+        if (document.getElementById('page-ra').classList.contains('active')) carregarDados(); 
+        if (document.getElementById('page-detratores').classList.contains('active')) carregarDadosDetratores(); 
+    } 
+    
+    // Auto-refresh a cada 2 minutos se logado
+    setInterval(() => { 
+        if (verificarSessao()) { 
+            if (document.getElementById('page-ra').classList.contains('active')) carregarDados(); 
+            if (document.getElementById('page-detratores').classList.contains('active')) carregarDadosDetratores(); 
+        } 
+    }, 120000); 
+};
 </script>
 
 <div id="loginScreen">
-  <div class="login-box">
-    <div class="login-logo">NELO<span>GICA</span></div>
-    <div class="login-sub">Customer Care</div>
-    <div class="login-title">Acesso restrito — faça login para continuar</div>
-    <div class="login-field"><label>Usuário</label><input type="text" id="loginUser" placeholder="seu usuário" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()"></div>
-    <div class="login-field"><label>Senha</label><input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')tentarLogin()"></div>
-    <button class="login-btn" onclick="tentarLogin()">Entrar →</button>
-    <div class="login-err" id="loginErr"></div>
-    <div class="login-footer">Nelogica · Customer Care · v13.5 · 2026</div>
-  </div>
+    <div class="login-box">
+        <div class="login-logo">NELO<span>GICA</span></div>
+        <div class="login-sub">Customer Care Area</div>
+        <div class="login-title">Autenticação Requerida — Plataforma Segura</div>
+        <div class="login-field">
+            <label>Usuário</label>
+            <input type="text" id="loginUser" placeholder="Seu ID de acesso" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
+        </div>
+        <div class="login-field">
+            <label>Senha de Segurança</label>
+            <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')tentarLogin()">
+        </div>
+        <button class="login-btn" onclick="tentarLogin()">Entrar no Sistema →</button>
+        <div class="login-err" id="loginErr"></div>
+        <div class="login-footer">Nelogica · Customer Care Division · v14.0 · Master Branch</div>
+    </div>
 </div>
+
 </body>
 </html>
