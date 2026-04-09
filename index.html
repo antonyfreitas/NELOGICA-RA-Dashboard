@@ -188,7 +188,7 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
         <div class="page-title">Reclame <span>Aqui</span></div>
         <div class="page-subtitle">Análise de atendimentos e indicadores de qualidade</div>
       </div>
-      <div class="version-tag">v11.5 · 2026</div>
+      <div class="version-tag">v12.0 · 2026</div>
     </div>
 
     <div class="upload-bar">
@@ -205,7 +205,9 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
         <button class="btn-atualizar" onclick="carregarDados()">⟳ Sincronizar</button>
         <button class="btn-atualizar" onclick="abrirModalAdicionar()" style="background:var(--success);color:#0b0f1a;">＋ Novo Caso</button>
         <div class="divider-v"></div>
-        <button class="btn-export" onclick="exportar('csv')">⬇ CSV</button>
+        <button class="btn-export" onclick="exportarGeral('csv', 'ra')">⬇ CSV</button>
+        <button class="btn-export" onclick="exportarGeral('xlsx', 'ra')">⬇ XLSX</button>
+        <button class="btn-export" onclick="exportarPDF('ra')">⬇ PDF</button>
       </div>
     </div>
 
@@ -270,52 +272,55 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
         <input type="date" id="dataFimDet" onchange="processarPainelDetratores()">
         <div class="divider-v"></div>
         <button class="btn-atualizar" onclick="carregarDadosDetratores()">⟳ Sincronizar</button>
+        <div class="divider-v"></div>
+        <button class="btn-export" onclick="exportarGeral('csv', 'detratores')">⬇ CSV</button>
+        <button class="btn-export" onclick="exportarGeral('xlsx', 'detratores')">⬇ XLSX</button>
+        <button class="btn-export" onclick="exportarPDF('detratores')">⬇ PDF</button>
       </div>
     </div>
 
     <div id="detratores-dash" style="display: block;">
-      
-      <div class="kpi-grid">
-        <div class="kpi-card" onclick="abrirModalDetratores('todos')">
-          <div class="kpi-label">Total Detratores</div>
-          <div class="kpi-value" id="det-kpi-total">—</div>
-          <div class="kpi-sub" id="det-kpi-tendencia-total" style="font-weight: 600;"></div>
+      <div id="detratores-capture">
+        <div class="kpi-grid">
+          <div class="kpi-card" onclick="abrirModalDetratores('todos')">
+            <div class="kpi-label">Total Detratores</div>
+            <div class="kpi-value" id="det-kpi-total">—</div>
+            <div class="kpi-sub" id="det-kpi-tendencia-total" style="font-weight: 600;"></div>
+          </div>
+          <div class="kpi-card warning" onclick="abrirModalDetratores('sinalizados')">
+            <div class="kpi-label">Com Sinalização</div>
+            <div class="kpi-value warning" id="det-kpi-sinalizados">—</div>
+            <div class="kpi-sub" id="det-kpi-sinalizados-pct"></div>
+          </div>
+          <div class="kpi-card success" onclick="abrirModalDetratores('recuperados')">
+            <div class="kpi-label">Taxa de Recuperação</div>
+            <div class="kpi-value success" id="det-kpi-recuperacao">—</div>
+            <div class="kpi-sub">dos clientes sinalizados</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Satisfação Pós-Contato</div>
+            <div class="kpi-value" id="det-kpi-satisfacao">—</div>
+            <div class="kpi-sub">nota média (1 a 5)</div>
+          </div>
         </div>
-        <div class="kpi-card warning" onclick="abrirModalDetratores('sinalizados')">
-          <div class="kpi-label">Com Sinalização</div>
-          <div class="kpi-value warning" id="det-kpi-sinalizados">—</div>
-          <div class="kpi-sub" id="det-kpi-sinalizados-pct"></div>
-        </div>
-        <div class="kpi-card success" onclick="abrirModalDetratores('recuperados')">
-          <div class="kpi-label">Taxa de Recuperação</div>
-          <div class="kpi-value success" id="det-kpi-recuperacao">—</div>
-          <div class="kpi-sub">dos clientes sinalizados</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Satisfação Pós-Contato</div>
-          <div class="kpi-value" id="det-kpi-satisfacao">—</div>
-          <div class="kpi-sub">nota média (1 a 5)</div>
-        </div>
-      </div>
 
-      <div class="charts-grid" style="grid-template-columns: 1fr; margin-bottom: 20px;">
-        <div class="chart-card">
-          <div class="chart-title">Evolução Diária de Detrações</div>
-          <div class="chart-wrap" style="height: 200px;"><canvas id="chartDetDiario"></canvas></div>
+        <div class="charts-grid" style="grid-template-columns: 1fr; margin-bottom: 20px;">
+          <div class="chart-card">
+            <div class="chart-title">Evolução Diária de Detrações</div>
+            <div class="chart-wrap" style="height: 200px;"><canvas id="chartDetDiario"></canvas></div>
+          </div>
         </div>
-      </div>
 
-      <div class="charts-grid">
-        <div class="chart-card" style="cursor:pointer;" title="Clique nas fatias para filtrar"><div class="chart-title">Status de Recuperação 🖱️</div><div class="chart-wrap"><canvas id="chartStatusRec"></canvas></div></div>
-        <div class="chart-card" style="cursor:pointer;" title="Clique nas barras para filtrar"><div class="chart-title">Top Agressores (Por Líder) 🖱️</div><div class="chart-wrap"><canvas id="chartAgressores"></canvas></div></div>
-      </div>
+        <div class="charts-grid">
+          <div class="chart-card" style="cursor:pointer;" title="Clique nas fatias para filtrar"><div class="chart-title">Status de Recuperação 🖱️</div><div class="chart-wrap"><canvas id="chartStatusRec"></canvas></div></div>
+          <div class="chart-card" style="cursor:pointer;" title="Clique nas barras para filtrar"><div class="chart-title">Top Agressores (Por Líder) 🖱️</div><div class="chart-wrap"><canvas id="chartAgressores"></canvas></div></div>
+        </div>
 
-      <div class="charts-grid">
-        <div class="chart-card" style="cursor:pointer;" title="Clique nas fatias para filtrar"><div class="chart-title">Canais de Origem 🖱️</div><div class="chart-wrap"><canvas id="chartCanal"></canvas></div></div>
-        <div class="chart-card" style="cursor:pointer;" title="Clique nas barras para filtrar"><div class="chart-title">Top Motivos da Detração 🖱️</div><div class="chart-wrap"><canvas id="chartMotivos"></canvas></div></div>
-      </div>
-
-      <div class="detractors-card">
+        <div class="charts-grid" style="margin-bottom: 20px;">
+          <div class="chart-card" style="cursor:pointer;" title="Clique nas fatias para filtrar"><div class="chart-title">Canais de Origem 🖱️</div><div class="chart-wrap"><canvas id="chartCanal"></canvas></div></div>
+          <div class="chart-card" style="cursor:pointer;" title="Clique nas barras para filtrar"><div class="chart-title">Top Motivos da Detração 🖱️</div><div class="chart-wrap"><canvas id="chartMotivos"></canvas></div></div>
+        </div>
+      </div> <div class="detractors-card">
         <div class="section-header">
           <div class="section-title">🔴 Fila de Ação Tática (Casos com Sinalização)</div>
           <span class="badge badge-danger" id="badge-detratores-acao">0 casos</span>
@@ -450,7 +455,7 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
 // ─── CONFIGURAÇÃO GITHUB ─────────────────────────────────────────────────────
 const GITHUB_USER  = 'antonyfreitas';
 const GITHUB_REPO  = 'NELOGICA-RA-Dashboard';
-const GITHUB_TOKEN = '__GH_TOKEN__'; // COLE AQUI O TEU TOKEN
+const GITHUB_TOKEN = '__GH_TOKEN__'; // COLE AQUI O TEU TOKEN!!!
 const JSON_URL     = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/dados_ra.json`;
 const API_URL      = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/dados_ra.json`;
 const URL_DETRATORES = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/dados_detratores.json`;
@@ -477,7 +482,6 @@ function setStatus(tipo, msg) {
 }
 function dataParaNum(val) { if (!val) return 0; return parseInt(String(val).replace(/-/g, '')); }
 function isNotNA(val) { if (!val) return false; const v = String(val).trim().toUpperCase(); return v !== 'N/A' && v !== 'N/A ' && v !== 'NA' && v !== ''; }
-function escapeRegExp(string) { return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
 // ─── NAVEGAÇÃO ────────────────────────────────────────────────────────────────
 function navegarPara(pagina) {
@@ -745,13 +749,88 @@ async function salvarNovoCaso() {
   dadosGerais.push(novo); try{ showToast('⏳ Adicionando...', 'ok'); await salvarJSON(); fecharModalAdicionar(); showToast('✅ Adicionado!', 'ok'); processarDados(); }catch(e){ dadosGerais.pop(); showToast('❌ Erro', 'err'); }
 }
 
-function exportar(formato) { /* Código mantido (omito p/ poupar espaço visualmente se precisasses, mas está 100% igual ao anterior na lógica base de exportar csv) */ }
+// ─── EXPORTAÇÕES (COMPLETO) ──────────────────────────────────────────────────
+function exportarGeral(formato, origem) {
+  let dados, headers, rows, filename;
+
+  if (origem === 'ra') {
+    if (!dadosFiltrados.length) return showToast('⚠️ Sem dados para exportar', 'err');
+    dados = dadosFiltrados;
+    headers = ['Ticket Zendesk','ID ReclameAqui','Cliente','Produto','Categoria','Data abertura','Data resolução','Tempo resolução','Contato feito CC','Resolvido CC','Nota RA','Voltaria a Fazer Negócio', 'Comentários Internos', 'É Case?'];
+    rows = dados.map(r => [ r.ticket, r.ra, r.cliente, r.produto, r.categoria, r.data, r.dataRes, r.tempo, r.contato, isResolvido(r.resolvido)?'Sim':'Não', r.nota, isResolvido(r.voltaria)?'Sim':'Não', r.comentario, r.is_case?'Sim':'Não' ]);
+    filename = 'ReclameAqui_Export';
+  } else {
+    if (!listaDetFiltrada.length) return showToast('⚠️ Sem dados para exportar', 'err');
+    dados = listaDetFiltrada;
+    headers = ['Zendesk', 'Data Detração', 'Cliente', 'Agente Responsável', 'Líder Responsável', 'Canal', 'Motivo', 'Impacto', 'Status Recuperação', 'Satisfação Pós-Contato', 'Comentários QA', 'É Case?'];
+    rows = dados.map(d => [ d.ticket_detracao, d.data_detracao, d.cliente, d.agente_responsavel, d.lider_responsavel, d.canal, d.motivo_detracao, d.impacto, d.status_recuperacao, d.satisfacao_pos_contato, d.comentarios_qa, d.is_case?'Sim':'Não' ]);
+    filename = 'Detratores_Export';
+  }
+
+  if (formato === 'csv') {
+    const sep = ';';
+    const csvContent = [headers, ...rows].map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(sep)).join('\n');
+    downloadBlob(new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' }), `${filename}.csv`);
+    showToast('✅ CSV exportado!', 'ok');
+  } 
+  else if (formato === 'xlsx') {
+    let xml = `<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Export"><Table>`;
+    [headers, ...rows].forEach(row => {
+      xml += '<Row>';
+      row.forEach(cell => {
+        const v = String(cell ?? '');
+        const type = !isNaN(v) && v !== '' ? 'Number' : 'String';
+        xml += `<Cell><Data ss:Type="${type}">${v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</Data></Cell>`;
+      });
+      xml += '</Row>';
+    });
+    xml += '</Table></Worksheet></Workbook>';
+    downloadBlob(new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8;' }), `${filename}.xls`);
+    showToast('✅ Excel exportado!', 'ok');
+  }
+}
+
+async function exportarPDF(origem) {
+  const elId = origem === 'ra' ? 'dashboard-capture' : 'detratores-capture';
+  const dataF = origem === 'ra' ? dadosFiltrados : listaDetFiltrada;
+  
+  if (!dataF.length) return showToast('⚠️ Sem dados', 'err');
+  
+  const spinner = document.createElement('div'); spinner.className = 'pdf-spinner'; 
+  spinner.innerHTML = '<div class="spinner-ring"></div><p>Gerando snapshot do dashboard...</p>'; 
+  document.body.appendChild(spinner);
+  
+  try {
+    await new Promise(r => setTimeout(r, 100)); 
+    const el = document.getElementById(elId); 
+    const canvas = await html2canvas(el, { backgroundColor: '#0b0f1a', scale: 2, useCORS: true, logging: false }); 
+    const imgData = canvas.toDataURL('image/png'); 
+    const win = window.open('', '_blank'); 
+    
+    let dIni, dFim;
+    if(origem === 'ra') { dIni = document.getElementById('dataInicio').value; dFim = document.getElementById('dataFim').value; }
+    else { dIni = document.getElementById('dataInicioDet').value; dFim = document.getElementById('dataFimDet').value; }
+    
+    const periodo = dIni && dFim ? `${dIni} → ${dFim}` : 'Todos os dados';
+    const titulo = origem === 'ra' ? 'Controle Reclame Aqui' : 'Controle Detratores';
+    
+    win.document.write(`<!DOCTYPE html><html><head><title>${titulo} — Snapshot</title><style>@page { margin: 10mm; } body { margin:0; background:#0b0f1a; font-family: Arial, sans-serif; } .header { padding: 16px 20px 12px; border-bottom: 1px solid #1a2236; display:flex; justify-content:space-between; align-items:center; } .header h1 { font-size:14px; color:#3d7fff; margin:0; letter-spacing:.05em; } .header span { font-size:11px; color:#6b7a99; } img { width:100%; display:block; } .footer { padding:12px 20px; font-size:10px; color:#3a4560; text-align:right; }</style></head><body><div class="header"><h1>NELOGICA · ${titulo}</h1><span>Período: ${periodo} · ${dataF.length} registros · Exportado em ${new Date().toLocaleString('pt-BR')}</span></div><img src="${imgData}" /><div class="footer">Nelogica Customer Care · v12.0</div><script>window.onload = () => { window.print(); }<\/script></body></html>`);
+    win.document.close(); 
+    showToast('✅ PDF visual gerado!', 'ok');
+  } catch(e) { 
+    showToast('❌ Erro ao gerar PDF', 'err'); 
+  } finally { 
+    document.body.removeChild(spinner); 
+  }
+}
+
+function downloadBlob(blob, filename) { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url); }
 
 // ─── LOGIN ──────────────────────────────────────────────────────────
 const USUARIOS = [{ user: 'antony', senha: 'nelogica2026' }, { user: 'suporte', senha: 'ra@2026' }, { user: 'lider', senha: 'gestao@2026' }];
 const SESSION_KEY = 'ra_dash_auth'; const SESSION_TTL = 8 * 60 * 60 * 1000;
-function verificarSessao() { try { const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null'); if (s && Date.now() - s.ts < SESSION_TTL) { usuarioLogado = s.user; document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('statusUser').innerText = `👤 ${s.user} · v11.5`; return true; } } catch(e) {} return false; }
-function tentarLogin() { const user = document.getElementById('loginUser').value.trim().toLowerCase(); const senha = document.getElementById('loginPass').value; const err = document.getElementById('loginErr'); const match = USUARIOS.find(u => u.user === user && u.senha === senha); if (match) { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user, ts: Date.now() })); usuarioLogado = user; document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('statusUser').innerText = `👤 ${user} · v11.5`; err.textContent = ''; if (document.getElementById('page-ra').classList.contains('active')) carregarDados(); if (document.getElementById('page-detratores').classList.contains('active')) carregarDadosDetratores(); } else { err.textContent = 'Credenciais inválidas.'; document.getElementById('loginPass').value = ''; document.getElementById('loginPass').focus(); } }
+function verificarSessao() { try { const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null'); if (s && Date.now() - s.ts < SESSION_TTL) { usuarioLogado = s.user; document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('statusUser').innerText = `👤 ${s.user} · v12.0`; return true; } } catch(e) {} return false; }
+function tentarLogin() { const user = document.getElementById('loginUser').value.trim().toLowerCase(); const senha = document.getElementById('loginPass').value; const err = document.getElementById('loginErr'); const match = USUARIOS.find(u => u.user === user && u.senha === senha); if (match) { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user, ts: Date.now() })); usuarioLogado = user; document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('statusUser').innerText = `👤 ${user} · v12.0`; err.textContent = ''; if (document.getElementById('page-ra').classList.contains('active')) carregarDados(); if (document.getElementById('page-detratores').classList.contains('active')) carregarDadosDetratores(); } else { err.textContent = 'Credenciais inválidas.'; document.getElementById('loginPass').value = ''; document.getElementById('loginPass').focus(); } }
 function fazerLogout() { sessionStorage.removeItem(SESSION_KEY); window.location.reload(); }
 window.onload = () => { if (verificarSessao()) { if (document.getElementById('page-ra').classList.contains('active')) carregarDados(); if (document.getElementById('page-detratores').classList.contains('active')) carregarDadosDetratores(); } setInterval(() => { if (verificarSessao()) { if (document.getElementById('page-ra').classList.contains('active')) carregarDados(); if (document.getElementById('page-detratores').classList.contains('active')) carregarDadosDetratores(); } }, 120000); };
 </script>
@@ -765,7 +844,7 @@ window.onload = () => { if (verificarSessao()) { if (document.getElementById('pa
     <div class="login-field"><label>Senha</label><input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')tentarLogin()"></div>
     <button class="login-btn" onclick="tentarLogin()">Entrar →</button>
     <div class="login-err" id="loginErr"></div>
-    <div class="login-footer">Nelogica · Customer Care · v11.5 · 2026</div>
+    <div class="login-footer">Nelogica · Customer Care · v12.0 · 2026</div>
   </div>
 </div>
 </body>
