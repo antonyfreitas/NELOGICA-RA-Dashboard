@@ -535,14 +535,16 @@ function isNotNA(val) {
   return v !== 'N/A' && v !== 'N/A ' && v !== 'NA' && v !== '';
 }
 
+let chartDetDiario, chartStatusRec, chartAgressores;
+
 function processarPainelDetratores() {
   if (!dadosDetratores.length) return;
 
-  // Lógica de filtro por data
   const nIni = dataParaNum(document.getElementById('dataInicioDet').value);
   const nFim = dataParaNum(document.getElementById('dataFimDet').value);
 
-  const listaFiltrada = dadosDetratores.filter(d => {
+  // Filtra período atual
+  const listaAtual = dadosDetratores.filter(d => {
     const dt = dataParaNum(d.data_detracao);
     if (!dt) return true;
     if (nIni && dt < nIni) return false;
@@ -550,77 +552,130 @@ function processarPainelDetratores() {
     return true;
   });
 
-  const total = listaFiltrada.length;
-  const sinalizados = listaFiltrada.filter(d => String(d.status_sinalizacao).includes('COM sinalização')).length;
-  const semSinalizacao = total - sinalizados;
-  const atuacao = listaFiltrada.filter(d => String(d.necessario_atuacao).toUpperCase() === 'SIM').length;
-
-  document.getElementById('det-kpi-total').innerText = total;
-  document.getElementById('det-kpi-sinalizados').innerText = sinalizados;
-  document.getElementById('det-kpi-sinalizados-pct').innerText = total > 0 ? `${((sinalizados/total)*100).toFixed(1)}% da amostra` : '';
+  // Filtra período anterior para a Tendência (Health Score)
+  let diffDias = 30; // padrão
+  if (document.getElementById('dataInicioDet').value && document.getElementById('dataFimDet').value) {
+    const d1 = new Date(document.getElementById('dataInicioDet').value);
+    const d2 = new Date(document.getElementById('dataFimDet').value);
+    diffDias = Math.round((d2 - d1) / (1000 * 60 * 60 * 24)) || 1;
+  }
+  const dAntFim = new Date(document.getElementById('dataInicioDet').value || new Date());
+  dAntFim.setDate(dAntFim.getDate() - 1);
+  const dAntIni = new Date(dAntFim);
+  dAntIni.setDate(dAntIni.getDate() - diffDias);
   
-  document.getElementById('det-kpi-atuacao').innerText = atuacao;
-  document.getElementById('det-kpi-atuacao-pct').innerText = sinalizados > 0 ? `${((atuacao/sinalizados)*100).toFixed(1)}% dos sinalizados` : '';
-  
-  document.getElementById('det-kpi-ok').innerText = semSinalizacao;
+  const nAntIni = dataParaNum(dAntIni.toISOString().split('T')[0]);
+  const nAntFim = dataParaNum(dAntFim.toISOString().split('T')[0]);
 
-  // Passa a lista filtrada para os gráficos e tabela
-  atualizarGraficosDetratores(sinalizados, semSinalizacao, listaFiltrada);
-  renderTabelaAcaoDetratores(listaFiltrada);
-}
-
-function atualizarGraficosDetratores(sinalizados, semSinalizacao, listaFiltrada) {
-  [chartSinalizacao, chartMotivos, chartCanal, chartImpacto].forEach(c => c && c.destroy());
-  const font = { family: "'DM Sans', sans-serif", size: 11 };
-
-  chartSinalizacao = new Chart(document.getElementById('chartSinalizacao'), {
-    type: 'doughnut',
-    data: { 
-      labels: ['COM Sinalização', 'SEM Sinalização'], 
-      datasets: [{ data: [sinalizados, semSinalizacao], backgroundColor: ['#ffb930', '#00e5c3'], borderWidth: 0, hoverOffset: 6 }] 
-    },
-    options: { animation: false, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { labels: { color: '#6b7a99', font, padding: 16 } } } }
+  const listaAnterior = dadosDetratores.filter(d => {
+    const dt = dataParaNum(d.data_detracao);
+    return dt && dt >= nAntIni && dt <= nAntFim;
   });
 
+  // Cálculos Básicos
+  const total = listaAtual.length;
+  const totalAnterior = listaAnterior.length;
+  const sinalizados = listaAtual.filter(d => String(d.status_sinalizacao).includes('COM sinalização')).length;
+  
+  // Cálculos de Sucesso (Customer Care)
+  const recuperados = listaAtual.filter(d => d.status_recuperacao === 'Recuperado').length;
+  const taxaRecuperacao = sinalizados > 0 ? ((recuperados / sinalizados) * 100).toFixed(1) : 0;
+  
+  const notasStr = listaAtual.map(d => parseFloat(d.satisfacao_pos_contato)).filter(n => !isNaN(n));
+  const mediaSatisfacao = notasStr.length > 0 ? (notasStr.reduce((a, b) => a + b, 0) / notasStr.length).toFixed(1) : '—';
+
+  // Atualizar DOM
+  document.getElementById('det-kpi-total').innerText = total;
+  
+  // Setinha de Tendência (Health Score)
+  const tendEl = document.getElementById('det-kpi-tendencia-total');
+  if (total > totalAnterior) {
+    tendEl.innerHTML = `<span style="color:var(--danger)">🔼 +${total - totalAnterior} vs ant.</span>`;
+  } else if (total < totalAnterior) {
+    tendEl.innerHTML = `<span style="color:var(--success)">🔽 ${total - totalAnterior} vs ant.</span>`;
+  } else {
+    tendEl.innerHTML = `<span style="color:var(--muted)">➖ Estável vs ant.</span>`;
+  }
+
+  document.getElementById('det-kpi-sinalizados').innerText = sinalizados;
+  document.getElementById('det-kpi-sinalizados-pct').innerText = total > 0 ? `${((sinalizados/total)*100).toFixed(0)}% do total` : '';
+  
+  document.getElementById('det-kpi-recuperacao').innerText = taxaRecuperacao + '%';
+  document.getElementById('det-kpi-satisfacao').innerText = mediaSatisfacao;
+
+  atualizarGraficosDetratores(listaAtual);
+  renderTabelaAcaoDetratores(listaAtual);
+}
+
+function atualizarGraficosDetratores(lista) {
+  [chartDetDiario, chartStatusRec, chartAgressores, chartCanal, chartMotivos].forEach(c => c && c.destroy());
+  const font = { family: "'DM Sans', sans-serif", size: 11 };
+  const gridY = { color: 'rgba(255,255,255,.04)' };
+
+  // 1. Gráfico Diário (Evolução)
+  const diaMap = {};
+  lista.forEach(d => {
+    if(d.data_detracao) diaMap[d.data_detracao] = (diaMap[d.data_detracao] || 0) + 1;
+  });
+  // Ordenar por data cronológica
+  const diasOrdenados = Object.keys(diaMap).sort();
+  chartDetDiario = new Chart(document.getElementById('chartDetDiario'), {
+    type: 'line',
+    data: { 
+      labels: diasOrdenados.map(d => d.split('-').reverse().slice(0,2).join('/')), 
+      datasets: [{ label: 'Detratores', data: diasOrdenados.map(d => diaMap[d]), borderColor: '#3d7fff', backgroundColor: 'rgba(61,127,255,0.1)', fill: true, tension: 0.3, pointRadius: 4 }]
+    },
+    options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { color: '#6b7a99', font } }, y: { grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } } } }
+  });
+
+  // 2. Gráfico Status Recuperação (Donut)
+  const recMap = { 'Recuperado':0, 'Perdido':0, 'Neutro':0, 'Pendente':0 };
+  lista.filter(d => String(d.status_sinalizacao).includes('COM')).forEach(d => {
+    const st = d.status_recuperacao || 'Pendente';
+    if(recMap[st] !== undefined) recMap[st]++;
+  });
+  chartStatusRec = new Chart(document.getElementById('chartStatusRec'), {
+    type: 'doughnut',
+    data: { labels: Object.keys(recMap), datasets: [{ data: Object.values(recMap), backgroundColor: ['#00e5c3', '#ff4d6d', '#ffb930', '#6b7a99'], borderWidth: 0, hoverOffset: 6 }] },
+    options: { maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { color: '#6b7a99', font, padding: 12 } } } }
+  });
+
+  // 3. Gráfico Agressores / Líderes (Barras Horizontais)
+  const liderMap = {};
+  lista.forEach(d => {
+    if(isNotNA(d.lider_responsavel)) {
+      const lider = d.lider_responsavel.split('@')[0]; // Pega só o primeiro nome
+      liderMap[lider] = (liderMap[lider] || 0) + 1;
+    }
+  });
+  const liderSorted = Object.entries(liderMap).sort((a,b) => b[1]-a[1]).slice(0, 5);
+  chartAgressores = new Chart(document.getElementById('chartAgressores'), {
+    type: 'bar',
+    data: { labels: liderSorted.map(e=>e[0]), datasets: [{ label: 'Casos Gerados', data: liderSorted.map(e=>e[1]), backgroundColor: '#ff4d6d', borderRadius: 5 }] },
+    options: { maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } }, y: { grid: { display: false }, ticks: { color: '#6b7a99', font } } } }
+  });
+
+  // 4. Gráfico Canais (Donut)
+  const cMap = {};
+  lista.forEach(d => { if(isNotNA(d.canal)) cMap[d.canal.trim()] = (cMap[d.canal.trim()] || 0) + 1; });
+  chartCanal = new Chart(document.getElementById('chartCanal'), {
+    type: 'doughnut',
+    data: { labels: Object.keys(cMap), datasets: [{ data: Object.values(cMap), backgroundColor: CHART_COLORS, borderWidth:0, hoverOffset:6 }] },
+    options: { maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { color: '#6b7a99', font } } } }
+  });
+
+  // 5. Gráfico Motivos (Barras Horizontais)
   const mMap = {};
-  listaFiltrada.forEach(d => {
+  lista.forEach(d => {
     if (isNotNA(d.motivo_detracao)) {
-      const motivos = d.motivo_detracao.split(';');
-      motivos.forEach(m => {
-        const key = m.trim();
-        if(key) mMap[key] = (mMap[key] || 0) + 1;
-      });
+      d.motivo_detracao.split(';').forEach(m => { const key = m.trim(); if(key) mMap[key] = (mMap[key] || 0) + 1; });
     }
   });
   const mSorted = Object.entries(mMap).sort((a,b) => b[1]-a[1]).slice(0, 5);
   chartMotivos = new Chart(document.getElementById('chartMotivos'), {
     type: 'bar',
-    data: { labels: mSorted.map(e=>e[0]), datasets: [{ label:'Ocorrências', data: mSorted.map(e=>e[1]), backgroundColor: '#ff4d6d', borderRadius: 5 }] },
-    options: { animation: false, maintainAspectRatio: false, indexAxis:'y', plugins:{ legend:{display:false} }, scales:{ x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#6b7a99',font,stepSize:1}}, y:{grid:{display:false},ticks:{color:'#6b7a99',font}} } }
-  });
-
-  const cMap = {};
-  listaFiltrada.forEach(d => {
-    if(isNotNA(d.canal)) { const c = d.canal.trim(); cMap[c] = (cMap[c]||0)+1; }
-  });
-  chartCanal = new Chart(document.getElementById('chartCanal'), {
-    type: 'doughnut',
-    data: { labels: Object.keys(cMap), datasets: [{ data: Object.values(cMap), backgroundColor: CHART_COLORS, borderWidth:0, hoverOffset:6 }] },
-    options: { animation: false, maintainAspectRatio: false, cutout:'60%', plugins:{ legend:{ position:'right', labels:{color:'#6b7a99',font,padding:12} } } }
-  });
-
-  const iMap = {'Alto':0, 'Médio':0, 'Baixo':0};
-  listaFiltrada.forEach(d => {
-    if(isNotNA(d.impacto)) {
-      // CORREÇÃO: Corta a string no "(" e remove os espaços extras
-      const imp = d.impacto.split('(')[0].trim();
-      if(iMap[imp] !== undefined) iMap[imp]++; else iMap[imp] = 1;
-    }
-  });
-  chartImpacto = new Chart(document.getElementById('chartImpacto'), {
-    type: 'bar',
-    data: { labels: Object.keys(iMap), datasets: [{ label:'Casos', data: Object.values(iMap), backgroundColor: ['#ff4d6d', '#ffb930', '#3d7fff'], borderRadius: 6 }] },
-    options: { animation: false, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{grid:{display:false},ticks:{color:'#6b7a99',font}}, y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#6b7a99',font,stepSize:1}} } }
+    data: { labels: mSorted.map(e=>e[0]), datasets: [{ label: 'Ocorrências', data: mSorted.map(e=>e[1]), backgroundColor: '#ffb930', borderRadius: 5 }] },
+    options: { maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } }, y: { grid: { display: false }, ticks: { color: '#6b7a99', font } } } }
   });
 }
 
