@@ -214,6 +214,7 @@ input[type="text"].search-box:focus { border-color:var(--accent); outline:none; 
         <button class="btn-periodo" onclick="definirPeriodo('tudo',event)">Tudo</button>
         <input type="date" id="dataInicio">
         <input type="date" id="dataFim">
+        <input type="text" id="buscaRA" class="search-box" placeholder="Buscar ticket, nome..." onkeyup="processarDados()">
         <button class="btn-atualizar" onclick="processarDados()">↻ Filtrar</button>
         <div class="divider-v"></div>
         <button class="btn-atualizar" onclick="carregarDados()">⟳ Sincronizar</button>
@@ -302,22 +303,22 @@ input[type="text"].search-box:focus { border-color:var(--accent); outline:none; 
     <div id="detratores-dash" style="display: block;">
       
       <div class="kpi-grid">
-        <div class="kpi-card">
+        <div class="kpi-card" onclick="abrirModalDetratores('total')">
           <div class="kpi-label">Total Detratores</div>
           <div class="kpi-value" id="det-kpi-total">—</div>
           <div class="kpi-sub" id="det-kpi-tendencia-total" style="font-weight: 600;"></div>
         </div>
-        <div class="kpi-card warning">
+        <div class="kpi-card warning" onclick="abrirModalDetratores('sinalizados')">
           <div class="kpi-label">Com Sinalização</div>
           <div class="kpi-value warning" id="det-kpi-sinalizados">—</div>
           <div class="kpi-sub" id="det-kpi-sinalizados-pct"></div>
         </div>
-        <div class="kpi-card success">
+        <div class="kpi-card success" onclick="abrirModalDetratores('recuperados')">
           <div class="kpi-label">Taxa de Recuperação</div>
           <div class="kpi-value success" id="det-kpi-recuperacao">—</div>
           <div class="kpi-sub">dos clientes contatados</div>
         </div>
-        <div class="kpi-card">
+        <div class="kpi-card" onclick="abrirModalDetratores('total')">
           <div class="kpi-label">Satisfação Pós-Contato</div>
           <div class="kpi-value" id="det-kpi-satisfacao">—</div>
           <div class="kpi-sub">nota média (1 a 5)</div>
@@ -450,6 +451,19 @@ input[type="text"].search-box:focus { border-color:var(--accent); outline:none; 
   </div>
 </div>
 
+<div id="modalDetratores" class="modal" onclick="fecharModalOutsideDetratores(event)">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitleDet">Detalhes Detratores</div>
+      <button class="close" onclick="fecharModalDetratores()">&times;</button>
+    </div>
+    <table class="mini-table">
+      <thead><tr><th>Zendesk</th><th>Data</th><th>Cliente</th><th>Líder</th><th>Comentário Cliente</th><th>Status</th><th></th></tr></thead>
+      <tbody id="modalBodyDet"></tbody>
+    </table>
+  </div>
+</div>
+
 <div id="modalEditarDetrator" class="edit-modal" onclick="if(event.target===this)fecharModalEditarDetrator()">
   <div class="edit-box">
     <h3>✏️ Atuação no Detrator <span id="edDetTicket"></span></h3>
@@ -503,6 +517,7 @@ let chartStatus, chartCategorias, chartProduto, chartTempo;
 let usuarioLogado = '';
 
 let dadosDetratores = [];
+let listaAtualDetratores = []; // Guarda a lista filtrada atual
 let chartDetDiario, chartStatusRec, chartAgressores, chartCanal, chartMotivos;
 
 function navegarPara(pagina) {
@@ -575,7 +590,7 @@ function processarPainelDetratores() {
   const buscaText = document.getElementById('buscaDetratores').value.toLowerCase().trim();
 
   // Filtra período e termo de busca
-  const listaAtual = dadosDetratores.filter(d => {
+  listaAtualDetratores = dadosDetratores.filter(d => {
     const dt = dataParaNum(d.data_detracao);
     if (nIni && dt && dt < nIni) return false;
     if (nFim && dt && dt > nFim) return false;
@@ -610,14 +625,14 @@ function processarPainelDetratores() {
   // Helper seguro para ler "COM sinalização"
   const isSinalizado = d => String(d.status_sinalizacao || '').toUpperCase().includes('COM');
 
-  const total = listaAtual.length;
+  const total = listaAtualDetratores.length;
   const totalAnterior = listaAnterior.length;
-  const sinalizados = listaAtual.filter(isSinalizado).length;
+  const sinalizados = listaAtualDetratores.filter(isSinalizado).length;
   
-  const recuperados = listaAtual.filter(d => d.status_recuperacao === 'Recuperado').length;
+  const recuperados = listaAtualDetratores.filter(d => d.status_recuperacao === 'Recuperado').length;
   const taxaRecuperacao = sinalizados > 0 ? ((recuperados / sinalizados) * 100).toFixed(1) : 0;
   
-  const notasStr = listaAtual.map(d => parseFloat(d.satisfacao_pos_contato)).filter(n => !isNaN(n));
+  const notasStr = listaAtualDetratores.map(d => parseFloat(d.satisfacao_pos_contato)).filter(n => !isNaN(n));
   const mediaSatisfacao = notasStr.length > 0 ? (notasStr.reduce((a, b) => a + b, 0) / notasStr.length).toFixed(1) : '—';
 
   // Atualizar DOM
@@ -638,8 +653,8 @@ function processarPainelDetratores() {
   document.getElementById('det-kpi-recuperacao').innerText = taxaRecuperacao + '%';
   document.getElementById('det-kpi-satisfacao').innerText = mediaSatisfacao;
 
-  atualizarGraficosDetratores(listaAtual);
-  renderTabelaAcaoDetratores(listaAtual);
+  atualizarGraficosDetratores(listaAtualDetratores);
+  renderTabelaAcaoDetratores(listaAtualDetratores);
 }
 
 function atualizarGraficosDetratores(lista) {
@@ -667,7 +682,7 @@ function atualizarGraficosDetratores(lista) {
   chartStatusRec = new Chart(document.getElementById('chartStatusRec'), {
     type: 'doughnut',
     data: { labels: Object.keys(recMap), datasets: [{ data: Object.values(recMap), backgroundColor: ['#00e5c3', '#ff4d6d', '#ffb930', '#6b7a99'], borderWidth: 0, hoverOffset: 6 }] },
-    options: { maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { color: '#6b7a99', font, padding: 12 } } } }
+    options: { maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { color: '#6b7a99', font, padding: 12 } } }, onClick: (e, els) => { if(els.length) abrirModalDetratores('status', Object.keys(recMap)[els[0].index]); } }
   });
 
   const liderMap = {};
@@ -681,7 +696,7 @@ function atualizarGraficosDetratores(lista) {
   chartAgressores = new Chart(document.getElementById('chartAgressores'), {
     type: 'bar',
     data: { labels: liderSorted.map(e=>e[0]), datasets: [{ label: 'Casos Gerados', data: liderSorted.map(e=>e[1]), backgroundColor: '#ff4d6d', borderRadius: 5 }] },
-    options: { maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } }, y: { grid: { display: false }, ticks: { color: '#6b7a99', font } } } }
+    options: { maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } }, y: { grid: { display: false }, ticks: { color: '#6b7a99', font } } }, onClick: (e, els) => { if(els.length) abrirModalDetratores('lider', liderSorted[els[0].index][0]); } }
   });
 
   const cMap = {};
@@ -707,7 +722,6 @@ function atualizarGraficosDetratores(lista) {
 }
 
 function renderTabelaAcaoDetratores(listaFiltrada) {
-  // Tratamento seguro para localizar casos COM sinalização
   const isSinalizado = d => String(d.status_sinalizacao || '').toUpperCase().includes('COM');
   const lista = listaFiltrada.filter(isSinalizado).reverse();
   
@@ -720,7 +734,6 @@ function renderTabelaAcaoDetratores(listaFiltrada) {
   }
 
   const linhas = lista.map((d) => {
-    // Tratamento de conversão segura caso o ticket_detracao seja um Número do JSON em vez de String
     const safeTicket = String(d.ticket_detracao || '');
     const linkTicket = safeTicket.includes('http') ? safeTicket : `https://nelogica.zendesk.com/agent/tickets/${safeTicket}`;
     const tkDisplay = safeTicket.match(/\d+/) ? `#${safeTicket.match(/\d+/)[0]}` : 'Ver Ticket';
@@ -735,7 +748,7 @@ function renderTabelaAcaoDetratores(listaFiltrada) {
       <td>${d.data_detracao || '—'}</td>
       <td style="font-weight:600">${d.agente_responsavel ? d.agente_responsavel.split('@')[0] : '—'}</td>
       <td>${isNotNA(d.lider_responsavel) ? `<span class="chip">${d.lider_responsavel}</span>` : '—'}</td>
-      <td style="font-size:11px; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${d.comentarios_qa || ''}">${d.comentarios_qa || 'Sem comentário'}</td>
+      <td style="font-size:11px; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${d.comentario_cliente || ''}">${d.comentario_cliente || 'Sem comentário'}</td>
       <td title="Status: ${d.status_recuperacao || 'Pendente'}">${recStatus}</td>
       <td><button class="btn-edit-row" onclick="abrirModalEditarDetrator('${idUnico}')">✏</button></td>
     </tr>`;
@@ -744,10 +757,49 @@ function renderTabelaAcaoDetratores(listaFiltrada) {
   cont.innerHTML = `
     <table class="mini-table">
       <thead>
-        <tr><th>Zendesk</th><th>Data</th><th>Agente</th><th>Líder Resp.</th><th>Comentários QA</th><th>Status</th><th>Atuar</th></tr>
+        <tr><th>Zendesk</th><th>Data</th><th>Agente</th><th>Líder Resp.</th><th>Comentário Cliente</th><th>Status</th><th>Atuar</th></tr>
       </thead>
       <tbody>${linhas}</tbody>
     </table>`;
+}
+
+// === FUNÇÕES DOS MODAIS DETRATORES ===
+function abrirModalDetratores(tipo, extra='') {
+  const titleMap = {total:'Todos os Detratores',sinalizados:'Com Sinalização',recuperados:'Recuperados',lider:`Agressor: ${extra}`,status:`Status: ${extra}`};
+  document.getElementById('modalTitleDet').innerText = titleMap[tipo]||'Detalhes';
+  
+  let lista = [];
+  const isSinal = d => String(d.status_sinalizacao || '').toUpperCase().includes('COM');
+
+  if (tipo === 'total') lista = listaAtualDetratores;
+  else if (tipo === 'sinalizados') lista = listaAtualDetratores.filter(isSinal);
+  else if (tipo === 'recuperados') lista = listaAtualDetratores.filter(d => d.status_recuperacao === 'Recuperado');
+  else if (tipo === 'lider') lista = listaAtualDetratores.filter(d => d.lider_responsavel && d.lider_responsavel.split('@')[0] === extra);
+  else if (tipo === 'status') lista = listaAtualDetratores.filter(d => (d.status_recuperacao || 'Pendente') === extra);
+  
+  document.getElementById('modalBodyDet').innerHTML = lista.map(linhaTabelaDetratoresModal).join('');
+  document.getElementById('modalDetratores').style.display = 'block';
+}
+
+function fecharModalDetratores() { document.getElementById('modalDetratores').style.display = 'none'; }
+function fecharModalOutsideDetratores(e) { if(e.target===document.getElementById('modalDetratores')) fecharModalDetratores(); }
+
+function linhaTabelaDetratoresModal(d) {
+   const safeTicket = String(d.ticket_detracao || '');
+   const linkTicket = safeTicket.includes('http') ? safeTicket : `https://nelogica.zendesk.com/agent/tickets/${safeTicket}`;
+   const tkDisplay = safeTicket.match(/\d+/) ? `#${safeTicket.match(/\d+/)[0]}` : 'Ver Ticket';
+   const idUnico = d._id || safeTicket; 
+   const recStatus = d.status_recuperacao === 'Recuperado' ? '🟩' : d.status_recuperacao === 'Perdido' ? '🟥' : '🟨';
+   
+   return `<tr>
+     <td><a href="${linkTicket}" target="_blank" class="zendesk-link">${tkDisplay}</a></td>
+     <td>${d.data_detracao || '—'}</td>
+     <td style="font-size:11px">${d.cliente || '—'}</td>
+     <td>${isNotNA(d.lider_responsavel) ? `<span class="chip">${d.lider_responsavel}</span>` : '—'}</td>
+     <td style="font-size:11px; max-width:250px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${d.comentario_cliente || ''}">${d.comentario_cliente || 'Sem comentário'}</td>
+     <td title="Status: ${d.status_recuperacao || 'Pendente'}">${recStatus}</td>
+     <td><button class="btn-edit-row" onclick="fecharModalDetratores(); abrirModalEditarDetrator('${idUnico}')">✏</button></td>
+   </tr>`;
 }
 
 function abrirModalEditarDetrator(idUnico) {
@@ -949,12 +1001,16 @@ function processarDados() {
   if (!dadosGerais.length) return;
   const nIni = dataParaNum(document.getElementById('dataInicio').value);
   const nFim = dataParaNum(document.getElementById('dataFim').value);
+  const buscaTextRA = document.getElementById('buscaRA').value.toLowerCase().trim();
 
   dadosFiltrados = dadosGerais.filter(r => {
     const d = dataParaNum(r.data);
-    if (!d) return true;
     if (nIni && d < nIni) return false;
     if (nFim && d > nFim) return false;
+    if (buscaTextRA) {
+      const fullStr = Object.values(r).join(' ').toLowerCase();
+      if (!fullStr.includes(buscaTextRA)) return false;
+    }
     return true;
   });
 
