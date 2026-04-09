@@ -372,5 +372,22 @@
     "Comentario": "",
     "is_case": false,
     "Ultima Alteracao": "antony · 08/04/2026, 17:48"
+  },
+  {
+    "Ticket Zendesk": 123456,
+    "ID ReclameAqui": "",
+    "Cliente": "teste",
+    "Produto": "",
+    "Categoria": "",
+    "Data abertura": 46122,
+    "Data resolução": "",
+    "Tempo resolução": 0,
+    "Contato feito CC": "",
+    "Resolvido CC": false,
+    "Nota RA": "",
+    "Voltaria a Fazer Negócio": false,
+    "Comentario": "",
+    "is_case": true,
+    "Ultima Alteracao": "antony · 08/04/2026, 23:55:57"
   }
 ]
