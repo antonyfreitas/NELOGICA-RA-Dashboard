@@ -169,7 +169,7 @@ input[type="text"].search-box:focus { border-color:var(--accent); outline:none; 
 .login-logo{font-family:var(--mono);font-size:18px;color:var(--accent);margin-bottom:4px;}
 .login-logo span{color:var(--accent2);}
 .login-sub{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:36px;}
-.login-title{font-size:13px;color:var(--muted);margin-bottom:20px;}
+.login-title{font-size:13px;color:var(--muted);margin-bottom:20px;text-align:center;}
 .login-field{width:100%;display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
 .login-field label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-weight:600;}
 .login-field input{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:14px;font-family:var(--sans);transition:.2s;outline:none;width:100%;}
@@ -189,7 +189,7 @@ input[type="text"].search-box:focus { border-color:var(--accent); outline:none; 
   <div class="nav-item active" onclick="navegarPara('ra')" id="nav-ra"><span class="nav-icon">📊</span> Reclame Aqui</div>
   <div class="nav-item" onclick="navegarPara('detratores')" id="nav-detratores"><span class="nav-icon">⚠️</span> Detratores</div>
   <div class="sidebar-status">
-    <div><span class="status-dot" id="statusDot"></span><span id="statusText">Carregando...</span></div>
+    <div><span class="status-dot" id="statusDot"></span><span id="statusText">Aguardando login...</span></div>
     <div style="margin-top:6px;font-family:var(--mono);font-size:9px;color:#3a4560;" id="statusUser"></div>
     <button class="btn-logout" onclick="fazerLogout()">↩ Sair da conta</button>
   </div>
@@ -203,7 +203,7 @@ input[type="text"].search-box:focus { border-color:var(--accent); outline:none; 
         <div class="page-title">Reclame <span>Aqui</span></div>
         <div class="page-subtitle">Análise de atendimentos e indicadores de qualidade</div>
       </div>
-      <div class="version-tag">v11.0 · 2026</div>
+      <div class="version-tag">v11.1 · 2026</div>
     </div>
 
     <div class="upload-bar">
@@ -501,13 +501,36 @@ input[type="text"].search-box:focus { border-color:var(--accent); outline:none; 
 
 <div class="toast" id="toast"></div>
 
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">NELO<span>GICA</span></div>
+    <div class="login-sub">Customer Care</div>
+    <div class="login-title">Acesso restrito — Faça login para aceder à base</div>
+    <div class="login-field">
+      <label>Seu Nome</label>
+      <input type="text" id="loginUser" placeholder="Ex: Antony" autocomplete="off" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
+    </div>
+    <div class="login-field">
+      <label>Token do GitHub (Permissão 'repo')</label>
+      <input type="password" id="loginPass" placeholder="ghp_..." autocomplete="off" onkeydown="if(event.key==='Enter')tentarLogin()">
+    </div>
+    <button class="login-btn" onclick="tentarLogin()">Autenticar e Entrar →</button>
+    <div class="login-err" id="loginErr"></div>
+    <div class="login-footer">Nelogica · Customer Care · v11.1 · 2026</div>
+  </div>
+</div>
+
 <script>
 const GITHUB_USER  = 'antonyfreitas';
 const GITHUB_REPO  = 'NELOGICA-RA-Dashboard';
-const GITHUB_TOKEN = '__GH_TOKEN__'; // COLE AQUI O TEU TOKEN!!!
 const API_URL      = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/dados_ra.json`;
 const URL_DETRATORES = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/dados_detratores.json`;
-const API_HEADS    = { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' };
+
+function getApiHeads() {
+  const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
+  const token = s ? s.token : '';
+  return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+}
 
 const META_SLA = 5;
 const CHART_COLORS = ['#3d7fff','#00e5c3','#ffb930','#ff4d6d','#a78bfa','#38bdf8','#fb923c','#4ade80','#f472b6','#facc15','#818cf8','#34d399'];
@@ -517,7 +540,7 @@ let chartStatus, chartCategorias, chartProduto, chartTempo;
 let usuarioLogado = '';
 
 let dadosDetratores = [];
-let listaAtualDetratores = []; // Guarda a lista filtrada atual
+let listaAtualDetratores = []; 
 let chartDetDiario, chartStatusRec, chartAgressores, chartCanal, chartMotivos;
 
 function navegarPara(pagina) {
@@ -567,7 +590,7 @@ function isNotNA(val) {
 async function carregarDadosDetratores() {
   setStatus('loading', 'A sincronizar Detratores...');
   try {
-    const r = await fetch(URL_DETRATORES, { headers: API_HEADS, cache: 'no-store' });
+    const r = await fetch(URL_DETRATORES, { headers: getApiHeads(), cache: 'no-store' });
     if (!r.ok) throw new Error(`Erro ${r.status} no GitHub`);
     
     const meta = await r.json();
@@ -589,12 +612,10 @@ function processarPainelDetratores() {
   const nFim = dataParaNum(document.getElementById('dataFimDet').value);
   const buscaText = document.getElementById('buscaDetratores').value.toLowerCase().trim();
 
-  // Filtra período e termo de busca
   listaAtualDetratores = dadosDetratores.filter(d => {
     const dt = dataParaNum(d.data_detracao);
     if (nIni && dt && dt < nIni) return false;
     if (nFim && dt && dt > nFim) return false;
-    
     if (buscaText) {
       const fullStr = Object.values(d).join(' ').toLowerCase();
       if (!fullStr.includes(buscaText)) return false;
@@ -602,8 +623,7 @@ function processarPainelDetratores() {
     return true;
   });
 
-  // Filtra período anterior para a Tendência (Health Score)
-  let diffDias = 30; // padrão
+  let diffDias = 30;
   if (document.getElementById('dataInicioDet').value && document.getElementById('dataFimDet').value) {
     const d1 = new Date(document.getElementById('dataInicioDet').value);
     const d2 = new Date(document.getElementById('dataFimDet').value);
@@ -622,7 +642,6 @@ function processarPainelDetratores() {
     return dt && dt >= nAntIni && dt <= nAntFim;
   });
 
-  // Helper seguro para ler "COM sinalização"
   const isSinalizado = d => String(d.status_sinalizacao || '').toUpperCase().includes('COM');
 
   const total = listaAtualDetratores.length;
@@ -635,7 +654,6 @@ function processarPainelDetratores() {
   const notasStr = listaAtualDetratores.map(d => parseFloat(d.satisfacao_pos_contato)).filter(n => !isNaN(n));
   const mediaSatisfacao = notasStr.length > 0 ? (notasStr.reduce((a, b) => a + b, 0) / notasStr.length).toFixed(1) : '—';
 
-  // Atualizar DOM
   document.getElementById('det-kpi-total').innerText = total;
   
   const tendEl = document.getElementById('det-kpi-tendencia-total');
@@ -649,7 +667,6 @@ function processarPainelDetratores() {
 
   document.getElementById('det-kpi-sinalizados').innerText = sinalizados;
   document.getElementById('det-kpi-sinalizados-pct').innerText = total > 0 ? `${((sinalizados/total)*100).toFixed(0)}% do total` : '';
-  
   document.getElementById('det-kpi-recuperacao').innerText = taxaRecuperacao + '%';
   document.getElementById('det-kpi-satisfacao').innerText = mediaSatisfacao;
 
@@ -726,7 +743,6 @@ function renderTabelaAcaoDetratores(listaFiltrada) {
   const lista = listaFiltrada.filter(isSinalizado).reverse();
   
   document.getElementById('badge-detratores-acao').innerText = lista.length + ' casos';
-  
   const cont = document.getElementById('tabela-acao-detratores');
   if (!lista.length) { 
     cont.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-text">Excelente! Sem casos críticos pendentes.</div></div>'; 
@@ -737,10 +753,8 @@ function renderTabelaAcaoDetratores(listaFiltrada) {
     const safeTicket = String(d.ticket_detracao || '');
     const linkTicket = safeTicket.includes('http') ? safeTicket : `https://nelogica.zendesk.com/agent/tickets/${safeTicket}`;
     const tkDisplay = safeTicket.match(/\d+/) ? `#${safeTicket.match(/\d+/)[0]}` : 'Ver Ticket';
-    
     const recStatus = d.status_recuperacao === 'Recuperado' ? '🟩' : d.status_recuperacao === 'Perdido' ? '🟥' : '🟨';
     const caseEstrela = d.is_case === true ? '⭐ ' : '';
-    
     const idUnico = d._id || safeTicket; 
     
     return `<tr>
@@ -754,13 +768,7 @@ function renderTabelaAcaoDetratores(listaFiltrada) {
     </tr>`;
   }).join('');
 
-  cont.innerHTML = `
-    <table class="mini-table">
-      <thead>
-        <tr><th>Zendesk</th><th>Data</th><th>Agente</th><th>Líder Resp.</th><th>Comentário Cliente</th><th>Status</th><th>Atuar</th></tr>
-      </thead>
-      <tbody>${linhas}</tbody>
-    </table>`;
+  cont.innerHTML = `<table class="mini-table"><thead><tr><th>Zendesk</th><th>Data</th><th>Agente</th><th>Líder Resp.</th><th>Comentário Cliente</th><th>Status</th><th>Atuar</th></tr></thead><tbody>${linhas}</tbody></table>`;
 }
 
 // === FUNÇÕES DOS MODAIS DETRATORES ===
@@ -820,9 +828,7 @@ function abrirModalEditarDetrator(idUnico) {
   document.getElementById('modalEditarDetrator').classList.add('open');
 }
 
-function fecharModalEditarDetrator() {
-  document.getElementById('modalEditarDetrator').classList.remove('open');
-}
+function fecharModalEditarDetrator() { document.getElementById('modalEditarDetrator').classList.remove('open'); }
 
 async function salvarEdicaoDetrator() {
   const idUnico = document.getElementById('edDetRecordId').value;
@@ -838,15 +844,16 @@ async function salvarEdicaoDetrator() {
 
   try {
     showToast('⏳ A guardar alterações...', 'ok');
-    const metaR = await fetch(URL_DETRATORES, { headers: API_HEADS });
+    const metaR = await fetch(URL_DETRATORES, { headers: getApiHeads(), cache: 'no-store' });
     const meta = await metaR.json();
+    
     const body = {
       message: 'Atualização de Atuação (Via Dashboard)',
       content: btoa(unescape(encodeURIComponent(JSON.stringify(dadosDetratores, null, 2)))),
       sha: meta.sha
     };
     
-    const r = await fetch(URL_DETRATORES, { method: 'PUT', headers: API_HEADS, body: JSON.stringify(body) });
+    const r = await fetch(URL_DETRATORES, { method: 'PUT', headers: getApiHeads(), body: JSON.stringify(body) });
     if (!r.ok) throw new Error(`Erro HTTP: ${r.status}`);
     
     fecharModalEditarDetrator();
@@ -861,7 +868,7 @@ async function salvarEdicaoDetrator() {
 async function carregarDados() {
   setStatus('loading', 'Carregando...');
   try {
-    const r = await fetch(API_URL, { headers: API_HEADS, cache: 'no-store' });
+    const r = await fetch(API_URL, { headers: getApiHeads(), cache: 'no-store' });
     if (!r.ok) throw new Error(`Erro ${r.status}`);
     const meta = await r.json();
     const records = JSON.parse(decodeURIComponent(escape(atob(meta.content))));
@@ -901,7 +908,7 @@ async function carregarDados() {
 }
 
 async function salvarJSON() {
-  const metaR = await fetch(API_URL, { headers: API_HEADS });
+  const metaR = await fetch(API_URL, { headers: getApiHeads(), cache: 'no-store' });
   const meta = await metaR.json();
   const sha = meta.sha;
 
@@ -936,7 +943,7 @@ async function salvarJSON() {
     sha: sha
   };
 
-  const r = await fetch(API_URL, { method: 'PUT', headers: API_HEADS, body: JSON.stringify(body) });
+  const r = await fetch(API_URL, { method: 'PUT', headers: getApiHeads(), body: JSON.stringify(body) });
   if (!r.ok) throw new Error(`Erro ${r.status}`);
   return r.json();
 }
@@ -1328,7 +1335,7 @@ async function exportarPDFVisual() {
         <span>Período: ${periodo} · ${dadosFiltrados.length} registros · Exportado em ${new Date().toLocaleString('pt-BR')}</span>
       </div>
       <img src="${imgData}" />
-      <div class="footer">Nelogica Customer Care · v11.0</div>
+      <div class="footer">Nelogica Customer Care · v11.1</div>
       <script>window.onload = () => { window.print(); }<\/script>
       </body></html>`);
     win.document.close();
@@ -1347,45 +1354,57 @@ function downloadBlob(blob, filename) {
   URL.revokeObjectURL(url);
 }
 
-// ─── LOGIN ────────────────────────────────────────────────────────────────────
-const USUARIOS = [
-  { user: 'antony',  senha: 'nelogica2026' },
-  { user: 'suporte', senha: 'ra@2026'      },
-  { user: 'lider',   senha: 'gestao@2026'  },
-];
+// ─── LOGIN SEGURO COM TOKEN ───────────────────────────────────────────────────
 const SESSION_KEY = 'ra_dash_auth';
 const SESSION_TTL = 8 * 60 * 60 * 1000;
 
 function verificarSessao() {
   try {
     const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
-    if (s && Date.now() - s.ts < SESSION_TTL) {
+    if (s && Date.now() - s.ts < SESSION_TTL && s.token) {
       usuarioLogado = s.user;
       document.getElementById('loginScreen').classList.add('hidden');
-      document.getElementById('statusUser').innerText = `👤 ${s.user} · v11.0`;
+      document.getElementById('statusUser').innerText = `👤 ${s.user} · v11.1`;
       return true;
     }
   } catch(e) {}
   return false;
 }
 
-function tentarLogin() {
-  const user  = document.getElementById('loginUser').value.trim().toLowerCase();
-  const senha = document.getElementById('loginPass').value;
+async function tentarLogin() {
+  const user  = document.getElementById('loginUser').value.trim();
+  const token = document.getElementById('loginPass').value.trim();
   const err   = document.getElementById('loginErr');
-  const match = USUARIOS.find(u => u.user === user && u.senha === senha);
   
-  if (match) {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user, ts: Date.now() }));
+  if (!user || !token) {
+    err.textContent = 'Preencha o seu nome e o Token do GitHub.';
+    return;
+  }
+  
+  err.textContent = 'A validar acesso com o GitHub...';
+  
+  try {
+    const r = await fetch(API_URL, { 
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      cache: 'no-store'
+    });
+    
+    if (!r.ok) {
+        if(r.status === 401) throw new Error('Token inválido ou revogado.');
+        if(r.status === 404) throw new Error('Repositório não encontrado. Verifica as permissões.');
+        throw new Error('Erro na autenticação.');
+    }
+    
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user, token, ts: Date.now() }));
     usuarioLogado = user;
     document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('statusUser').innerText = `👤 ${user} · v11.0`;
+    document.getElementById('statusUser').innerText = `👤 ${user} · v11.1`;
     err.textContent = '';
 
     if (document.getElementById('page-ra').classList.contains('active')) carregarDados();
     if (document.getElementById('page-detratores').classList.contains('active')) carregarDadosDetratores();
-  } else {
-    err.textContent = 'Usuário ou senha incorretos.';
+  } catch(e) {
+    err.textContent = 'Erro: ' + e.message;
     document.getElementById('loginPass').value = '';
     document.getElementById('loginPass').focus();
   }
