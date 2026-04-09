@@ -1400,13 +1400,36 @@ async function tentarLogin() {
     err.textContent = 'Preencha o seu nome e a senha.';
     return;
   }
+
+  // === TUA LISTA DE USUÁRIOS E SENHAS RESTAURADA ===
+  const usuariosPermitidos = {
+    'Antony': 'nelogica2026',
+    'Lider': 'nelogica2026',
+    // Podes adicionar mais utilizadores da equipa aqui embaixo seguindo o mesmo padrão:
+    // 'NomeDoAgente': 'nelogica2026'
+  };
   
-  if (pass !== 'ra@2026') {
-    err.textContent = 'Senha incorreta. Acesso negado.';
+  // Procura se o nome digitado existe na lista (ignorando maiúsculas e minúsculas)
+  const userKey = Object.keys(usuariosPermitidos).find(k => k.toLowerCase() === user.toLowerCase());
+
+  // Se o usuário não existir ou a senha estiver errada, bloqueia
+  if (!userKey || usuariosPermitidos[userKey] !== pass) {
+    err.textContent = 'Usuário ou senha incorretos. Acesso negado.';
     document.getElementById('loginPass').value = '';
     document.getElementById('loginPass').focus();
     return;
   }
+  
+  // Se passou, faz o login normalmente
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user: userKey, ts: Date.now() }));
+  usuarioLogado = userKey;
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('statusUser').innerText = `👤 ${userKey} · v11.1`;
+  err.textContent = '';
+
+  if (document.getElementById('page-ra').classList.contains('active')) carregarDados();
+  if (document.getElementById('page-detratores').classList.contains('active')) carregarDadosDetratores();
+}
   
   sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user, ts: Date.now() }));
   usuarioLogado = user;
