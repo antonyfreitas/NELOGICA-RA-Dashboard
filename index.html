@@ -49,7 +49,9 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 .btn-periodo{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:11px;font-family:var(--sans);font-weight:600;transition:all .2s;}
 .btn-periodo:hover,.btn-periodo.active{border-color:var(--accent);color:var(--accent);}
 .btn-periodo.active{background:rgba(61,127,255,.15);}
-input[type="date"]{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:6px 10px;border-radius:6px;font-size:11px;font-family:var(--sans);color-scheme:dark;}
+input[type="date"], input[type="text"].search-box{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:11px;font-family:var(--sans);color-scheme:dark;}
+input[type="text"].search-box { width: 180px; }
+input[type="text"].search-box:focus { border-color:var(--accent); outline:none; }
 .btn-atualizar{background:var(--accent);color:white;border:none;padding:7px 18px;border-radius:6px;cursor:pointer;font-size:11px;font-family:var(--sans);font-weight:700;transition:.2s;letter-spacing:.05em;text-transform:uppercase;}
 .btn-atualizar:hover{background:#5a91ff;}
 .divider-v{width:1px;height:28px;background:var(--border);}
@@ -255,7 +257,9 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
         <div class="chart-card"><div class="chart-title">Casos por Produto</div><div class="chart-wrap"><canvas id="chartProduto"></canvas></div></div>
         <div class="chart-card"><div class="chart-title">Distribuição Tempo de Resolução</div><div class="chart-wrap"><canvas id="chartTempo"></canvas></div></div>
       </div>
-    </div><div class="detractors-card">
+    </div>
+    
+    <div class="detractors-card">
       <div class="section-header">
         <div class="section-title">⚠️ Casos sem nota RA</div>
         <span class="badge badge-warning" id="badge-semNota">0 casos</span>
@@ -270,7 +274,9 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
       </div>
       <div id="tabela-fora-sla"><div class="empty-state"><div class="empty-icon">📂</div><div class="empty-text">Carregando dados...</div></div></div>
     </div>
-  </div><div id="page-detratores" class="page">
+  </div>
+
+  <div id="page-detratores" class="page">
     <div class="page-header" style="margin-bottom: 24px;">
       <div>
         <div class="page-title">Projeto <span>Detratores</span></div>
@@ -279,13 +285,14 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
       <div class="version-tag">Customer Care · 2026</div>
     </div>
 
-<div class="upload-bar">
+    <div class="upload-bar">
       <div class="filter-group">
         <button class="btn-periodo active" id="btn-sub-dash" onclick="alternarVisaoDetratores('dash')">📊 Visão Geral</button>
         <button class="btn-periodo" id="btn-sub-form" onclick="alternarVisaoDetratores('form')">📝 Inserir Dados</button>
         <div class="divider-v"></div>
         <input type="date" id="dataInicioDet">
         <input type="date" id="dataFimDet">
+        <input type="text" id="buscaDetratores" class="search-box" placeholder="Buscar ticket ou nome..." onkeyup="processarPainelDetratores()">
         <button class="btn-atualizar" onclick="processarPainelDetratores()">↻ Filtrar</button>
         <div class="divider-v"></div>
         <button class="btn-atualizar" onclick="carregarDadosDetratores()">⟳ Sincronizar</button>
@@ -335,7 +342,17 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
         </div>
       </div>
 
-     
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">Canais de Origem da Detração</div>
+          <div class="chart-wrap"><canvas id="chartCanal"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Top Motivos da Detração</div>
+          <div class="chart-wrap"><canvas id="chartMotivos"></canvas></div>
+        </div>
+      </div>
+
       <div class="detractors-card">
         <div class="section-header">
           <div class="section-title">🔴 Fila de Ação Tática (Casos com Sinalização)</div>
@@ -346,11 +363,16 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
         </div>
       </div>
 
-    </div> <div id="detratores-form" style="display: none; height: calc(100vh - 220px);">
+    </div> 
+    
+    <div id="detratores-form" style="display: none; height: calc(100vh - 220px);">
       <iframe src="https://forms.office.com/Pages/ResponsePage.aspx?id=jchkxOlNv0aI6XiDm_4y12D-Yv6pu8tJvhm51FOsNkFUNkJET0I4Q1RGMlhKV1BaVjQ1Qk9RSVBTUC4u" width="100%" height="100%" frameborder="0" style="border: none; border-radius: 12px; background: white;"></iframe>
     </div>
 
-  </div> </div><div id="modalTickets" class="modal" onclick="fecharModalOutside(event)">
+  </div> 
+</div>
+
+<div id="modalTickets" class="modal" onclick="fecharModalOutside(event)">
   <div class="modal-content">
     <div class="modal-header">
       <div class="modal-title" id="modalTitle">Detalhes</div>
@@ -428,14 +450,47 @@ input[type="date"]{background:var(--surface2);border:1px solid var(--border);col
   </div>
 </div>
 
+<div id="modalEditarDetrator" class="edit-modal" onclick="if(event.target===this)fecharModalEditarDetrator()">
+  <div class="edit-box">
+    <h3>✏️ Atuação no Detrator <span id="edDetTicket"></span></h3>
+    <input type="hidden" id="edDetRecordId">
+    <div class="edit-grid">
+      <div class="ef"><label>Líder Responsável</label><input id="edDetLider" type="text"></div>
+      <div class="ef"><label>Data de Atuação</label><input id="edDetDataAtuacao" type="date"></div>
+      
+      <div class="ef"><label>Status da Recuperação</label>
+        <select id="edDetStatusRec">
+          <option value="Pendente">Pendente</option>
+          <option value="Recuperado">Recuperado (Sucesso)</option>
+          <option value="Perdido">Perdido (Não revertido)</option>
+          <option value="Neutro">Neutro / Apenas Contato</option>
+        </select>
+      </div>
+      <div class="ef"><label>Satisfação Pós-Contato (1 a 5)</label><input id="edDetSatisfacao" type="number" min="1" max="5"></div>
+      
+      <div class="ef" style="grid-column: span 2;">
+        <label>Comentários da Atuação (QA / Líder)</label>
+        <textarea id="edDetComentarios" rows="3" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:7px;font-family:var(--sans);width:100%;resize:none;"></textarea>
+      </div>
+      
+      <div class="ef" style="flex-direction: row; align-items: center; gap: 10px; grid-column: span 2; margin-top: 10px;">
+        <input type="checkbox" id="edDetIsCase" style="width: 18px; height: 18px; accent-color: var(--accent);">
+        <label for="edDetIsCase" style="font-size: 12px; color: var(--accent2);">⭐ Marcar como Case de Destaque (Impactante)</label>
+      </div>
+    </div>
+    <div class="edit-actions">
+      <button class="btn-cancel-edit" onclick="fecharModalEditarDetrator()">Cancelar</button>
+      <button class="btn-save-edit" onclick="salvarEdicaoDetrator()">💾 Salvar Atuação</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-// ─── CONFIGURAÇÃO GITHUB ─────────────────────────────────────────────────────
 const GITHUB_USER  = 'antonyfreitas';
 const GITHUB_REPO  = 'NELOGICA-RA-Dashboard';
 const GITHUB_TOKEN = '__GH_TOKEN__'; // COLE AQUI O TEU TOKEN!!!
-const JSON_URL     = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/dados_ra.json`;
 const API_URL      = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/dados_ra.json`;
 const URL_DETRATORES = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/dados_detratores.json`;
 const API_HEADS    = { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' };
@@ -447,26 +502,21 @@ let dadosGerais = [], dadosFiltrados = [];
 let chartStatus, chartCategorias, chartProduto, chartTempo;
 let usuarioLogado = '';
 
-// Variáveis Detratores
 let dadosDetratores = [];
-let chartSinalizacao, chartMotivos, chartCanal, chartImpacto;
+let chartDetDiario, chartStatusRec, chartAgressores, chartCanal, chartMotivos;
 
-// ─── NAVEGAÇÃO ENTRE ABAS ─────────────────────────────────────────────────────
 function navegarPara(pagina) {
-  // Esconde e mostra a aba correspondente
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + pagina).classList.add('active');
   document.getElementById('nav-' + pagina).classList.add('active');
   
-  // Ao navegar, se já houver sessão, carrega os dados específicos daquela aba
   if (verificarSessao()) {
     if (pagina === 'ra') carregarDados();
     if (pagina === 'detratores') carregarDadosDetratores();
   }
 }
 
-// ─── NAVEGAÇÃO SUB-ABAS DETRATORES ───────────────────────────────────────────
 function alternarVisaoDetratores(visao) {
   const dashBtn = document.getElementById('btn-sub-dash');
   const formBtn = document.getElementById('btn-sub-form');
@@ -487,6 +537,17 @@ function alternarVisaoDetratores(visao) {
   }
 }
 
+function dataParaNum(val) {
+  if (!val) return 0;
+  return parseInt(String(val).replace(/-/g, ''));
+}
+
+function isNotNA(val) {
+  if (!val) return false;
+  const v = String(val).trim().toUpperCase();
+  return v !== 'N/A' && v !== 'N/A ' && v !== 'NA' && v !== '';
+}
+
 // ─── LÓGICA: DETRATORES ───────────────────────────────────────────────────────
 async function carregarDadosDetratores() {
   setStatus('loading', 'A sincronizar Detratores...');
@@ -500,33 +561,29 @@ async function carregarDadosDetratores() {
 
     setStatus('ok', `${dadosDetratores.length} formulários`);
     processarPainelDetratores();
-
   } catch(e) {
     setStatus('err', 'Falha na sincronização');
     showToast('❌ Erro ao carregar Detratores: ' + e.message, 'err');
   }
 }
 
-function isNotNA(val) {
-  if (!val) return false;
-  const v = String(val).trim().toUpperCase();
-  return v !== 'N/A' && v !== 'N/A ' && v !== 'NA' && v !== '';
-}
-
-let chartDetDiario, chartStatusRec, chartAgressores;
-
 function processarPainelDetratores() {
   if (!dadosDetratores.length) return;
 
   const nIni = dataParaNum(document.getElementById('dataInicioDet').value);
   const nFim = dataParaNum(document.getElementById('dataFimDet').value);
+  const buscaText = document.getElementById('buscaDetratores').value.toLowerCase().trim();
 
-  // Filtra período atual
+  // Filtra período e termo de busca
   const listaAtual = dadosDetratores.filter(d => {
     const dt = dataParaNum(d.data_detracao);
-    if (!dt) return true;
-    if (nIni && dt < nIni) return false;
-    if (nFim && dt > nFim) return false;
+    if (nIni && dt && dt < nIni) return false;
+    if (nFim && dt && dt > nFim) return false;
+    
+    if (buscaText) {
+      const fullStr = Object.values(d).join(' ').toLowerCase();
+      if (!fullStr.includes(buscaText)) return false;
+    }
     return true;
   });
 
@@ -550,12 +607,13 @@ function processarPainelDetratores() {
     return dt && dt >= nAntIni && dt <= nAntFim;
   });
 
-  // Cálculos Básicos
+  // Helper seguro para ler "COM sinalização"
+  const isSinalizado = d => String(d.status_sinalizacao || '').toUpperCase().includes('COM');
+
   const total = listaAtual.length;
   const totalAnterior = listaAnterior.length;
-  const sinalizados = listaAtual.filter(d => String(d.status_sinalizacao).includes('COM sinalização')).length;
+  const sinalizados = listaAtual.filter(isSinalizado).length;
   
-  // Cálculos de Sucesso (Customer Care)
   const recuperados = listaAtual.filter(d => d.status_recuperacao === 'Recuperado').length;
   const taxaRecuperacao = sinalizados > 0 ? ((recuperados / sinalizados) * 100).toFixed(1) : 0;
   
@@ -565,7 +623,6 @@ function processarPainelDetratores() {
   // Atualizar DOM
   document.getElementById('det-kpi-total').innerText = total;
   
-  // Setinha de Tendência (Health Score)
   const tendEl = document.getElementById('det-kpi-tendencia-total');
   if (total > totalAnterior) {
     tendEl.innerHTML = `<span style="color:var(--danger)">🔼 +${total - totalAnterior} vs ant.</span>`;
@@ -590,12 +647,8 @@ function atualizarGraficosDetratores(lista) {
   const font = { family: "'DM Sans', sans-serif", size: 11 };
   const gridY = { color: 'rgba(255,255,255,.04)' };
 
-  // 1. Gráfico Diário (Evolução)
   const diaMap = {};
-  lista.forEach(d => {
-    if(d.data_detracao) diaMap[d.data_detracao] = (diaMap[d.data_detracao] || 0) + 1;
-  });
-  // Ordenar por data cronológica
+  lista.forEach(d => { if(d.data_detracao) diaMap[d.data_detracao] = (diaMap[d.data_detracao] || 0) + 1; });
   const diasOrdenados = Object.keys(diaMap).sort();
   chartDetDiario = new Chart(document.getElementById('chartDetDiario'), {
     type: 'line',
@@ -606,9 +659,8 @@ function atualizarGraficosDetratores(lista) {
     options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { color: '#6b7a99', font } }, y: { grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } } } }
   });
 
-  // 2. Gráfico Status Recuperação (Donut)
   const recMap = { 'Recuperado':0, 'Perdido':0, 'Neutro':0, 'Pendente':0 };
-  lista.filter(d => String(d.status_sinalizacao).includes('COM')).forEach(d => {
+  lista.filter(d => String(d.status_sinalizacao || '').toUpperCase().includes('COM')).forEach(d => {
     const st = d.status_recuperacao || 'Pendente';
     if(recMap[st] !== undefined) recMap[st]++;
   });
@@ -618,11 +670,10 @@ function atualizarGraficosDetratores(lista) {
     options: { maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { color: '#6b7a99', font, padding: 12 } } } }
   });
 
-  // 3. Gráfico Agressores / Líderes (Barras Horizontais)
   const liderMap = {};
   lista.forEach(d => {
     if(isNotNA(d.lider_responsavel)) {
-      const lider = d.lider_responsavel.split('@')[0]; // Pega só o primeiro nome
+      const lider = d.lider_responsavel.split('@')[0];
       liderMap[lider] = (liderMap[lider] || 0) + 1;
     }
   });
@@ -633,7 +684,6 @@ function atualizarGraficosDetratores(lista) {
     options: { maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } }, y: { grid: { display: false }, ticks: { color: '#6b7a99', font } } } }
   });
 
-  // 4. Gráfico Canais (Donut)
   const cMap = {};
   lista.forEach(d => { if(isNotNA(d.canal)) cMap[d.canal.trim()] = (cMap[d.canal.trim()] || 0) + 1; });
   chartCanal = new Chart(document.getElementById('chartCanal'), {
@@ -642,7 +692,6 @@ function atualizarGraficosDetratores(lista) {
     options: { maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { color: '#6b7a99', font } } } }
   });
 
-  // 5. Gráfico Motivos (Barras Horizontais)
   const mMap = {};
   lista.forEach(d => {
     if (isNotNA(d.motivo_detracao)) {
@@ -658,7 +707,10 @@ function atualizarGraficosDetratores(lista) {
 }
 
 function renderTabelaAcaoDetratores(listaFiltrada) {
-  const lista = listaFiltrada.filter(d => String(d.status_sinalizacao).includes('COM sinalização')).reverse();
+  // Tratamento seguro para localizar casos COM sinalização
+  const isSinalizado = d => String(d.status_sinalizacao || '').toUpperCase().includes('COM');
+  const lista = listaFiltrada.filter(isSinalizado).reverse();
+  
   document.getElementById('badge-detratores-acao').innerText = lista.length + ' casos';
   
   const cont = document.getElementById('tabela-acao-detratores');
@@ -667,14 +719,16 @@ function renderTabelaAcaoDetratores(listaFiltrada) {
     return; 
   }
 
-  const linhas = lista.map((d, index) => {
-    const linkTicket = d.ticket_detracao.includes('http') ? d.ticket_detracao : `https://nelogica.zendesk.com/agent/tickets/${d.ticket_detracao}`;
-    const tkDisplay = d.ticket_detracao.match(/\d+/) ? `#${d.ticket_detracao.match(/\d+/)[0]}` : 'Ver Ticket';
+  const linhas = lista.map((d) => {
+    // Tratamento de conversão segura caso o ticket_detracao seja um Número do JSON em vez de String
+    const safeTicket = String(d.ticket_detracao || '');
+    const linkTicket = safeTicket.includes('http') ? safeTicket : `https://nelogica.zendesk.com/agent/tickets/${safeTicket}`;
+    const tkDisplay = safeTicket.match(/\d+/) ? `#${safeTicket.match(/\d+/)[0]}` : 'Ver Ticket';
+    
     const recStatus = d.status_recuperacao === 'Recuperado' ? '🟩' : d.status_recuperacao === 'Perdido' ? '🟥' : '🟨';
     const caseEstrela = d.is_case === true ? '⭐ ' : '';
     
-    // O ID pode ser o próprio índice ou um campo _id se existir
-    const idUnico = d._id || d.ticket_detracao; 
+    const idUnico = d._id || safeTicket; 
     
     return `<tr>
       <td><a href="${linkTicket}" target="_blank" class="zendesk-link">${caseEstrela}${tkDisplay}</a></td>
@@ -696,14 +750,13 @@ function renderTabelaAcaoDetratores(listaFiltrada) {
     </table>`;
 }
 
-// === FUNÇÕES DO MODAL DE DETRATORES ===
 function abrirModalEditarDetrator(idUnico) {
-  // Encontra o registo pelo ticket_detracao (ou _id)
-  const d = dadosDetratores.find(x => x._id === idUnico || x.ticket_detracao === idUnico);
+  const d = dadosDetratores.find(x => x._id === idUnico || String(x.ticket_detracao) === idUnico);
   if (!d) { showToast('Erro: Registo não encontrado', 'err'); return; }
   
   document.getElementById('edDetRecordId').value = idUnico;
-  document.getElementById('edDetTicket').innerText = '#' + (d.ticket_detracao.match(/\d+/) ? d.ticket_detracao.match(/\d+/)[0] : 'Ticket');
+  const safeTicket = String(d.ticket_detracao || '');
+  document.getElementById('edDetTicket').innerText = '#' + (safeTicket.match(/\d+/) ? safeTicket.match(/\d+/)[0] : 'Ticket');
   
   document.getElementById('edDetLider').value = d.lider_responsavel && d.lider_responsavel !== 'N/A' ? d.lider_responsavel : '';
   document.getElementById('edDetDataAtuacao').value = d.data_atuacao && d.data_atuacao !== 'N/A' ? d.data_atuacao : '';
@@ -721,10 +774,9 @@ function fecharModalEditarDetrator() {
 
 async function salvarEdicaoDetrator() {
   const idUnico = document.getElementById('edDetRecordId').value;
-  const idx = dadosDetratores.findIndex(x => x._id === idUnico || x.ticket_detracao === idUnico);
+  const idx = dadosDetratores.findIndex(x => x._id === idUnico || String(x.ticket_detracao) === idUnico);
   if (idx === -1) return;
 
-  // Atualiza os dados locais
   dadosDetratores[idx].lider_responsavel = document.getElementById('edDetLider').value || 'N/A';
   dadosDetratores[idx].data_atuacao = document.getElementById('edDetDataAtuacao').value || 'N/A';
   dadosDetratores[idx].status_recuperacao = document.getElementById('edDetStatusRec').value;
@@ -734,8 +786,6 @@ async function salvarEdicaoDetrator() {
 
   try {
     showToast('⏳ A guardar alterações...', 'ok');
-    
-    // Função para fazer PUT no GitHub (usa a mesma lógica do RA, mas para o ficheiro dos detratores)
     const metaR = await fetch(URL_DETRATORES, { headers: API_HEADS });
     const meta = await metaR.json();
     const body = {
@@ -749,7 +799,7 @@ async function salvarEdicaoDetrator() {
     
     fecharModalEditarDetrator();
     showToast('✅ Atuação registada com sucesso!', 'ok');
-    processarPainelDetratores(); // Recarrega os gráficos
+    processarPainelDetratores(); 
   } catch(e) {
     showToast('❌ Erro ao guardar: ' + e.message, 'err');
   }
@@ -880,11 +930,6 @@ function definirPeriodo(tipo, e) {
   document.getElementById('dataInicio').value = inicio.toISOString().split('T')[0];
   document.getElementById('dataFim').value = hoje.toISOString().split('T')[0];
   processarDados();
-}
-
-function dataParaNum(val) {
-  if (!val) return 0;
-  return parseInt(String(val).replace(/-/g, ''));
 }
 
 function isResolvido(val) {
@@ -1281,7 +1326,6 @@ function tentarLogin() {
     document.getElementById('statusUser').innerText = `👤 ${user} · v11.0`;
     err.textContent = '';
 
-    // Carrega dados para a página que está aberta
     if (document.getElementById('page-ra').classList.contains('active')) carregarDados();
     if (document.getElementById('page-detratores').classList.contains('active')) carregarDadosDetratores();
   } else {
@@ -1309,60 +1353,5 @@ window.onload = () => {
   }, 120000);
 };
 </script>
-
-<div id="loginScreen">
-  <div class="login-box">
-    <div class="login-logo">NELO<span>GICA</span></div>
-    <div class="login-sub">Customer Care</div>
-    <div class="login-title">Acesso restrito — faça login para continuar</div>
-    <div class="login-field">
-      <label>Usuário</label>
-      <input type="text" id="loginUser" placeholder="seu usuário" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
-    </div>
-    <div class="login-field">
-      <label>Senha</label>
-      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')tentarLogin()">
-    </div>
-    <button class="login-btn" onclick="tentarLogin()">Entrar →</button>
-    <div class="login-err" id="loginErr"></div>
-    <div class="login-footer">Nelogica · Customer Care · v11.0 · 2026</div>
-  </div>
-</div>
-
-  <div id="modalEditarDetrator" class="edit-modal" onclick="if(event.target===this)fecharModalEditarDetrator()">
-  <div class="edit-box">
-    <h3>✏️ Atuação no Detrator <span id="edDetTicket"></span></h3>
-    <input type="hidden" id="edDetRecordId">
-    <div class="edit-grid">
-      <div class="ef"><label>Líder Responsável</label><input id="edDetLider" type="text"></div>
-      <div class="ef"><label>Data de Atuação</label><input id="edDetDataAtuacao" type="date"></div>
-      
-      <div class="ef"><label>Status da Recuperação</label>
-        <select id="edDetStatusRec">
-          <option value="Pendente">Pendente</option>
-          <option value="Recuperado">Recuperado (Sucesso)</option>
-          <option value="Perdido">Perdido (Não revertido)</option>
-          <option value="Neutro">Neutro / Apenas Contato</option>
-        </select>
-      </div>
-      <div class="ef"><label>Satisfação Pós-Contato (1 a 5)</label><input id="edDetSatisfacao" type="number" min="1" max="5"></div>
-      
-      <div class="ef" style="grid-column: span 2;">
-        <label>Comentários da Atuação (QA / Líder)</label>
-        <textarea id="edDetComentarios" rows="3" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:7px;font-family:var(--sans);width:100%;resize:none;"></textarea>
-      </div>
-      
-      <div class="ef" style="flex-direction: row; align-items: center; gap: 10px; grid-column: span 2; margin-top: 10px;">
-        <input type="checkbox" id="edDetIsCase" style="width: 18px; height: 18px; accent-color: var(--accent);">
-        <label for="edDetIsCase" style="font-size: 12px; color: var(--accent2);">⭐ Marcar como Case de Destaque (Impactante)</label>
-      </div>
-    </div>
-    <div class="edit-actions">
-      <button class="btn-cancel-edit" onclick="fecharModalEditarDetrator()">Cancelar</button>
-      <button class="btn-save-edit" onclick="salvarEdicaoDetrator()">💾 Salvar Atuação</button>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>
