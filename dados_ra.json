@@ -2,7 +2,7 @@
   {
     "Ticket Zendesk": 3165138,
     "ID ReclameAqui": 241718977,
-    "Cliente": "MARCO ANTONIO NOVAES PASSOS",
+    "Cliente": "Marco Antonio Novaes Passos",
     "Produto": "Profit",
     "Categoria": "Ordem OCO",
     "Data abertura": "2026-02-26",
@@ -19,7 +19,7 @@
   {
     "Ticket Zendesk": 3165150,
     "ID ReclameAqui": 241676429,
-    "Cliente": "HIAGO DE SOUSA QUEIROZ LIMA",
+    "Cliente": "Hiago de Sousa Queiroz Lima",
     "Produto": "BlackArrow",
     "Categoria": "Relarório de Performance",
     "Data abertura": "2026-02-25",
@@ -36,7 +36,7 @@
   {
     "Ticket Zendesk": 3167483,
     "ID ReclameAqui": 241913653,
-    "Cliente": "FAUSTO JORGESAHIUM",
+    "Cliente": "Fausto Jorgesahium",
     "Produto": "Profit",
     "Categoria": "Replicador",
     "Data abertura": "2026-02-27",
@@ -53,7 +53,7 @@
   {
     "Ticket Zendesk": 3174231,
     "ID ReclameAqui": 242344391,
-    "Cliente": "CYBELE RODRIGUES TROINA",
+    "Cliente": "Cybele Rodrigues Troina",
     "Produto": "BlackArrow",
     "Categoria": "Operação",
     "Data abertura": "2026-03-04",
@@ -70,7 +70,7 @@
   {
     "Ticket Zendesk": 3175768,
     "ID ReclameAqui": 242446173,
-    "Cliente": "Rênio Monteiro Dos Santos",
+    "Cliente": "Rênio Monteiro dos Santos",
     "Produto": "Profit",
     "Categoria": "Automação",
     "Data abertura": "2026-03-05",
@@ -87,7 +87,7 @@
   {
     "Ticket Zendesk": 3185064,
     "ID ReclameAqui": 243176487,
-    "Cliente": "MAURICIO DE LIMA E SILVA",
+    "Cliente": "Mauricio de Lima e Silva",
     "Produto": "Akeloo",
     "Categoria": "Ajuste de Resultado",
     "Data abertura": "2026-03-13",
@@ -121,7 +121,7 @@
   {
     "Ticket Zendesk": 3188026,
     "ID ReclameAqui": 243457873,
-    "Cliente": "Denilton RUDSON VAL SILVA",
+    "Cliente": "Denilton Rudson Val Silva",
     "Produto": "Automação",
     "Categoria": "Cancelamento",
     "Data abertura": "2026-03-17",
@@ -172,7 +172,7 @@
   {
     "Ticket Zendesk": 3195318,
     "ID ReclameAqui": 243993529,
-    "Cliente": "LAURECI MARCELINO DE LIMA NETO",
+    "Cliente": "Laureci Marcelino de Lima Neto",
     "Produto": "Profit",
     "Categoria": "Gráfico",
     "Data abertura": "2026-03-22",
@@ -189,7 +189,7 @@
   {
     "Ticket Zendesk": 3192902,
     "ID ReclameAqui": 243913809,
-    "Cliente": "Suzan De Fatima Machado Teixeira",
+    "Cliente": "Suzan de Fatima Machado Teixeira",
     "Produto": "Profit",
     "Categoria": "Relarório de Performance",
     "Data abertura": "2026-03-21",
@@ -223,7 +223,7 @@
   {
     "Ticket Zendesk": 3199774,
     "ID ReclameAqui": 244395791,
-    "Cliente": "RENATO VINICIUS CALDAS",
+    "Cliente": "Renato Vinicius Caldas",
     "Produto": "BlackArrow",
     "Categoria": "Acesso",
     "Data abertura": "2026-03-26",
@@ -240,7 +240,7 @@
   {
     "Ticket Zendesk": 3200128,
     "ID ReclameAqui": 244433047,
-    "Cliente": "ARNOLD MADLENERRICARDODOSSANTOS",
+    "Cliente": "Arnold Madlenerricardodossantos",
     "Produto": "Profit",
     "Categoria": "Indicador",
     "Data abertura": "2026-03-26",
@@ -257,7 +257,7 @@
   {
     "Ticket Zendesk": 3204093,
     "ID ReclameAqui": 244731821,
-    "Cliente": "FABIO LUIZ",
+    "Cliente": "Fabio Luiz",
     "Produto": "Profit",
     "Categoria": "Replay",
     "Data abertura": "2026-03-30",
@@ -274,7 +274,7 @@
   {
     "Ticket Zendesk": 3175421,
     "ID ReclameAqui": 244745799,
-    "Cliente": "ELVIS LUIZ DA SILVA",
+    "Cliente": "Elvis Luiz da Silva",
     "Produto": "Profit",
     "Categoria": "Carteiras",
     "Data abertura": "2026-03-31",
@@ -291,7 +291,7 @@
   {
     "Ticket Zendesk": 3204661,
     "ID ReclameAqui": 244748373,
-    "Cliente": "NECI SCREMIN SILVA",
+    "Cliente": "Neci Scremin Silva",
     "Produto": "BlackArrow",
     "Categoria": "Gestão de Risco",
     "Data abertura": "2026-03-31",
@@ -342,7 +342,7 @@
   {
     "Ticket Zendesk": 3212253,
     "ID ReclameAqui": 245360915,
-    "Cliente": "FERNANDA DE MIRANDA CLIMACO",
+    "Cliente": "Fernanda de Miranda Climaco",
     "Produto": "Profit",
     "Categoria": "Operação",
     "Data abertura": "2026-04-07",
@@ -359,7 +359,7 @@
   {
     "Ticket Zendesk": 3214358,
     "ID ReclameAqui": 245517471,
-    "Cliente": "JONAS MARQUES",
+    "Cliente": "Jonas Marques",
     "Produto": "Profit",
     "Categoria": "Acesso",
     "Data abertura": "2026-04-08",
@@ -372,5 +372,22 @@
     "Comentario": "",
     "is_case": false,
     "Ultima Alteracao": ""
+  },
+  {
+    "Ticket Zendesk": 3215528,
+    "ID ReclameAqui": 245468035,
+    "Cliente": "Marcos Roberto Alves Guimarães",
+    "Produto": "Vector",
+    "Categoria": "Operação",
+    "Data abertura": "2026-04-09",
+    "Data resolução": "",
+    "Tempo resolução": 0,
+    "Contato feito CC": "Não",
+    "Resolvido CC": false,
+    "Nota RA": "",
+    "Voltaria a Fazer Negócio": false,
+    "Comentario": "",
+    "is_case": false,
+    "Ultima Alteracao": "Criado por antony em 09/04/2026, 12:45:02"
   }
 ]
