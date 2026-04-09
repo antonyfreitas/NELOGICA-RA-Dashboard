@@ -1349,7 +1349,13 @@ async function carregarDadosDetratores() {
         
         const meta = await r.json(); 
         const jsonString = decodeURIComponent(escape(atob(meta.content)));
-        dadosDetratores = JSON.parse(jsonString); 
+        const parsed = JSON.parse(jsonString);
+dadosDetratores = parsed.map(d => ({
+    ...d,
+    cliente: formatarNome(d.cliente),
+    agente_responsavel: formatarNome(d.agente_responsavel),
+    lider_responsavel: formatarNome(d.lider_responsavel)
+})); 
         
         setStatus('ok', `${dadosDetratores.length} formulários`); 
         processarPainelDetratores();
