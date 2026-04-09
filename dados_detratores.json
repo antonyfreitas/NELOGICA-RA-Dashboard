@@ -61,7 +61,7 @@
     "data_atuacao": "N/A",
     "status_recuperacao": "Recuperado",
     "satisfacao_pos_contato": "4",
-    "is_case": true
+    "is_case": false
   },
   {
     "ticket_detracao": "3201110",
