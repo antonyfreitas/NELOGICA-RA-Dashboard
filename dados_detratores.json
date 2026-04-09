@@ -57,7 +57,11 @@
     "necessario_atuacao": "Sim",
     "ticket_atuacao": "3202988",
     "lider_responsavel": "ebenvegnu@nelogica.com.br",
-    "comentarios_qa": "Informação errada (Funcionamento do Profit Ultra em mais de um dispositivo); Condução confusa; Cliente saiu sem compreender como funciona o login na plataforma."
+    "comentarios_qa": "Informação errada (Funcionamento do Profit Ultra em mais de um dispositivo); Condução confusa; Cliente saiu sem compreender como funciona o login na plataforma.",
+    "data_atuacao": "N/A",
+    "status_recuperacao": "Recuperado",
+    "satisfacao_pos_contato": "4",
+    "is_case": true
   },
   {
     "ticket_detracao": "3201110",
