@@ -312,7 +312,7 @@
     "Produto": "BlackArrow",
     "Categoria": "Relarório de Performance",
     "Data abertura": 46113,
-    "Data resolução": 46119,
+    "Data resolução": "",
     "Tempo resolução": 6,
     "Contato feito CC": "Sim",
     "Resolvido CC": false,
@@ -320,7 +320,7 @@
     "Voltaria a Fazer Negócio": false,
     "Comentario": "",
     "is_case": false,
-    "Ultima Alteracao": ""
+    "Ultima Alteracao": "antony · 09/04/2026, 10:48:13"
   },
   {
     "Ticket Zendesk": 3210147,
