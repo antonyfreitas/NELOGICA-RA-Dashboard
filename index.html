@@ -1029,7 +1029,7 @@ function atualizarGraficosRA(res, tot) {
             plugins: { legend: { display: false } }, 
             scales: { 
                 x: { grid: { display: false }, ticks: { color: '#6b7a99', font } }, 
-                y: { grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } } 
+                y: { beginAtZero: true, grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } } 
             } 
         } 
     });
@@ -1060,7 +1060,7 @@ function atualizarGraficosRA(res, tot) {
             plugins: { legend: { display: false } },
             scales: {
                 x: { grid: { display: false }, ticks: { color: '#6b7a99', font } },
-                y: { grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } }
+                y: { beginAtZero: true, grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } }
             }
         }
     });
@@ -1110,7 +1110,7 @@ function atualizarGraficosRA(res, tot) {
             plugins: { legend: { display: false } }, 
             scales: { 
                 x: { grid: { display: false }, ticks: { color: '#6b7a99', font } }, 
-                y: { grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } } 
+                y: { beginAtZero: true, grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } } 
             } 
         } 
     });
@@ -1460,7 +1460,7 @@ function atualizarGraficosDetratores(lista) {
             plugins: { legend: { display: false } }, 
             scales: { 
                 x: { grid: { display: false }, ticks: { color: '#6b7a99', font } }, 
-                y: { grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } } 
+                y: { beginAtZero: true, grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } } 
             } 
         } 
     });
@@ -1491,7 +1491,7 @@ function atualizarGraficosDetratores(lista) {
             plugins: { legend: { display: false } },
             scales: {
                 x: { grid: { display: false }, ticks: { color: '#6b7a99', font } },
-                y: { grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } }
+                y: { beginAtZero: true, grid: gridY, ticks: { color: '#6b7a99', font, stepSize: 1 } }
             }
         }
     });
