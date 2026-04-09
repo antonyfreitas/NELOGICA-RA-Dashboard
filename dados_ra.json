@@ -349,12 +349,12 @@
     "Data resolução": "",
     "Tempo resolução": 2,
     "Contato feito CC": "Sim",
-    "Resolvido CC": false,
+    "Resolvido CC": true,
     "Nota RA": "",
     "Voltaria a Fazer Negócio": false,
     "Comentario": "",
     "is_case": false,
-    "Ultima Alteracao": ""
+    "Ultima Alteracao": "Última edição por antony em 09/04/2026, 12:06:44"
   },
   {
     "Ticket Zendesk": 3214358,
