@@ -511,8 +511,8 @@ input[type="text"].search-box:focus { border-color:var(--accent); outline:none; 
       <input type="text" id="loginUser" placeholder="Ex: Antony" autocomplete="off" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
     </div>
     <div class="login-field">
-      <label>Token do GitHub (Permissão 'repo')</label>
-      <input type="password" id="loginPass" placeholder="ghp_..." autocomplete="off" onkeydown="if(event.key==='Enter')tentarLogin()">
+      <label>Senha de Acesso</label>
+      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="off" onkeydown="if(event.key==='Enter')tentarLogin()">
     </div>
     <button class="login-btn" onclick="tentarLogin()">Autenticar e Entrar →</button>
     <div class="login-err" id="loginErr"></div>
@@ -521,15 +521,19 @@ input[type="text"].search-box:focus { border-color:var(--accent); outline:none; 
 </div>
 
 <script>
+// =========================================================================
+// ATENÇÃO ANTONY: COLA O TEU TOKEN NOVO AQUI EM BAIXO DENTRO DAS ASPAS!
+// =========================================================================
+const GITHUB_TOKEN = '__GH_TOKEN__'; 
+
 const GITHUB_USER  = 'antonyfreitas';
 const GITHUB_REPO  = 'NELOGICA-RA-Dashboard';
 const API_URL      = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/dados_ra.json`;
 const URL_DETRATORES = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/dados_detratores.json`;
 
+// Voltou ao formato original usando a variável chumbada acima
 function getApiHeads() {
-  const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
-  const token = s ? s.token : '';
-  return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+  return { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' };
 }
 
 const META_SLA = 5;
@@ -540,7 +544,7 @@ let chartStatus, chartCategorias, chartProduto, chartTempo;
 let usuarioLogado = '';
 
 let dadosDetratores = [];
-let listaAtualDetratores = []; 
+let listaAtualDetratores = []; // Guarda a lista filtrada atual
 let chartDetDiario, chartStatusRec, chartAgressores, chartCanal, chartMotivos;
 
 function navegarPara(pagina) {
@@ -612,10 +616,12 @@ function processarPainelDetratores() {
   const nFim = dataParaNum(document.getElementById('dataFimDet').value);
   const buscaText = document.getElementById('buscaDetratores').value.toLowerCase().trim();
 
+  // Filtra período e termo de busca
   listaAtualDetratores = dadosDetratores.filter(d => {
     const dt = dataParaNum(d.data_detracao);
     if (nIni && dt && dt < nIni) return false;
     if (nFim && dt && dt > nFim) return false;
+    
     if (buscaText) {
       const fullStr = Object.values(d).join(' ').toLowerCase();
       if (!fullStr.includes(buscaText)) return false;
@@ -623,7 +629,8 @@ function processarPainelDetratores() {
     return true;
   });
 
-  let diffDias = 30;
+  // Filtra período anterior para a Tendência (Health Score)
+  let diffDias = 30; // padrão
   if (document.getElementById('dataInicioDet').value && document.getElementById('dataFimDet').value) {
     const d1 = new Date(document.getElementById('dataInicioDet').value);
     const d2 = new Date(document.getElementById('dataFimDet').value);
@@ -642,6 +649,7 @@ function processarPainelDetratores() {
     return dt && dt >= nAntIni && dt <= nAntFim;
   });
 
+  // Helper seguro para ler "COM sinalização"
   const isSinalizado = d => String(d.status_sinalizacao || '').toUpperCase().includes('COM');
 
   const total = listaAtualDetratores.length;
@@ -654,6 +662,7 @@ function processarPainelDetratores() {
   const notasStr = listaAtualDetratores.map(d => parseFloat(d.satisfacao_pos_contato)).filter(n => !isNaN(n));
   const mediaSatisfacao = notasStr.length > 0 ? (notasStr.reduce((a, b) => a + b, 0) / notasStr.length).toFixed(1) : '—';
 
+  // Atualizar DOM
   document.getElementById('det-kpi-total').innerText = total;
   
   const tendEl = document.getElementById('det-kpi-tendencia-total');
@@ -667,6 +676,7 @@ function processarPainelDetratores() {
 
   document.getElementById('det-kpi-sinalizados').innerText = sinalizados;
   document.getElementById('det-kpi-sinalizados-pct').innerText = total > 0 ? `${((sinalizados/total)*100).toFixed(0)}% do total` : '';
+  
   document.getElementById('det-kpi-recuperacao').innerText = taxaRecuperacao + '%';
   document.getElementById('det-kpi-satisfacao').innerText = mediaSatisfacao;
 
@@ -743,6 +753,7 @@ function renderTabelaAcaoDetratores(listaFiltrada) {
   const lista = listaFiltrada.filter(isSinalizado).reverse();
   
   document.getElementById('badge-detratores-acao').innerText = lista.length + ' casos';
+  
   const cont = document.getElementById('tabela-acao-detratores');
   if (!lista.length) { 
     cont.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-text">Excelente! Sem casos críticos pendentes.</div></div>'; 
@@ -753,8 +764,10 @@ function renderTabelaAcaoDetratores(listaFiltrada) {
     const safeTicket = String(d.ticket_detracao || '');
     const linkTicket = safeTicket.includes('http') ? safeTicket : `https://nelogica.zendesk.com/agent/tickets/${safeTicket}`;
     const tkDisplay = safeTicket.match(/\d+/) ? `#${safeTicket.match(/\d+/)[0]}` : 'Ver Ticket';
+    
     const recStatus = d.status_recuperacao === 'Recuperado' ? '🟩' : d.status_recuperacao === 'Perdido' ? '🟥' : '🟨';
     const caseEstrela = d.is_case === true ? '⭐ ' : '';
+    
     const idUnico = d._id || safeTicket; 
     
     return `<tr>
@@ -768,7 +781,13 @@ function renderTabelaAcaoDetratores(listaFiltrada) {
     </tr>`;
   }).join('');
 
-  cont.innerHTML = `<table class="mini-table"><thead><tr><th>Zendesk</th><th>Data</th><th>Agente</th><th>Líder Resp.</th><th>Comentário Cliente</th><th>Status</th><th>Atuar</th></tr></thead><tbody>${linhas}</tbody></table>`;
+  cont.innerHTML = `
+    <table class="mini-table">
+      <thead>
+        <tr><th>Zendesk</th><th>Data</th><th>Agente</th><th>Líder Resp.</th><th>Comentário Cliente</th><th>Status</th><th>Atuar</th></tr>
+      </thead>
+      <tbody>${linhas}</tbody>
+    </table>`;
 }
 
 // === FUNÇÕES DOS MODAIS DETRATORES ===
@@ -828,7 +847,9 @@ function abrirModalEditarDetrator(idUnico) {
   document.getElementById('modalEditarDetrator').classList.add('open');
 }
 
-function fecharModalEditarDetrator() { document.getElementById('modalEditarDetrator').classList.remove('open'); }
+function fecharModalEditarDetrator() {
+  document.getElementById('modalEditarDetrator').classList.remove('open');
+}
 
 async function salvarEdicaoDetrator() {
   const idUnico = document.getElementById('edDetRecordId').value;
@@ -846,7 +867,6 @@ async function salvarEdicaoDetrator() {
     showToast('⏳ A guardar alterações...', 'ok');
     const metaR = await fetch(URL_DETRATORES, { headers: getApiHeads(), cache: 'no-store' });
     const meta = await metaR.json();
-    
     const body = {
       message: 'Atualização de Atuação (Via Dashboard)',
       content: btoa(unescape(encodeURIComponent(JSON.stringify(dadosDetratores, null, 2)))),
@@ -1354,14 +1374,14 @@ function downloadBlob(blob, filename) {
   URL.revokeObjectURL(url);
 }
 
-// ─── LOGIN SEGURO COM TOKEN ───────────────────────────────────────────────────
+// ─── LOGIN SEGURO COM SENHA FIXA (REVERTIDO) ───────────────────────────────────
 const SESSION_KEY = 'ra_dash_auth';
 const SESSION_TTL = 8 * 60 * 60 * 1000;
 
 function verificarSessao() {
   try {
     const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
-    if (s && Date.now() - s.ts < SESSION_TTL && s.token) {
+    if (s && Date.now() - s.ts < SESSION_TTL) {
       usuarioLogado = s.user;
       document.getElementById('loginScreen').classList.add('hidden');
       document.getElementById('statusUser').innerText = `👤 ${s.user} · v11.1`;
@@ -1372,42 +1392,30 @@ function verificarSessao() {
 }
 
 async function tentarLogin() {
-  const user  = document.getElementById('loginUser').value.trim();
-  const token = document.getElementById('loginPass').value.trim();
-  const err   = document.getElementById('loginErr');
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value.trim();
+  const err  = document.getElementById('loginErr');
   
-  if (!user || !token) {
-    err.textContent = 'Preencha o seu nome e o Token do GitHub.';
+  if (!user || !pass) {
+    err.textContent = 'Preencha o seu nome e a senha.';
     return;
   }
   
-  err.textContent = 'A validar acesso com o GitHub...';
-  
-  try {
-    const r = await fetch(API_URL, { 
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-      cache: 'no-store'
-    });
-    
-    if (!r.ok) {
-        if(r.status === 401) throw new Error('Token inválido ou revogado.');
-        if(r.status === 404) throw new Error('Repositório não encontrado. Verifica as permissões.');
-        throw new Error('Erro na autenticação.');
-    }
-    
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user, token, ts: Date.now() }));
-    usuarioLogado = user;
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('statusUser').innerText = `👤 ${user} · v11.1`;
-    err.textContent = '';
-
-    if (document.getElementById('page-ra').classList.contains('active')) carregarDados();
-    if (document.getElementById('page-detratores').classList.contains('active')) carregarDadosDetratores();
-  } catch(e) {
-    err.textContent = 'Erro: ' + e.message;
+  if (pass !== 'ra@2026') {
+    err.textContent = 'Senha incorreta. Acesso negado.';
     document.getElementById('loginPass').value = '';
     document.getElementById('loginPass').focus();
+    return;
   }
+  
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user, ts: Date.now() }));
+  usuarioLogado = user;
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('statusUser').innerText = `👤 ${user} · v11.1`;
+  err.textContent = '';
+
+  if (document.getElementById('page-ra').classList.contains('active')) carregarDados();
+  if (document.getElementById('page-detratores').classList.contains('active')) carregarDadosDetratores();
 }
 
 function fazerLogout() {
