@@ -59,10 +59,11 @@
     "lider_responsavel": "Ebenvegnu@nelogica.com.br",
     "comentarios_qa": "Informação errada (Funcionamento do Profit Ultra em mais de um dispositivo); Condução confusa; Cliente saiu sem compreender como funciona o login na plataforma.",
     "data_atuacao": "N/A",
-    "status_recuperacao": "Pendente",
+    "status_recuperacao": "Recuperado",
     "satisfacao_pos_contato": "Neutro",
     "is_case": false,
-    "canal_contato_cc": "N/A"
+    "canal_contato_cc": "N/A",
+    "ultimaAlteracao": "Atuado por antony em 09/04/2026, 13:06:44"
   },
   {
     "ticket_detracao": "3201110",
