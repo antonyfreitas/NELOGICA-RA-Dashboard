@@ -252,8 +252,8 @@
     "data_atuacao": "N/A",
     "status_recuperacao": "Pendente",
     "satisfacao_pos_contato": "Neutro",
-    "is_case": false,
-    "ultimaAlteracao": "Atuado por antony em 10/04/2026, 15:39:54"
+    "is_case": true,
+    "ultimaAlteracao": "Atuado por antony em 10/04/2026, 15:40:01"
   },
   {
     "ticket_detracao": "3205647",
