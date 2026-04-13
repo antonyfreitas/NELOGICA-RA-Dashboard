@@ -629,6 +629,7 @@
                 <tr>
                     <th>Zendesk</th>
                     <th>Data</th>
+                    <th>Cliente</th>
                     <th>Agente</th>
                     <th>Líder Resp.</th>
                     <th>Motivo</th>
@@ -646,6 +647,13 @@
         <h3>✏️ Atuação no Detrator <span id="edDetTicket"></span></h3>
         <input type="hidden" id="edDetRecordId">
         <div class="edit-grid">
+
+            <div id="area-sugestao-ia" style="display: none; grid-column: span 2; background: rgba(61,127,255,.1); border: 1px dashed rgba(61,127,255,.4); padding: 18px; border-radius: 8px; margin-bottom: 8px;">
+                <div style="font-family: var(--mono); font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 10px; font-weight: 700;">
+                    🤖 Plano de Ação sugerido pela IA
+                </div>
+                <div id="texto-ia" style="font-size: 12px; color: var(--text); white-space: pre-wrap; line-height: 1.6;"></div>
+            </div>
             <div class="ef"><label>Líder Responsável</label><input id="edDetLider" type="text"></div>
             <div class="ef"><label>Data de Atuação</label><input id="edDetDataAtuacao" type="date"></div>
             
@@ -673,21 +681,6 @@
                 <label>Comentários da Atuação (QA / Líder)</label>
                 <textarea id="edDetComentarios" rows="3"></textarea>
             </div>
-            
-            <div id="modalEditarDetrator" class="edit-modal" onclick="if(event.target===this)fecharModalEditarDetrator()">
-    <div class="edit-box">
-        <h3>✏️ Atuação no Detrator <span id="edDetTicket"></span></h3>
-        <input type="hidden" id="edDetRecordId">
-        <div class="edit-grid">
-            
-            <div id="area-sugestao-ia" style="display: none; grid-column: span 2; background: rgba(61,127,255,.1); border: 1px dashed rgba(61,127,255,.4); padding: 18px; border-radius: 8px; margin-bottom: 8px;">
-                <div style="font-family: var(--mono); font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 10px; font-weight: 700;">
-                    🤖 Plano de Ação sugerido pela IA
-                </div>
-                <div id="texto-ia" style="font-size: 12px; color: var(--text); white-space: pre-wrap; line-height: 1.6;"></div>
-            </div>
-            <div class="ef"><label>Líder Responsável</label><input id="edDetLider" type="text"></div>
-            <div class="ef"><label>Data de Atuação</label><input id="edDetDataAtuacao" type="date"></div>
             
             <div class="ef" style="flex-direction: row; align-items: center; gap: 10px; grid-column: span 2; margin-top: 10px;">
                 <input type="checkbox" id="edDetIsCase" style="width: 18px; height: 18px; accent-color: var(--accent);">
@@ -1619,7 +1612,6 @@ function linhaDetTabela(d) {
     // Ícone Case Detratores
     const caseEstrela = d.is_case === true ? '<span style="font-size:14px; margin-right:8px; color:var(--warning);" title="Case de Destaque">⭐</span>' : ''; 
     
-    // REMOVIDO: Botão de exclusão (Trava de Segurança)
     return `<tr>
         <td>
             <div style="display:flex; align-items:center;">
@@ -1628,6 +1620,7 @@ function linhaDetTabela(d) {
             </div>
         </td>
         <td>${d.data_detracao || '—'}</td>
+        <td style="font-weight:500">${d.cliente || '—'}</td>
         <td style="font-weight:600">${d.agente_responsavel ? d.agente_responsavel.split('@')[0] : '—'}</td>
         <td>${isNotNA(d.lider_responsavel) ? `<span class="chip">${d.lider_responsavel.split('@')[0]}</span>` : '—'}</td>
         <td style="font-size:11px; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${d.motivo_detracao || ''}">${d.motivo_detracao || '—'}</td>
@@ -1648,7 +1641,7 @@ function renderTabelaAcaoDetratores(lista) {
         return; 
     }
     
-    cont.innerHTML = `<table class="mini-table"><thead><tr><th>Zendesk</th><th>Data</th><th>Agente</th><th>Líder Resp.</th><th>Motivo Principal</th><th style="text-align:center">Status</th><th>Ação</th></tr></thead><tbody>${criticos.map(linhaDetTabela).join('')}</tbody></table>`;
+    cont.innerHTML = `<table class="mini-table"><thead><tr><th>Zendesk</th><th>Data</th><th>Cliente</th><th>Agente</th><th>Líder Resp.</th><th>Motivo Principal</th><th style="text-align:center">Status</th><th>Ação</th></tr></thead><tbody>${criticos.map(linhaDetTabela).join('')}</tbody></table>`;
 }
 
 function abrirModalDetratores(tipo, valor='') {
@@ -1666,7 +1659,7 @@ function abrirModalDetratores(tipo, valor='') {
 
     document.getElementById('modalBodyDet').innerHTML = filtrado.length 
         ? filtrado.reverse().map(linhaDetTabela).join('') 
-        : '<tr><td colspan="7" style="text-align:center;color:var(--muted)">Nenhum caso encontrado para o filtro.</td></tr>';
+        : '<tr><td colspan="8" style="text-align:center;color:var(--muted)">Nenhum caso encontrado para o filtro.</td></tr>';
         
     document.getElementById('modalTicketsDet').style.display = 'block';
 }
@@ -1705,6 +1698,42 @@ function abrirModalEditarDetrator(idUnico) {
     document.getElementById('edDetUltimaAlteracao').innerText = d.ultimaAlteracao ? 'Histórico: ' + d.ultimaAlteracao : 'Nenhuma atuação manual prévia.';
     
     document.getElementById('modalEditarDetrator').classList.add('open');
+}
+
+function fecharModalEditarDetrator() { document.getElementById('modalEditarDetrator').classList.remove('open'); }
+
+async function salvarEdicaoDetrator() {
+    const idUnico = document.getElementById('edDetRecordId').value; 
+    const idx = dadosDetratores.findIndex(x => x._id === idUnico || x.ticket_detracao === idUnico); 
+    if (idx === -1) return;
+    
+    dadosDetratores[idx].lider_responsavel = document.getElementById('edDetLider').value || 'N/A'; 
+    dadosDetratores[idx].data_atuacao = document.getElementById('edDetDataAtuacao').value || 'N/A'; 
+    dadosDetratores[idx].status_recuperacao = document.getElementById('edDetStatusRec').value; 
+    dadosDetratores[idx].satisfacao_pos_contato = document.getElementById('edDetSatisfacao').value || 'N/A'; 
+    dadosDetratores[idx].comentarios_qa = document.getElementById('edDetComentarios').value || 'N/A'; 
+    dadosDetratores[idx].is_case = document.getElementById('edDetIsCase').checked;
+    
+    // Grava Rastreabilidade
+    dadosDetratores[idx].ultimaAlteracao = `Atuado por ${usuarioLogado} em ${new Date().toLocaleString('pt-BR')}`;
+    
+    try { 
+        showToast('⏳ Sincronizando atuação com a nuvem...', 'ok'); 
+        const metaR = await fetch(URL_DETRATORES, { headers: API_HEADS }); 
+        const meta = await metaR.json(); 
+        const body = { 
+            message: 'Atualização de Atuação (Dashboard)', 
+            content: btoa(unescape(encodeURIComponent(JSON.stringify(dadosDetratores, null, 2)))), 
+            sha: meta.sha 
+        }; 
+        const r = await fetch(URL_DETRATORES, { method: 'PUT', headers: API_HEADS, body: JSON.stringify(body) }); 
+        if (!r.ok) throw new Error(); 
+        fecharModalEditarDetrator(); 
+        showToast('✅ Atuação registrada e salva!', 'ok'); 
+        processarPainelDetratores(); 
+    } catch(e) { 
+        showToast('❌ Falha ao tentar salvar na rede', 'err'); 
+    }
 }
 
 /* --------------------------------------------------------------------------
