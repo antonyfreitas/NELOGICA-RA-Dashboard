@@ -393,7 +393,7 @@
   {
     "Ticket Zendesk": 3213025,
     "ID ReclameAqui": 245816855,
-    "Cliente": "FELIPE BATISTA VIANA DA COSTA",
+    "Cliente": "Felipe Batista Viana da Costa",
     "Produto": "Profit",
     "Categoria": "Replay",
     "Data abertura": "2026-04-13",
@@ -406,5 +406,22 @@
     "Comentario": "",
     "is_case": false,
     "Ultima Alteracao": "Criado por antony em 13/04/2026, 10:02:54"
+  },
+  {
+    "Ticket Zendesk": 3218242,
+    "ID ReclameAqui": 245762485,
+    "Cliente": "LUIZ COELHO DOS SANTOS",
+    "Produto": "Profit",
+    "Categoria": "Replay",
+    "Data abertura": "2026-04-13",
+    "Data resolução": "",
+    "Tempo resolução": 0,
+    "Contato feito CC": "",
+    "Resolvido CC": false,
+    "Nota RA": "",
+    "Voltaria a Fazer Negócio": false,
+    "Comentario": "",
+    "is_case": false,
+    "Ultima Alteracao": "Criado por antony em 13/04/2026, 10:04:57"
   }
 ]
