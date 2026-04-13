@@ -674,6 +674,21 @@
                 <textarea id="edDetComentarios" rows="3"></textarea>
             </div>
             
+            <div id="modalEditarDetrator" class="edit-modal" onclick="if(event.target===this)fecharModalEditarDetrator()">
+    <div class="edit-box">
+        <h3>✏️ Atuação no Detrator <span id="edDetTicket"></span></h3>
+        <input type="hidden" id="edDetRecordId">
+        <div class="edit-grid">
+            
+            <div id="area-sugestao-ia" style="display: none; grid-column: span 2; background: rgba(61,127,255,.1); border: 1px dashed rgba(61,127,255,.4); padding: 18px; border-radius: 8px; margin-bottom: 8px;">
+                <div style="font-family: var(--mono); font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 10px; font-weight: 700;">
+                    🤖 Plano de Ação sugerido pela IA
+                </div>
+                <div id="texto-ia" style="font-size: 12px; color: var(--text); white-space: pre-wrap; line-height: 1.6;"></div>
+            </div>
+            <div class="ef"><label>Líder Responsável</label><input id="edDetLider" type="text"></div>
+            <div class="ef"><label>Data de Atuação</label><input id="edDetDataAtuacao" type="date"></div>
+            
             <div class="ef" style="flex-direction: row; align-items: center; gap: 10px; grid-column: span 2; margin-top: 10px;">
                 <input type="checkbox" id="edDetIsCase" style="width: 18px; height: 18px; accent-color: var(--accent);">
                 <label for="edDetIsCase" style="font-size: 12px; color: var(--accent2);">⭐ Marcar como Case de Destaque</label>
@@ -1677,6 +1692,31 @@ function abrirModalEditarDetrator(idUnico) {
     
     document.getElementById('modalEditarDetrator').classList.add('open');
 }
+
+    function abrirModalEditarDetrator(idUnico) {
+    const d = dadosDetratores.find(x => x._id === idUnico || x.ticket_detracao === idUnico);
+    if (!d) return showToast('Erro crítico: Registo não encontrado na base', 'err');
+    
+    fecharModalDetratores();
+    document.getElementById('edDetRecordId').value = idUnico; 
+    document.getElementById('edDetTicket').innerText = '#' + (d.ticket_detracao.match(/\d+/) ? d.ticket_detracao.match(/\d+/)[0] : 'Ticket'); 
+    
+    // ✨ NOVA LÓGICA DA IA AQUI ✨
+    const divIA = document.getElementById('area-sugestao-ia');
+    const textoIA = document.getElementById('texto-ia');
+    
+    if (d.sugestao_ia && d.sugestao_ia.trim() !== "") {
+        textoIA.innerText = d.sugestao_ia;
+        divIA.style.display = 'block'; // Mostra a caixa se tiver IA
+    } else {
+        divIA.style.display = 'none'; // Esconde nos tickets antigos
+        textoIA.innerText = "";
+    }
+    // ✨ FIM DA LÓGICA DA IA ✨
+
+    document.getElementById('edDetLider').value = d.lider_responsavel && d.lider_responsavel !== 'N/A' ? d.lider_responsavel : ''; 
+    document.getElementById('edDetDataAtuacao').value = d.data_atuacao && d.data_atuacao !== 'N/A' ? d.data_atuacao : ''; 
+    // ... restante do código original
 
 function fecharModalEditarDetrator() { document.getElementById('modalEditarDetrator').classList.remove('open'); }
 
