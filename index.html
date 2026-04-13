@@ -1680,26 +1680,6 @@ function abrirModalEditarDetrator(idUnico) {
     fecharModalDetratores();
     document.getElementById('edDetRecordId').value = idUnico; 
     document.getElementById('edDetTicket').innerText = '#' + (d.ticket_detracao.match(/\d+/) ? d.ticket_detracao.match(/\d+/)[0] : 'Ticket'); 
-    document.getElementById('edDetLider').value = d.lider_responsavel && d.lider_responsavel !== 'N/A' ? d.lider_responsavel : ''; 
-    document.getElementById('edDetDataAtuacao').value = d.data_atuacao && d.data_atuacao !== 'N/A' ? d.data_atuacao : ''; 
-    document.getElementById('edDetStatusRec').value = d.status_recuperacao && d.status_recuperacao !== 'N/A' ? d.status_recuperacao : 'Pendente'; 
-    document.getElementById('edDetSatisfacao').value = d.satisfacao_pos_contato && d.satisfacao_pos_contato !== 'N/A' ? d.satisfacao_pos_contato : ''; 
-    document.getElementById('edDetComentarios').value = d.comentarios_qa && d.comentarios_qa !== 'N/A' ? d.comentarios_qa : ''; 
-    document.getElementById('edDetIsCase').checked = d.is_case === true;
-    
-    // Log de Rastreabilidade Detratores
-    document.getElementById('edDetUltimaAlteracao').innerText = d.ultimaAlteracao ? 'Histórico: ' + d.ultimaAlteracao : 'Nenhuma atuação manual prévia.';
-    
-    document.getElementById('modalEditarDetrator').classList.add('open');
-}
-
-    function abrirModalEditarDetrator(idUnico) {
-    const d = dadosDetratores.find(x => x._id === idUnico || x.ticket_detracao === idUnico);
-    if (!d) return showToast('Erro crítico: Registo não encontrado na base', 'err');
-    
-    fecharModalDetratores();
-    document.getElementById('edDetRecordId').value = idUnico; 
-    document.getElementById('edDetTicket').innerText = '#' + (d.ticket_detracao.match(/\d+/) ? d.ticket_detracao.match(/\d+/)[0] : 'Ticket'); 
     
     // ✨ NOVA LÓGICA DA IA AQUI ✨
     const divIA = document.getElementById('area-sugestao-ia');
@@ -1716,42 +1696,15 @@ function abrirModalEditarDetrator(idUnico) {
 
     document.getElementById('edDetLider').value = d.lider_responsavel && d.lider_responsavel !== 'N/A' ? d.lider_responsavel : ''; 
     document.getElementById('edDetDataAtuacao').value = d.data_atuacao && d.data_atuacao !== 'N/A' ? d.data_atuacao : ''; 
-    // ... restante do código original
-
-function fecharModalEditarDetrator() { document.getElementById('modalEditarDetrator').classList.remove('open'); }
-
-async function salvarEdicaoDetrator() {
-    const idUnico = document.getElementById('edDetRecordId').value; 
-    const idx = dadosDetratores.findIndex(x => x._id === idUnico || x.ticket_detracao === idUnico); 
-    if (idx === -1) return;
+    document.getElementById('edDetStatusRec').value = d.status_recuperacao && d.status_recuperacao !== 'N/A' ? d.status_recuperacao : 'Pendente'; 
+    document.getElementById('edDetSatisfacao').value = d.satisfacao_pos_contato && d.satisfacao_pos_contato !== 'N/A' ? d.satisfacao_pos_contato : ''; 
+    document.getElementById('edDetComentarios').value = d.comentarios_qa && d.comentarios_qa !== 'N/A' ? d.comentarios_qa : ''; 
+    document.getElementById('edDetIsCase').checked = d.is_case === true;
     
-    dadosDetratores[idx].lider_responsavel = document.getElementById('edDetLider').value || 'N/A'; 
-    dadosDetratores[idx].data_atuacao = document.getElementById('edDetDataAtuacao').value || 'N/A'; 
-    dadosDetratores[idx].status_recuperacao = document.getElementById('edDetStatusRec').value; 
-    dadosDetratores[idx].satisfacao_pos_contato = document.getElementById('edDetSatisfacao').value || 'N/A'; 
-    dadosDetratores[idx].comentarios_qa = document.getElementById('edDetComentarios').value || 'N/A'; 
-    dadosDetratores[idx].is_case = document.getElementById('edDetIsCase').checked;
+    // Log de Rastreabilidade Detratores
+    document.getElementById('edDetUltimaAlteracao').innerText = d.ultimaAlteracao ? 'Histórico: ' + d.ultimaAlteracao : 'Nenhuma atuação manual prévia.';
     
-    // Grava Rastreabilidade
-    dadosDetratores[idx].ultimaAlteracao = `Atuado por ${usuarioLogado} em ${new Date().toLocaleString('pt-BR')}`;
-    
-    try { 
-        showToast('⏳ Sincronizando atuação com a nuvem...', 'ok'); 
-        const metaR = await fetch(URL_DETRATORES, { headers: API_HEADS }); 
-        const meta = await metaR.json(); 
-        const body = { 
-            message: 'Atualização de Atuação (Dashboard)', 
-            content: btoa(unescape(encodeURIComponent(JSON.stringify(dadosDetratores, null, 2)))), 
-            sha: meta.sha 
-        }; 
-        const r = await fetch(URL_DETRATORES, { method: 'PUT', headers: API_HEADS, body: JSON.stringify(body) }); 
-        if (!r.ok) throw new Error(); 
-        fecharModalEditarDetrator(); 
-        showToast('✅ Atuação registrada e salva!', 'ok'); 
-        processarPainelDetratores(); 
-    } catch(e) { 
-        showToast('❌ Falha ao tentar salvar na rede', 'err'); 
-    }
+    document.getElementById('modalEditarDetrator').classList.add('open');
 }
 
 /* --------------------------------------------------------------------------
