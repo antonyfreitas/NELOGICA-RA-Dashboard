@@ -1,1 +1,52 @@
+Prezado Time Executivo,
 
+Como Diretor de CX e Customer Care da Nelogica, apresento o relatório de análise técnica dos atendimentos detratores coletados. Esta análise visa identificar gargalos operacionais e de conhecimento que impactam diretamente nosso NPS e a percepção de valor da marca.
+
+Abaixo, os dados foram anonimizados conforme as **Rigorosas Regras de Privacidade** estabelecidas.
+
+---
+
+### 1. Top 3 Ofensores da Semana
+
+Após a análise detalhada das interações, identificamos os três pilares que mais geraram atrito e insatisfação:
+
+1.  **Acuracidade Técnica e Misleading (Informação Incorreta):** O maior ofensor. Agentes estão fornecendo informações erradas sobre o funcionamento da plataforma (ex: login em múltiplos dispositivos, funcionalidades inexistentes e tipos de ordens). Isso gera retrabalho e quebra severa de confiança.
+2.  **Falha em Processos de Backoffice (Vínculos e Registros):** Identificamos diversos casos onde chamados de bugs conhecidos não foram vinculados aos tickets, ou solicitações de melhoria foram tratadas como erro (e vice-versa), além do não encaminhamento para setores responsáveis (como o Comercial).
+3.  **Baixa Empatia e Falta de Tato (Soft Skills):** Atendimentos robóticos ou tecnicamente arrogantes, especialmente com clientes iniciantes ou idosos. Orientações consideradas "óbvias" dadas sem o devido cuidado, resultando em uma experiência de suporte frustrante.
+
+---
+
+### 2. Raio-X por Líder e Agente
+
+Abaixo, o cruzamento de performance para identificar necessidades de coaching específico:
+
+*   **Liderança [DADO_OCULTADO] (ebenvegnu):**
+    *   **Agente [DADO_OCULTADO] (gscardoso):** Concentra o maior volume de críticas (3 tickets). Os padrões indicam falta de atenção ao processo (não vincular chamados) e falha na validação de comportamentos do sistema antes de responder ao cliente.
+    *   **Agentes [DADO_OCULTADO] (ysilva/pvieira):** Problemas pontuais, mas graves, de conhecimento técnico sobre o Profit Ultra e identificação de bugs vs. sugestões.
+    *   *Diagnóstico:* Necessidade urgente de reciclagem técnica e revisão de processos de vinculação de bugs.
+
+*   **Liderança [DADO_OCULTADO] (mrosa):**
+    *   **Agente [DADO_OCULTADO] (dborges):** Apresentou falhas de processo (não criar tickets prometidos) e, principalmente, falta de sensibilidade no atendimento a perfis específicos (cliente idoso), priorizando a negativa em vez da solução alternativa.
+    *   *Diagnóstico:* Foco em treinamento de Soft Skills e "Customer First".
+
+*   **Liderança [DADO_OCULTADO] (nchagas):**
+    *   **Agentes [DADO_OCULTADO] (lpanizzi/llazzari):** Falhas em explicar conceitos básicos (ordens limite) e promessa de funcionalidades inexistentes.
+    *   *Diagnóstico:* Alinhamento de produto e funcionalidades disponíveis no Mobile.
+
+---
+
+### 3. Diretrizes para a Próxima Semana
+
+Para reverter este cenário e mitigar o volume de detratores, as seguintes ações devem ser implementadas imediatamente:
+
+1.  **Blitz de Reciclagem Técnica (Foco Mobile e Ordens):** Realizar um treinamento rápido (15 min) com toda a operação sobre a diferença entre ordens a mercado/limite e as limitações atuais do Profit Ultra em múltiplos dispositivos.
+2.  **Auditoria de Vínculos (QA):** A equipe de QA deve focar a amostragem da próxima semana na verificação de tickets que mencionam "Bug" ou "Sugestão", garantindo que os fluxos internos de registro (Jira/Zendesk) foram seguidos.
+3.  **Reforço de Etiqueta e Empatia:** Os líderes devem realizar One-on-Ones focadas em "Escuta Ativa". É inadmissível que um cliente sinta que sua dúvida é tratada com desdém ou que o agente "desista" do atendimento por falta de compreensão.
+4.  **Checklist de Resposta:** Implementar a obrigatoriedade de conferência de dados básicos (como e-mail de contato comercial e horários de atendimento) antes do fechamento de tickets de transição.
+
+Este relatório deve ser utilizado para as reuniões de feedback individual com os agentes mencionados, focando na melhoria contínua da jornada do nosso investidor.
+
+Atenciosamente,
+
+**Diretor de CX e Customer Care**
+Nelogica
