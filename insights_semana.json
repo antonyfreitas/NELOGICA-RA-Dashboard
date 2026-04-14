@@ -1,50 +1,41 @@
 Prezado Time Executivo,
 
-Como Diretor de CX e Customer Care da Nelogica, apresento o relatório de análise técnica dos atendimentos detratores coletados. Esta análise visa identificar gargalos operacionais e de conhecimento que impactam diretamente nosso NPS e a percepção de valor da marca.
-
-Abaixo, os dados foram anonimizados conforme as **Rigorosas Regras de Privacidade** estabelecidas.
+Como Diretor de CX e Customer Care da Nelogica, apresento o relatório de análise técnica dos atendimentos detratores coletados nesta semana. O objetivo é identificar gargalos operacionais e comportamentais para elevar nosso NPS e a qualidade da jornada do usuário.
 
 ---
 
-### 1. Top 3 Ofensores da Semana
+### **RELATÓRIO EXECUTIVO DE ATENDIMENTO (DETRATORES)**
 
-Após a análise detalhada das interações, identificamos os três pilares que mais geraram atrito e insatisfação:
+#### **1. TOP 3 OFENSORES DA SEMANA**
 
-1.  **Acuracidade Técnica e Misleading (Informação Incorreta):** O maior ofensor. Agentes estão fornecendo informações erradas sobre o funcionamento da plataforma (ex: login em múltiplos dispositivos, funcionalidades inexistentes e tipos de ordens). Isso gera retrabalho e quebra severa de confiança.
-2.  **Falha em Processos de Backoffice (Vínculos e Registros):** Identificamos diversos casos onde chamados de bugs conhecidos não foram vinculados aos tickets, ou solicitações de melhoria foram tratadas como erro (e vice-versa), além do não encaminhamento para setores responsáveis (como o Comercial).
-3.  **Baixa Empatia e Falta de Tato (Soft Skills):** Atendimentos robóticos ou tecnicamente arrogantes, especialmente com clientes iniciantes ou idosos. Orientações consideradas "óbvias" dadas sem o devido cuidado, resultando em uma experiência de suporte frustrante.
+Após análise detalhada do volume de interações negativas, identificamos os três pilares que mais impactaram a satisfação do cliente:
 
----
-
-### 2. Raio-X por Líder e Agente
-
-Abaixo, o cruzamento de performance para identificar necessidades de coaching específico:
-
-*   **Liderança [DADO_OCULTADO] (ebenvegnu):**
-    *   **Agente [DADO_OCULTADO] (gscardoso):** Concentra o maior volume de críticas (3 tickets). Os padrões indicam falta de atenção ao processo (não vincular chamados) e falha na validação de comportamentos do sistema antes de responder ao cliente.
-    *   **Agentes [DADO_OCULTADO] (ysilva/pvieira):** Problemas pontuais, mas graves, de conhecimento técnico sobre o Profit Ultra e identificação de bugs vs. sugestões.
-    *   *Diagnóstico:* Necessidade urgente de reciclagem técnica e revisão de processos de vinculação de bugs.
-
-*   **Liderança [DADO_OCULTADO] (mrosa):**
-    *   **Agente [DADO_OCULTADO] (dborges):** Apresentou falhas de processo (não criar tickets prometidos) e, principalmente, falta de sensibilidade no atendimento a perfis específicos (cliente idoso), priorizando a negativa em vez da solução alternativa.
-    *   *Diagnóstico:* Foco em treinamento de Soft Skills e "Customer First".
-
-*   **Liderança [DADO_OCULTADO] (nchagas):**
-    *   **Agentes [DADO_OCULTADO] (lpanizzi/llazzari):** Falhas em explicar conceitos básicos (ordens limite) e promessa de funcionalidades inexistentes.
-    *   *Diagnóstico:* Alinhamento de produto e funcionalidades disponíveis no Mobile.
+1.  **Déficit de Conhecimento Técnico e de Produto:** O ponto mais crítico. Foram identificados casos de informações erradas sobre o funcionamento do Profit Ultra, confusão entre conceitos básicos de ordens (Limite vs. Mercado) e desconhecimento de funcionalidades inexistentes, gerando falsas expectativas e retrabalho.
+2.  **Falhas de Processo e Workflow:** Ausência de vinculação de chamados a bugs conhecidos, não criação de tickets prometidos ao cliente e erros em repasses para o setor comercial. O fluxo de "donos do problema" está fragmentado.
+3.  **Falta de Tato e Adaptabilidade (Soft Skills):** Atendimentos com tom "óbvio" ou falta de empatia com perfis específicos (como clientes idosos ou iniciantes), resultando em uma comunicação fria e ineficiente que não resolve a dor do usuário de forma acolhedora.
 
 ---
 
-### 3. Diretrizes para a Próxima Semana
+#### **2. RAIO-X POR LIDERANÇA E AGENTE**
 
-Para reverter este cenário e mitigar o volume de detratores, as seguintes ações devem ser implementadas imediatamente:
+A análise correlacional entre as frentes de gestão revela padrões específicos de atuação:
 
-1.  **Blitz de Reciclagem Técnica (Foco Mobile e Ordens):** Realizar um treinamento rápido (15 min) com toda a operação sobre a diferença entre ordens a mercado/limite e as limitações atuais do Profit Ultra em múltiplos dispositivos.
-2.  **Auditoria de Vínculos (QA):** A equipe de QA deve focar a amostragem da próxima semana na verificação de tickets que mencionam "Bug" ou "Sugestão", garantindo que os fluxos internos de registro (Jira/Zendesk) foram seguidos.
-3.  **Reforço de Etiqueta e Empatia:** Os líderes devem realizar One-on-Ones focadas em "Escuta Ativa". É inadmissível que um cliente sinta que sua dúvida é tratada com desdém ou que o agente "desista" do atendimento por falta de compreensão.
-4.  **Checklist de Resposta:** Implementar a obrigatoriedade de conferência de dados básicos (como e-mail de contato comercial e horários de atendimento) antes do fechamento de tickets de transição.
+*   **Liderança [DADO_OCULTADO]:** Concentra o maior volume de inconsistências técnicas. Os agentes sob esta supervisão (Agentes [DADO_OCULTADO], [DADO_OCULTADO] e [DADO_OCULTADO]) apresentaram falhas em identificar bugs já mapeados (ex: MOB-2205), tratando-os como "sugestões", e forneceram orientações erradas sobre login e janelas. **Diagnóstico:** Necessidade urgente de reciclagem técnica e alinhamento com o time de Produto/QA.
+*   **Liderança [DADO_OCULTADO]:** O foco de melhoria aqui reside na sensibilidade do atendimento e processos cross-department. O Agente [DADO_OCULTADO] falhou no repasse comercial e no atendimento a perfis de maior senioridade (idosos), demonstrando uma abordagem mecânica que ignora a necessidade do cliente. **Diagnóstico:** Treinamento de Customer Centricity e comunicação empática.
+*   **Liderança [DADO_OCULTADO]:** Identificamos um padrão de "geração de falsa expectativa". Os agentes (Agente [DADO_OCULTADO] e [DADO_OCULTADO]) tentaram contornar limitações da plataforma prometendo soluções inexistentes ou demorando excessivamente em dúvidas básicas de ordens mobile. **Diagnóstico:** Alinhamento sobre "Honestidade no Suporte" e agilidade em conceitos básicos de trading.
 
-Este relatório deve ser utilizado para as reuniões de feedback individual com os agentes mencionados, focando na melhoria contínua da jornada do nosso investidor.
+---
+
+#### **3. DIRETRIZES PARA A PRÓXIMA SEMANA**
+
+Para mitigarmos estes riscos e invertermos a tendência de detração, as seguintes ações devem ser implementadas imediatamente:
+
+1.  **Reforço em Ordens Mobile e Profit Ultra:** As lideranças devem realizar uma "Blitz de Conhecimento" de 15 minutos com os agentes sobre os tópicos de maior erro (Ordens Limite vs. Mercado no Mobile e limites de login no Ultra).
+2.  **Checklist de Vinculação (QA):** Implementar a obrigatoriedade de conferência de tickets vinculados antes do encerramento de qualquer interação que envolva bugs conhecidos da plataforma.
+3.  **Workshop de Adaptabilidade:** Treinamento rápido sobre "Atendimento para Diferentes Perfis", focando em como simplificar termos técnicos para iniciantes e como acolher usuários com menor literacia digital.
+4.  **Auditoria de Repasse Comercial:** Revisão imediata dos contatos e e-mails de outros departamentos fornecidos pelos agentes, garantindo que nenhum cliente receba informações de contato desatualizadas.
+
+Este cenário exige uma atuação próxima dos líderes de equipe para garantir que a técnica e a empatia caminhem juntas.
 
 Atenciosamente,
 
